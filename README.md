@@ -1,0 +1,1 @@
+NG implementation of DD's plugin.
