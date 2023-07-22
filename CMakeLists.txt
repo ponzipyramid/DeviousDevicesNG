@@ -97,7 +97,7 @@ if(BUILD_TESTS)
     add_executable(
             ${PROJECT_NAME}Tests
             ${headers}
-            ${tests} "test/ArrayMath.cpp")
+            ${tests} "test/DeviousDevices.cpp")
 
     target_link_libraries(
             ${PROJECT_NAME}Tests
