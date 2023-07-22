@@ -110,6 +110,8 @@
 // Compatible declarations with other sample projects.
 #define DLLEXPORT __declspec(dllexport)
 
+#define PAPYRUSFUNCHANDLE RE::BSScript::Internal::VirtualMachine* a_vm, const RE::VMStackID a_stackID, RE::StaticFunctionTag*
+
 using namespace std::literals;
 using namespace REL::literals;
 

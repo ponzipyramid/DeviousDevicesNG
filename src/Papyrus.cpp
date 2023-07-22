@@ -1,4 +1,5 @@
 #include "Papyrus.h"
+#include "Expression.h"
 #include <functional>
 #include <algorithm>
 
@@ -6,7 +7,7 @@ using namespace RE;
 using namespace RE::BSScript;
 using namespace REL;
 using namespace SKSE;
-namespace {
+namespace DeviousDevices {
     constexpr std::string_view PapyrusClass = "zadNativeFunctions";
 
     std::string GetName(StaticFunctionTag* base, RE::TESForm* thisForm) {
@@ -65,8 +66,21 @@ namespace {
 }
 
 bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
-    vm->RegisterFunction("GetName", PapyrusClass, GetName);
-    vm->RegisterFunction("FormHasKeywordString", PapyrusClass, FormHasKeywordString);
-    vm->RegisterFunction("FindMatchingDevice", PapyrusClass, FindMatchingDevice);
+    #define REGISTERPAPYRUSFUNC(name) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name);}
+
+    //Papyrus.h
+    REGISTERPAPYRUSFUNC(GetName);
+    REGISTERPAPYRUSFUNC(FormHasKeywordString);
+    REGISTERPAPYRUSFUNC(FindMatchingDevice);
+
+    //expression.h
+    REGISTERPAPYRUSFUNC(ApplyExpression);
+    REGISTERPAPYRUSFUNC(GetExpression);
+    REGISTERPAPYRUSFUNC(ResetExpression);
+    REGISTERPAPYRUSFUNC(FactionsToPreset);
+    REGISTERPAPYRUSFUNC(ApplyPhonemsFaction);
+
+
+    #undef REGISTERPAPYRUSFUNC
 	return true;
 }
