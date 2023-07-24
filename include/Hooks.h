@@ -17,6 +17,10 @@ namespace DeviousDevices {
 
         SKSE::log::info("{} unequipped {}", a_actor->GetFormID(), a_object->GetFormID());
 
+        if (a_object->GetFormID() == 248318) {
+            return;
+        }
+
         return originalFunction(a_1, a_actor, a_object, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
                          a_applyNow, a_slotToReplace);
     }
