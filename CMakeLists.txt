@@ -23,12 +23,14 @@ configure_file(
 set(headers
         include/Papyrus.h
         include/Expression.h
+        include/Hider.h
 )
 
 set(sources
         src/Main.cpp
         src/Papyrus.cpp
         src/Expression.cpp
+        src/Hider.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
