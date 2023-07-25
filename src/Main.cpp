@@ -1,5 +1,6 @@
 #include "Papyrus.h"
 #include "Hooks.h"
+#include "DeviceManager.h"
 #include <stddef.h>
 
 using namespace RE::BSScript;
@@ -45,11 +46,14 @@ namespace {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostLoad:  // Called after all plugins have finished running
                         break;
+                    case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
+                        DeviousDevices::Install();
+                        break;
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        DeviousDevices::Install();
+                        DeviousDevices::DeviceManager::GetSingleton().Setup();
                         // It is now safe to access form data.
                         break;
 

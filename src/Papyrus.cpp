@@ -52,8 +52,7 @@ namespace DeviousDevices {
             return NULL;
         }
         
-        std::map < TESBoundObject*, std::int32_t> inventory =
-            obj->GetInventoryCounts();
+        std::map<TESBoundObject*, std::int32_t> inventory = obj->GetInventoryCounts();
         
         for (auto& entry : inventory) {
             if (FormHasKeyword(base, entry.first, kwd)) {

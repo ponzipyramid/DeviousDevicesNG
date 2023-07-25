@@ -24,12 +24,16 @@ set(headers
         include/Papyrus.h
         include/Expression.h
         include/Hooks.h
+        include/Script.hpp
+        include/UI.h
+        include/DeviceManager.h
 )
 
 set(sources
         src/Main.cpp
         src/Papyrus.cpp
         src/Expression.cpp
+        src/DeviceManager.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
