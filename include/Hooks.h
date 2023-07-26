@@ -26,6 +26,16 @@ namespace DeviousDevices {
         auto mainMenu = ui->GetMenu(RE::InventoryMenu::MENU_NAME);
         return mainMenu.get();
     }
+
+    void PrintMembers(const RE::GFxValue& obj) {
+        obj.VisitMembers([](const char* name, const RE::GFxValue& value) {
+            std::string str(name);
+
+            SKSE::log::info("Selected has member {}", name);
+        });
+        SKSE::log::info("--------------");
+
+    }
     
     inline void EquipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
                             RE::ExtraDataList* a_extraData, std::uint32_t a_count, RE::BGSEquipSlot* a_slot,
@@ -33,41 +43,17 @@ namespace DeviousDevices {
                             bool a_applyNow) {
 
         if (dManager->IsInventoryDevice(item) && a_extraData != nullptr) {           
-            SKSE::log::info("Equipping device");
+            SKSE::log::info("Equipping");
 
             auto ui = RE::UI::GetSingleton();
             auto mainMenu = ui->GetMenu<RE::InventoryMenu>(RE::InventoryMenu::MENU_NAME);
 
             if (actor->GetFormID() == 20 && mainMenu.get()) {
                 dManager->ShowEquipMenu([=](uint32_t result) {
-                    SKSE::log::info("Time to actually equip");
-
                     if (result == 0) {
                         _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
                                      a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
-
-                        RE::InventoryMenu::RUNTIME_DATA& rData = mainMenu.get()->GetRuntimeData();
-                        RE::ItemList::Item* selected = rData.itemList->GetSelectedItem();
-
-                        if (selected != nullptr) {
-                            SKSE::log::info("{} is {}", selected->data.GetName(), selected->data.GetEquipState());
-                            RE::GFxValue* obj = &selected->obj;
-                            
-                            obj->VisitMembers([](const char* name, const RE::GFxValue& value) {
-                                std::string str(name);
-
-                                SKSE::log::info("Selected has member {}", name);
-                            });
-                            
-                        } else
-                            SKSE::log::info("Nothing presently selected");
-
-                        RE::UI* loc_ui = RE::UI::GetSingleton();
-                        RE::GPtr<RE::IMenu> loc_hudmenu = loc_ui->menuMap.find("InventoryMenu")->second.menu;
-                        if (loc_hudmenu.get() == nullptr) return;
-                        RE::GPtr<RE::GFxMovieView> loc_movie = loc_hudmenu->uiMovie;
-                        if (loc_movie.get() == nullptr) return;
-                        loc_movie->Advance(0.00001f);
+                        mainMenu.get()->GetRuntimeData().itemList->Update();
                     }
                     
                     
