@@ -43,20 +43,17 @@ namespace DeviousDevices {
                             bool a_applyNow) {
 
         if (dManager->IsInventoryDevice(item) && a_extraData != nullptr) {           
-            SKSE::log::info("Equipping");
-
             auto ui = RE::UI::GetSingleton();
-            auto mainMenu = ui->GetMenu<RE::InventoryMenu>(RE::InventoryMenu::MENU_NAME);
+            auto invMenu = ui->GetMenu<RE::InventoryMenu>(RE::InventoryMenu::MENU_NAME);
 
-            if (actor->GetFormID() == 20 && mainMenu.get()) {
+            if (actor->GetFormID() == 20 && invMenu.get()) {
                 dManager->ShowEquipMenu([=](uint32_t result) {
                     if (result == 0) {
                         _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
                                      a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
-                        mainMenu.get()->GetRuntimeData().itemList->Update();
+                        dManager->EquipRenderedDevice(actor, item);
+                        invMenu.get()->GetRuntimeData().itemList->Update();
                     }
-                    
-                    
                 });
             }
         } else {

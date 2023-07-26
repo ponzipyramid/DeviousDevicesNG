@@ -34,3 +34,14 @@ void DeviceManager::ShowEquipMenu(std::function<void(unsigned int)> callback) {
     int messageBoxId = 1;
     DeviousDevices::MessageBox::Show(bodyText, buttonTexts, callback);
 }
+
+void DeviceManager::EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device) {
+    RE::TESObjectARMO* rendered = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESObjectARMO>(
+        0x0866B9, "Devious Devices - Integration.esm");
+    
+    if (rendered != nullptr) {
+        SKSE::log::info("Found rendered device - equipping");
+        actor->AddWornItem(rendered, 1, false, 0, 0);
+    } else
+        SKSE::log::info("Could not find rendered device");
+}
