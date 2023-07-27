@@ -9,9 +9,12 @@ std::vector<int> DeviousDevices::RebuildSlotMask(PAPYRUSFUNCHANDLE, RE::Actor* a
     static RE::BGSKeyword* loc_nohidekeyword = nullptr;
     static std::vector<RE::BGSKeyword*> loc_nohidekeywordarr;
 
+    RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
+    if (loc_datahandler == nullptr) return std::vector<int>();
+
     if (loc_nohidekeyword == nullptr)
     {
-        loc_nohidekeyword = static_cast<RE::BGSKeyword*>(RE::TESDataHandler::GetSingleton()->LookupForm(0x043F84,"Devious Devices - Integration.esm"));
+        loc_nohidekeyword = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x043F84,"Devious Devices - Integration.esm"));
         loc_nohidekeywordarr.push_back(loc_nohidekeyword);
     }
 
@@ -80,6 +83,9 @@ bool DeviousDevices::_IsValidForHide(RE::TESObjectARMO* a_armor)
     if (a_armor == nullptr) return false;
 
     static std::vector<RE::BGSKeyword*> loc_nohidekeywords;
+
+    RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
+    if (loc_datahandler == nullptr) return false;
 
     //check lockable keyword
     static RE::BGSKeyword* loc_kwlockable = nullptr;
