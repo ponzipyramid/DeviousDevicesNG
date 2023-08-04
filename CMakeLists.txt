@@ -24,6 +24,7 @@ set(headers
         include/Papyrus.h
         include/Expression.h
         include/Hider.h
+        include/NodeHider.h
 )
 
 set(sources
@@ -31,6 +32,7 @@ set(sources
         src/Papyrus.cpp
         src/Expression.cpp
         src/Hider.cpp
+        src/NodeHider.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 

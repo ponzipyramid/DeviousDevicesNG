@@ -8,7 +8,7 @@ namespace DeviousDevices
     }
 
     std::vector<float> GetExpression(PAPYRUSFUNCHANDLE, RE::Actor* a_actor)
-    {
+    {   
         return _GetExpression(a_actor);
     }
 
@@ -19,7 +19,9 @@ namespace DeviousDevices
 
     std::vector<float> FactionsToPreset(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults)
     {
-        std::vector<float> loc_preset(32,0.0);
+        if (a_actor == nullptr) return std::vector<float>(32,0.0f);
+
+        std::vector<float> loc_preset(32,0.0f);
 
         if (a_factions.size() > 0)
         {
@@ -42,6 +44,8 @@ namespace DeviousDevices
 
     std::vector<float> ApplyPhonemsFaction(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, std::vector<float> a_exp, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults)
     {
+        if (a_actor == nullptr) return a_exp;
+
         if (a_factions.size() > 0)
         {
             for(int i =0; i < a_factions.size();i++)
@@ -63,9 +67,13 @@ namespace DeviousDevices
 
     std::vector<float> _ApplyExpression(RE::Actor* a_actor, const std::vector<float> &a_expression, int a_control)
     {
-        if (a_expression.size() == 0U) return _GetExpression(a_actor);
+        if (a_actor == nullptr) return std::vector<float>();
 
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
+
+        if (loc_expdata == nullptr) return std::vector<float>();
+
+        if (a_expression.size() == 0U) return _GetExpression(a_actor);
 
         RE::BSSpinLockGuard locker(loc_expdata->lock);
 
@@ -115,15 +123,17 @@ namespace DeviousDevices
                     break;
             }
         }
-
-
         return _GetExpression(a_actor);
     }
 
     std::vector<float> _GetExpression(RE::Actor* a_actor)
     {
+        if (a_actor == nullptr) return std::vector<float>(32,0.0f);
+
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
         
+        if (loc_expdata == nullptr) return std::vector<float>(32,0.0f);
+
         std::vector<float> loc_res;
 
         for (int i = 0; i < 16; i++) loc_res.push_back(loc_expdata->phenomeKeyFrame.values[i]); 
@@ -134,7 +144,11 @@ namespace DeviousDevices
 
     void _ResetExpression(RE::Actor* a_actor, bool a_phonem, bool a_mods)
     {
+        if (a_actor == nullptr) return;
+        
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
+
+        if (loc_expdata == nullptr) return;
 
         RE::BSSpinLockGuard locker(loc_expdata->lock);
 
