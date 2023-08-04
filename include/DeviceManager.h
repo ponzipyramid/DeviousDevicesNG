@@ -9,7 +9,7 @@ namespace DeviousDevices {
         
         inline bool IsInventoryDevice(RE::TESForm* obj) { return obj->HasKeywordInArray(invDeviceKwds, true); }
 
-        void EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device);
+        bool EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device);
 
         void ShowEquipMenu(std::function<void(unsigned int)> callback);
 

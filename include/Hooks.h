@@ -21,20 +21,10 @@ namespace DeviousDevices {
     inline OriginalEquipObject _EquipObject;
     inline OriginalUnequipObject _UnequipObject;
 
-    inline bool IsInventoryMenuOpen() {
+    inline RE::GPtr<RE::InventoryMenu> GetInventoryMenu() {
         auto ui = RE::UI::GetSingleton();
-        auto mainMenu = ui->GetMenu(RE::InventoryMenu::MENU_NAME);
-        return mainMenu.get();
-    }
-
-    void PrintMembers(const RE::GFxValue& obj) {
-        obj.VisitMembers([](const char* name, const RE::GFxValue& value) {
-            std::string str(name);
-
-            SKSE::log::info("Selected has member {}", name);
-        });
-        SKSE::log::info("--------------");
-
+        auto invMenu = ui->GetMenu<RE::InventoryMenu>(RE::InventoryMenu::MENU_NAME);
+        return invMenu;
     }
     
     inline void EquipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
@@ -43,15 +33,16 @@ namespace DeviousDevices {
                             bool a_applyNow) {
 
         if (dManager->IsInventoryDevice(item) && a_extraData != nullptr) {           
-            auto ui = RE::UI::GetSingleton();
-            auto invMenu = ui->GetMenu<RE::InventoryMenu>(RE::InventoryMenu::MENU_NAME);
+            auto invMenu = GetInventoryMenu();
 
             if (actor->GetFormID() == 20 && invMenu.get()) {
                 dManager->ShowEquipMenu([=](uint32_t result) {
                     if (result == 0) {
-                        _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
-                                     a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
-                        dManager->EquipRenderedDevice(actor, item);
+                        if (dManager->EquipRenderedDevice(actor, item)) {
+                            _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
+                                         a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
+                        }
+                        
                         invMenu.get()->GetRuntimeData().itemList->Update();
                     }
                 });
@@ -71,11 +62,11 @@ namespace DeviousDevices {
                                     std::uint64_t a_slotToReplace) {
         if (dManager->IsInventoryDevice(item)) {
             SKSE::log::info("unequip devious device detected: {}", item->GetFormID());
-
+            auto invMenu = GetInventoryMenu();
             // if in inventory menu and actor is player
-            if (actor->GetFormID() == 20 && IsInventoryMenuOpen()) {
+            if (actor->GetFormID() == 20 && invMenu.get()) {
                 SKSE::log::info("Player attempting equip from inventory menu");
-                // show message box and equip or don't accordingly
+                // show message box and unequip or don't accordingly
             } else {
                 SKSE::log::info("Prevented equip through regular function");
                 // prevent equipping on NPCs or player by script
