@@ -7,6 +7,7 @@
 #include <vector>
 #include <SKSE/SKSE.h>
 #include <articuno/archives/ryml/ryml.h>
+#include <chrono>
 
 using namespace DeviousDevices;
 using namespace SKSE;
@@ -20,16 +21,20 @@ DeviceManager& DeviceManager::GetSingleton() noexcept {
 void DeviceManager::LoadConfig() { 
     std::string base("Data\\SKSE\\Plugins\\Devious Devices NG"); 
 
-
+    auto start = std::chrono::high_resolution_clock::now();
     std::ifstream devicesFile(base + "\\devices.json");
     if (devicesFile.good()) {
+
         yaml_source ar(devicesFile);
-
         ar >> deviceList;
-
 
     } else
         log::error("Error: Failed to read devices file");
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    log::info("Time to load JSON = {}", duration.count());
 }
 
 void DeviceManager::Setup() {
@@ -38,10 +43,18 @@ void DeviceManager::Setup() {
     RE::BGSKeyword* kwd = handler->LookupForm<RE::BGSKeyword>(zadInventoryKwdId, "Devious Devices - Integration.esm");
     invDeviceKwds.push_back(kwd);
 
+    auto start = std::chrono::high_resolution_clock::now();
+
+
     for (auto& device : deviceList) {
         device.Init(handler);
         devices[device.GetFormID()] = device;
     }
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    log::info("Time to load devices = {}", duration.count());
 }
 
 void DeviceManager::ShowEquipMenu(std::function<void(unsigned int)> callback) {
