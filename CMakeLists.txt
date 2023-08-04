@@ -27,6 +27,7 @@ set(headers
         include/Script.hpp
         include/UI.h
         include/DeviceManager.h
+        include/Device.h
 )
 
 set(sources

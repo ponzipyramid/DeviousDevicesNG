@@ -12,9 +12,7 @@ registerPatcher({
     },
     execute: (patchFile, helpers, settings, locals) => ({
         initialize: function() {
-            locals.data = {
-                'mapping': []
-            }
+            locals.data = []
         },
         process: [{
             load: {
@@ -65,7 +63,7 @@ registerPatcher({
                     helpers.logMessage('could not find script')
                 }
                 
-                locals.data['mapping'].push(invData)
+                locals.data.push(invData)
             }
         }],
         finalize: function() {

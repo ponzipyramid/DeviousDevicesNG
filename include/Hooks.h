@@ -13,7 +13,7 @@ namespace DeviousDevices {
                                               bool a_queueEquip,
                                               bool a_forceEquip, bool a_playSounds,
                                               bool a_applyNow);
-     typedef void(WINAPI* OriginalUnequipObject)(std::uint64_t a_1, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+     typedef bool(WINAPI* OriginalUnequipObject)(std::uint64_t a_1, RE::Actor* a_actor, RE::TESBoundObject* a_object,
                                                 std::uint64_t a_extraData, std::uint64_t a_count, std::uint64_t a_slot,
                                                 std::uint64_t a_queueEquip, std::uint64_t a_forceEquip,
                                                 std::uint64_t a_playSounds, std::uint64_t a_applyNow,
@@ -55,7 +55,7 @@ namespace DeviousDevices {
     }
     
     
-    inline void UnequipObject(std::uint64_t a_1, RE::Actor* actor, RE::TESBoundObject* item,
+    inline bool UnequipObject(std::uint64_t a_1, RE::Actor* actor, RE::TESBoundObject* item,
                                     std::uint64_t a_extraData, std::uint64_t a_count, std::uint64_t a_slot,
                                     std::uint64_t a_queueEquip, std::uint64_t a_forceEquip,
                                     std::uint64_t a_playSounds, std::uint64_t a_applyNow,
@@ -63,14 +63,12 @@ namespace DeviousDevices {
         if (dManager->IsInventoryDevice(item)) {
             SKSE::log::info("unequip devious device detected: {}", item->GetFormID());
             auto invMenu = GetInventoryMenu();
-            // if in inventory menu and actor is player
+            
             if (actor->GetFormID() == 20 && invMenu.get()) {
                 SKSE::log::info("Player attempting equip from inventory menu");
                 // show message box and unequip or don't accordingly
-            } else {
-                SKSE::log::info("Prevented equip through regular function");
-                // prevent equipping on NPCs or player by script
             }
+            return false;
         } else {
             return _UnequipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
                                   a_playSounds, a_applyNow, a_slotToReplace);

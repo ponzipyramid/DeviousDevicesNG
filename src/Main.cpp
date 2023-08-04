@@ -14,7 +14,7 @@ namespace {
         if (!path) {
             report_and_fail("Unable to lookup SKSE logs directory.");
         }
-        *path += L"/DDi.log";
+        *path += L"/DeviousDevicesNG.log";
 
         std::shared_ptr<spdlog::logger> log;
         if (IsDebuggerPresent()) {
@@ -45,6 +45,7 @@ namespace {
                 switch (message->type) {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostLoad:  // Called after all plugins have finished running
+                        DeviousDevices::DeviceManager::GetSingleton().LoadConfig();
                         break;
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
                         DeviousDevices::Install();

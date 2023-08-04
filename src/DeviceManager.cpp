@@ -1,17 +1,35 @@
 #include "DeviceManager.h"
-#include "Script.hpp"
 #include "UI.h"
 
 #include <algorithm>
 #include <atomic>
 #include <unordered_map>
 #include <vector>
+#include <SKSE/SKSE.h>
+#include <articuno/archives/ryml/ryml.h>
 
 using namespace DeviousDevices;
+using namespace SKSE;
+using namespace articuno::ryml;
 
 DeviceManager& DeviceManager::GetSingleton() noexcept {
     static DeviceManager instance;
     return instance;
+}
+
+void DeviceManager::LoadConfig() { 
+    std::string base("Data\\SKSE\\Plugins\\Devious Devices NG"); 
+
+
+    std::ifstream devicesFile(base + "\\devices.json");
+    if (devicesFile.good()) {
+        yaml_source ar(devicesFile);
+
+        ar >> deviceList;
+
+
+    } else
+        log::error("Error: Failed to read devices file");
 }
 
 void DeviceManager::Setup() {
@@ -20,7 +38,10 @@ void DeviceManager::Setup() {
     RE::BGSKeyword* kwd = handler->LookupForm<RE::BGSKeyword>(zadInventoryKwdId, "Devious Devices - Integration.esm");
     invDeviceKwds.push_back(kwd);
 
-    // create inventory-rendered device mapping
+    for (auto& device : deviceList) {
+        device.Init(handler);
+        devices[device.GetFormID()] = device;
+    }
 }
 
 void DeviceManager::ShowEquipMenu(std::function<void(unsigned int)> callback) {
@@ -33,33 +54,18 @@ void DeviceManager::ShowEquipMenu(std::function<void(unsigned int)> callback) {
     DeviousDevices::MessageBox::Show(bodyText, buttonTexts, callback);
 }
 
-ScriptUtils::ObjectPtr GetDeviceScript(RE::TESForm* device) { 
-    std::string scriptNames[] = {"zadEquipScript", "zadCollarScript", "zadGagScript", "zadBodyHarnessScript", "zadPiercingNippleScript"};
-    ScriptUtils::ObjectPtr scriptPtr = nullptr;
-    for (const auto& sName : scriptNames) {
-        SKSE::log::info("Looking for script {}", sName);
-        scriptPtr = ScriptUtils::GetScriptObject(device, sName.c_str());
-        if (scriptPtr != nullptr) break;
-    }
-    return scriptPtr;
-}
-
 bool DeviceManager::EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device) {
-    ScriptUtils::ObjectPtr deviceScript = GetDeviceScript(device);
+    if (devices.count(device->GetFormID())) {
+        RE::TESObjectARMO* rendered = devices[device->GetFormID()].GetRenderedDevice();
 
-    RE::TESObjectARMO* rendered;
-    if (deviceScript != nullptr) {
-        SKSE::log::info("Found the script - pulling out device");
-        rendered = ScriptUtils::GetProperty<RE::TESObjectARMO*>(deviceScript, "deviceRendered");
+        if (rendered != nullptr) {
+            return actor->AddWornItem(rendered, 1, false, 0, 0);
+        } else {
+            SKSE::log::info("Cound not find rendered device");
+            return false;
+        }
     } else {
-        SKSE::log::info("Could not find equip script");
-        rendered = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESObjectARMO>(
-            0x0866B9, "Devious Devices - Integration.esm");
-    } 
-    
-    if (rendered != nullptr) {
-        SKSE::log::info("Found rendered device - equipping");
-        return actor->AddWornItem(rendered, 1, false, 0, 0);
-    } else
+        SKSE::log::info("Could not find device {} {} {} in registry", device->GetFormID(), device->GetRawFormID(), device->GetLocalFormID());
         return false;
+    }
 }
