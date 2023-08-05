@@ -10,9 +10,12 @@ namespace DeviousDevices
         void operator=(const NodeHider &) = delete;
         static NodeHider* GetSingleton();
 
+        void HideArms(RE::Actor* a_actor);
+        void ShowArms(RE::Actor* a_actor);
 
-        void HideArms();
-        void ShowArms();
+        void HideWeapons(RE::Actor* a_actor);
+        void ShowWeapons(RE::Actor* a_actor);
+
         void Setup();
     protected:
         NodeHider(){}
@@ -21,4 +24,7 @@ namespace DeviousDevices
         static NodeHider* _this;
     };
 
+    //papyrus interface
+    void HideWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor);
+    void ShowWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor);
 }

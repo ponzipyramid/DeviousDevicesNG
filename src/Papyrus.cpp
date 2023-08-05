@@ -1,6 +1,7 @@
 #include "Papyrus.h"
 #include "Expression.h"
 #include "Hider.h"
+#include "NodeHider.h"
 #include <functional>
 #include <algorithm>
 
@@ -86,6 +87,11 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     //hider
     REGISTERPAPYRUSFUNC(RebuildSlotMask,true);
     REGISTERPAPYRUSFUNC(FilterMask,true);
+
+    //node hider
+    REGISTERPAPYRUSFUNC(HideWeapons,true);
+    REGISTERPAPYRUSFUNC(ShowWeapons,true);
+
     #undef REGISTERPAPYRUSFUNC
     return true;
 }

@@ -1,6 +1,7 @@
 #include "Papyrus.h"
 #include "Hider.h"
 #include "NodeHider.h"
+#include "InventoryFilter.h"
 #include <stddef.h>
 
 using namespace RE::BSScript;
@@ -52,7 +53,6 @@ namespace {
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         // It is now safe to access form data.
                         break;
 
@@ -62,8 +62,9 @@ namespace {
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
+                        DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        
+                        DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPreLoadGame:  // Player selected a game to load, but it hasn't loaded yet.
                                                             // Data will be the name of the loaded save.
