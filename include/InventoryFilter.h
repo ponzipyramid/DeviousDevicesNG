@@ -3,6 +3,8 @@
 #include <RE/Skyrim.h>
 #include <REL/Relocation.h>
 
+
+#if (DD_USEINVENTORYFILTER_S == 1U)
 namespace DeviousDevices
 {
     class InventoryFilter
@@ -60,3 +62,4 @@ namespace DeviousDevices
 
     };
 }
+#endif

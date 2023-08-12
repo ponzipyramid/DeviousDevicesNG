@@ -1,5 +1,7 @@
 #include "InventoryFilter.h"
 
+#if (DD_USEINVENTORYFILTER_S == 1U)
+
 DeviousDevices::InventoryFilter* DeviousDevices::InventoryFilter::_this = new DeviousDevices::InventoryFilter;
 
 DeviousDevices::InventoryFilter* DeviousDevices::InventoryFilter::GetSingleton()
@@ -187,3 +189,5 @@ RE::BSEventNotifyControl DeviousDevices::MenuEvent::ProcessEvent(const RE::MenuO
     }
     return RE::BSEventNotifyControl::kContinue;
 }
+
+#endif

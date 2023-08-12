@@ -26,7 +26,8 @@ set(headers
         include/Hider.h
         include/NodeHider.h
         include/InventoryFilter.h
-        include/Utility.h
+        include/UpdateHook.h
+        include/Switches.h
 )
 
 set(sources
@@ -36,6 +37,7 @@ set(sources
         src/Hider.cpp
         src/NodeHider.cpp
         src/InventoryFilter.cpp
+        src/UpdateHook.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 

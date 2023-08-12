@@ -1,8 +1,13 @@
 #include "Papyrus.h"
 #include "Hider.h"
 #include "NodeHider.h"
-#include "InventoryFilter.h"
+#include "UpdateHook.h"
 #include <stddef.h>
+
+
+#if (DD_USEINVENTORYFILTER_S == 1U)
+    #include "InventoryFilter.h"
+#endif
 
 using namespace RE::BSScript;
 using namespace SKSE;
@@ -64,7 +69,10 @@ namespace {
                                                              // successful.
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        DeviousDevices::InventoryFilter::GetSingleton()->Setup();
+                        #if (DD_USEINVENTORYFILTER_S == 1U)
+                            DeviousDevices::InventoryFilter::GetSingleton()->Setup();
+                        #endif
+                        DeviousDevices::UpdateHook::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPreLoadGame:  // Player selected a game to load, but it hasn't loaded yet.
                                                             // Data will be the name of the loaded save.

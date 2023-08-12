@@ -70,7 +70,11 @@ namespace DeviousDevices {
 bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     //unhookfps means that the function will be unhooked from fps which will make it insanily faster. 
     //Note that not all functions can be unhooked from framerate (like some actor setters, as they are dependant on frame update)
-    #define REGISTERPAPYRUSFUNC(name,unhookfps) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name,unhookfps);}
+    #if (DD_ALLOWFASTPAPYRUSCALL_S == 1U)
+        #define REGISTERPAPYRUSFUNC(name,unhookfps) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name,unhookfps);}
+    #else
+        #define REGISTERPAPYRUSFUNC(name,unhookfps) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name,false);}
+    #endif
 
     //Papyrus.h
     REGISTERPAPYRUSFUNC(GetName,true);
