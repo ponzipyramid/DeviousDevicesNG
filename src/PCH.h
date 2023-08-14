@@ -120,6 +120,20 @@
 #define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print(std::format(__VA_ARGS__).c_str());} 
 
 
+#define SINGLETONHEADER(cname)                          \
+        public:                                         \
+            cname(cname &) = delete;                    \
+            void operator=(const cname &) = delete;     \
+            static cname* GetSingleton();               \
+        protected:                                      \
+            cname(){}                                   \
+            ~cname(){}                                  \
+            static cname* _this;
+
+#define SINGLETONBODY(cname)                            \
+        cname * cname::_this = new cname;               \
+        cname * cname::GetSingleton(){return _this;}
+
 using namespace std::literals;
 using namespace REL::literals;
 

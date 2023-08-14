@@ -6,18 +6,10 @@ namespace DeviousDevices
 {
     class UpdateHook
     {
+    SINGLETONHEADER(UpdateHook)
     public:
-        UpdateHook(UpdateHook &) = delete;
-        void operator=(const UpdateHook &) = delete;
-        static UpdateHook* GetSingleton();
-
         void Setup();
 
-    protected:
-        UpdateHook(){}
-        ~UpdateHook(){}
-
-        static UpdateHook* _this;
     private:
         bool _hooked = false;
 

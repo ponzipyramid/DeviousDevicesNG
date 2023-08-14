@@ -1,11 +1,6 @@
 #include "UpdateHook.h"
 
-DeviousDevices::UpdateHook* DeviousDevices::UpdateHook::_this = new DeviousDevices::UpdateHook;
-
-DeviousDevices::UpdateHook* DeviousDevices::UpdateHook::GetSingleton()
-{
-    return _this;
-}
+SINGLETONBODY(DeviousDevices::UpdateHook)
 
 void DeviousDevices::UpdateHook::Setup()
 {

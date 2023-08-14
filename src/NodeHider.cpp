@@ -1,11 +1,7 @@
 #include "NodeHider.h"
 
-DeviousDevices::NodeHider* DeviousDevices::NodeHider::_this = new DeviousDevices::NodeHider;
+SINGLETONBODY(DeviousDevices::NodeHider)
 
-DeviousDevices::NodeHider* DeviousDevices::NodeHider::GetSingleton()
-{
-    return _this;
-}
 #ifdef NH_IMPARMHIDER
 
 void DeviousDevices::NodeHider::HideArms(RE::Actor* a_actor)

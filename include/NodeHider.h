@@ -9,12 +9,8 @@ namespace DeviousDevices
     //for implementing this, I used https://github.com/ArranzCNL/ImprovedCameraSE-NG as reference which also hides arms using nodes
     class NodeHider
     {
+    SINGLETONHEADER(NodeHider)
     public:
-        NodeHider(NodeHider &) = delete;
-        void operator=(const NodeHider &) = delete;
-        static NodeHider* GetSingleton();
-
-
         class NodeHiderSlot
         {
         public:
@@ -52,15 +48,9 @@ namespace DeviousDevices
         bool ValidateActor(RE::Actor* a_actor);
 
     protected:
-        NodeHider(){}
-        ~NodeHider(){}
 
         bool AddHideNode(RE::Actor* a_actor, std::string a_nodename);
         bool RemoveHideNode(RE::Actor* a_actor, std::string a_nodename);
-
-        
-
-        static NodeHider* _this;
 
     private:
         std::map<RE::Actor*,NodeHiderSlot> _slots;
