@@ -1,7 +1,13 @@
 #include "Papyrus.h"
 #include "Hider.h"
 #include "NodeHider.h"
+#include "UpdateHook.h"
+#include "DeviceReader.h"
 #include <stddef.h>
+
+#if (DD_USEINVENTORYFILTER_S == 1U)
+    #include "InventoryFilter.h"
+#endif
 
 using namespace RE::BSScript;
 using namespace SKSE;
@@ -52,8 +58,8 @@ namespace {
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         // It is now safe to access form data.
+                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         break;
 
                     // Skyrim game events.
@@ -62,8 +68,14 @@ namespace {
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
-                        DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        
+                        {
+                            DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
+                            DeviousDevices::NodeHider::GetSingleton()->Setup();
+                            #if (DD_USEINVENTORYFILTER_S == 1U)
+                                DeviousDevices::InventoryFilter::GetSingleton()->Setup();
+                            #endif
+                            DeviousDevices::UpdateHook::GetSingleton()->Setup();
+                        }
                         break;
                     case MessagingInterface::kPreLoadGame:  // Player selected a game to load, but it hasn't loaded yet.
                                                             // Data will be the name of the loaded save.

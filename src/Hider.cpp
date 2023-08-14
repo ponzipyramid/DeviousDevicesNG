@@ -1,6 +1,6 @@
 #include "Hider.h"
 
-DeviousDevices::DeviceHiderManager* DeviousDevices::DeviceHiderManager::_this = new DeviousDevices::DeviceHiderManager;
+SINGLETONBODY(DeviousDevices::DeviceHiderManager)
 
 void DeviousDevices::DeviceHiderManager::Setup()
 {
@@ -46,11 +46,6 @@ int DeviousDevices::FilterMask(PAPYRUSFUNCHANDLE,RE::Actor* a_actor, int a_slotm
 {
     DeviceHiderManager* loc_hider = DeviceHiderManager::GetSingleton();
     return loc_hider->FilterMask(a_actor,a_slotmask);
-}
-
-DeviousDevices::DeviceHiderManager* DeviousDevices::DeviceHiderManager::GetSingleton()
-{
-    return _this;
 }
 
 std::vector<int> DeviousDevices::DeviceHiderManager::RebuildSlotMask(RE::Actor* a_actor, std::vector<int> a_slotfilter)

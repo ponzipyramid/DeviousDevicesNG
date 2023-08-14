@@ -25,6 +25,10 @@ set(headers
         include/Expression.h
         include/Hider.h
         include/NodeHider.h
+        include/InventoryFilter.h
+        include/UpdateHook.h
+        include/Switches.h
+        include/DeviceReader.h
 )
 
 set(sources
@@ -33,6 +37,9 @@ set(sources
         src/Expression.cpp
         src/Hider.cpp
         src/NodeHider.cpp
+        src/InventoryFilter.cpp
+        src/UpdateHook.cpp
+        src/DeviceReader.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
