@@ -35,6 +35,7 @@ set(sources
         src/Papyrus.cpp
         src/Expression.cpp
         src/DeviceManager.cpp
+        src/Device.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 

@@ -45,7 +45,6 @@ void DeviceManager::Setup() {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-
     for (auto& device : deviceList) {
         device.Init(handler);
         devices[device.GetFormID()] = device;
@@ -57,14 +56,26 @@ void DeviceManager::Setup() {
     log::info("Time to load devices = {}", duration.count());
 }
 
-void DeviceManager::ShowEquipMenu(std::function<void(unsigned int)> callback) {
-    std::string bodyText = "Do you want to lock this device on yourself?";
-    std::vector<std::string> buttonTexts;
+bool DeviceManager::CanEquipDevice(RE::Actor* actor, RE::TESForm* item) {
+    RE::FormID formId = item->GetFormID();
 
-    buttonTexts.push_back("Yes");
-    buttonTexts.push_back("No");
+    if (devices.count(formId)) {
 
-    DeviousDevices::MessageBox::Show(bodyText, buttonTexts, callback);
+        return devices[formId].CanEquip(actor);
+    } else {
+        return false;
+    }
+}
+
+void DeviceManager::ShowEquipMenu(RE::TESForm* item, std::function<void(bool)> callback) {
+    if (!devices.count(item->GetFormID())) return;
+
+    RE::BGSMessage* equipMenu = devices[item->GetFormID()].GetEquipMenu();
+
+    if (equipMenu != nullptr)
+        DeviousDevices::MessageBox::Show(equipMenu, [callback](uint32_t result) { callback(result == 0); });
+    else
+        SKSE::log::info("Could not fetch message box for {}", item->GetFormID());
 }
 
 bool DeviceManager::EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device) {

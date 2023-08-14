@@ -33,5 +33,15 @@ namespace DeviousDevices {
             for (auto text : buttonTextValues) messagebox->buttonText.push_back(text.c_str());
             messagebox->QueueMessage();
         }
+
+        static void Show(RE::BGSMessage* msg, std::function<void(unsigned int)> callback) { 
+            RE::BSString desc;
+            msg->GetDescription(desc, msg->ownerQuest);
+
+            std::vector<std::string> buttonTextValues;
+            for (const auto& btn : msg->menuButtons) buttonTextValues.push_back(std::string(btn->text.c_str()));
+
+            Show(std::string(desc.c_str()), buttonTextValues, callback);
+        }
     };
 }

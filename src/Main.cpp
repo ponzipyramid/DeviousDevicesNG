@@ -48,7 +48,7 @@ namespace {
                         DeviousDevices::DeviceManager::GetSingleton().LoadConfig();
                         break;
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
-                        DeviousDevices::Install();
+                        DeviousDevices::Hooks::Install();
                         break;
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;

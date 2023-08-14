@@ -9,7 +9,15 @@
 namespace DeviousDevices {
     class Device;
 
-    class DeviceInfo {
+    class FormInfo {
+    public:
+        template <class T>
+        inline T* GetForm(RE::TESDataHandler* handler) {
+            return handler->LookupForm<T>(formId, espName);
+        }
+
+    private:
+
         std::string editorId;
         RE::FormID formId;
         std::string espName;
@@ -24,20 +32,28 @@ namespace DeviousDevices {
         friend class articuno::access;
     };
 
-    class Device : DeviceInfo {
-    public:
+    class KeywordListWrapper : FormInfo {
+    public: 
         inline void Init(RE::TESDataHandler* handler) { 
-            inventory = handler->LookupForm<RE::TESObjectARMO>(formId, espName);
-            rendered = handler->LookupForm<RE::TESObjectARMO>(renderedInfo.formId, renderedInfo.espName);
-
-            if (!inventory)
-                SKSE::log::info("{} inventory device not found", editorId);
-            else
-                formId = inventory->GetFormID();
-            if (!rendered) SKSE::log::info("{} rendered device not found", editorId);
-
+            kwds.clear();
+            for (auto& info : infos) {
+                kwds.push_back(info.GetForm<RE::BGSKeyword>(handler));
+            }
         }
+        inline std::vector<RE::BGSKeyword*> GetKwds() { return kwds; }
+
+        std::vector<FormInfo> infos;
+    private:
+        std::vector<RE::BGSKeyword*> kwds;
+    };
+
+    class Device : FormInfo {
+    public:
+        void Init(RE::TESDataHandler* handler);
+        bool CanEquip(RE::Actor* actor);
+
         inline RE::TESObjectARMO* GetRenderedDevice() { return rendered; }
+        inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
         inline std::string GetName() { return editorId; }
         inline RE::FormID GetFormID() { return inventory->GetFormID(); }
     private:
@@ -46,12 +62,29 @@ namespace DeviousDevices {
             ar <=> articuno::kv(espName, "espName");
             ar <=> articuno::kv(editorId, "editorId");
 
-            ar <=> articuno::kv(renderedInfo, "rendered");
+            ar <=> articuno::kv(equipConflictingDeviceKwds.infos, "equipConflictingDeviceKwds");
+            ar <=> articuno::kv(requiredDeviceKwds.infos, "requiredDeviceKwds");
+            ar <=> articuno::kv(unequipConflictingDeviceKwds.infos, "unequipConflictingDeviceKwds");
 
+            ar <=> articuno::kv(kwdInfo, "kwd");
+
+            ar <=> articuno::kv(renderedInfo, "rendered");
+            ar <=> articuno::kv(equipMenuInfo, "equipMenu");
         }
-        DeviceInfo renderedInfo;
+        FormInfo renderedInfo;
+
+        FormInfo kwdInfo;
+        RE::BGSKeyword* kwd;
+
         RE::TESObjectARMO* rendered;
         RE::TESObjectARMO* inventory;
+
+        KeywordListWrapper equipConflictingDeviceKwds;
+        KeywordListWrapper requiredDeviceKwds;
+        KeywordListWrapper unequipConflictingDeviceKwds;
+
+        FormInfo equipMenuInfo;
+        RE::BGSMessage* equipMenu;
 
         friend class articuno::access;
     };
