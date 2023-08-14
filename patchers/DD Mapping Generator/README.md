@@ -1,1 +1,0 @@
-A simple z-edit patcher for Devious Devices that generates a JSON file mapping inventory to rendered devices.

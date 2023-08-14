@@ -1,7 +1,15 @@
 #include "Papyrus.h"
 #include "Hooks.h"
 #include "DeviceManager.h"
+#include "Hider.h"
+#include "NodeHider.h"
+#include "UpdateHook.h"
+#include "DeviceReader.h"
 #include <stddef.h>
+
+#if (DD_USEINVENTORYFILTER_S == 1U)
+    #include "InventoryFilter.h"
+#endif
 
 using namespace RE::BSScript;
 using namespace SKSE;
@@ -55,20 +63,21 @@ namespace {
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
                         DeviousDevices::DeviceManager::GetSingleton().Setup();
-                        // It is now safe to access form data.
                         break;
-
-                    // Skyrim game events.
-                    case MessagingInterface::kNewGame:      // Player starts a new game from main menu.
-                    case MessagingInterface::kPreLoadGame:  // Player selected a game to load, but it hasn't loaded yet.
-                                                            // Data will be the name of the loaded save.
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
-
+                        DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
+                        DeviousDevices::NodeHider::GetSingleton()->Setup();
+                        #if (DD_USEINVENTORYFILTER_S == 1U)
+                            DeviousDevices::InventoryFilter::GetSingleton()->Setup();
+                        #endif
+                        DeviousDevices::UpdateHook::GetSingleton()->Setup();
+                        break;
                     case MessagingInterface::kSaveGame:  // The player has saved a game.
                                                          // Data will be the save name.
-                    case MessagingInterface::kDeleteGame:  // The player deleted a saved game from within the load menu.
+                        // It is now safe to access form data.
+                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         break;
                 }
             })) {

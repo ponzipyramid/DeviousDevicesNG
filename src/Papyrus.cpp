@@ -1,5 +1,8 @@
 #include "Papyrus.h"
 #include "Expression.h"
+#include "Hider.h"
+#include "NodeHider.h"
+#include "DeviceReader.h"
 #include <functional>
 #include <algorithm>
 
@@ -65,21 +68,42 @@ namespace DeviousDevices {
 }
 
 bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
-    #define REGISTERPAPYRUSFUNC(name) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name);}
+    //unhookfps means that the function will be unhooked from fps which will make it insanily faster. 
+    //Note that not all functions can be unhooked from framerate (like some actor setters, as they are dependant on frame update)
+    #if (DD_ALLOWFASTPAPYRUSCALL_S == 1U)
+        #define REGISTERPAPYRUSFUNC(name,unhookfps) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name,unhookfps);}
+    #else
+        #define REGISTERPAPYRUSFUNC(name,unhookfps) {vm->RegisterFunction(#name, PapyrusClass, DeviousDevices::name,false);}
+    #endif
 
     //Papyrus.h
-    REGISTERPAPYRUSFUNC(GetName);
-    REGISTERPAPYRUSFUNC(FormHasKeywordString);
-    REGISTERPAPYRUSFUNC(FindMatchingDevice);
+    REGISTERPAPYRUSFUNC(GetName,true);
+    REGISTERPAPYRUSFUNC(FormHasKeywordString,true);
+    REGISTERPAPYRUSFUNC(FindMatchingDevice,true);
 
-    //expression.h
-    REGISTERPAPYRUSFUNC(ApplyExpression);
-    REGISTERPAPYRUSFUNC(GetExpression);
-    REGISTERPAPYRUSFUNC(ResetExpression);
-    REGISTERPAPYRUSFUNC(FactionsToPreset);
-    REGISTERPAPYRUSFUNC(ApplyPhonemsFaction);
+    //Expression.h
+    REGISTERPAPYRUSFUNC(ApplyExpression,true);
+    REGISTERPAPYRUSFUNC(GetExpression,true);
+    REGISTERPAPYRUSFUNC(ResetExpression,true);
+    REGISTERPAPYRUSFUNC(FactionsToPreset,true);
+    REGISTERPAPYRUSFUNC(ApplyPhonemsFaction,true);
 
+    //hider
+    REGISTERPAPYRUSFUNC(RebuildSlotMask,true);
+    REGISTERPAPYRUSFUNC(FilterMask,true);
+
+    //node hider
+    REGISTERPAPYRUSFUNC(HideWeapons,true);
+    REGISTERPAPYRUSFUNC(ShowWeapons,true);
+
+    //device reader
+    REGISTERPAPYRUSFUNC(GetRenderDevice,true);
+    REGISTERPAPYRUSFUNC(GetPropertyForm,true);
+    REGISTERPAPYRUSFUNC(GetPropertyInt,true);
+    REGISTERPAPYRUSFUNC(GetPropertyFloat,true);
+    REGISTERPAPYRUSFUNC(GetPropertyBool,true);
+    REGISTERPAPYRUSFUNC(GetPropertyString,true);
 
     #undef REGISTERPAPYRUSFUNC
-	return true;
+    return true;
 }
