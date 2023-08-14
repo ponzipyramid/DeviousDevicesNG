@@ -22,7 +22,7 @@ namespace DeviousDevices
         std::string propertyName;
         uint8_t propertyType;
         uint8_t status;
-        std::unique_ptr<uint8_t> data;
+        std::shared_ptr<uint8_t> data;
     };
 
     struct Script
@@ -70,7 +70,13 @@ namespace DeviousDevices
 
         //only usable form form properties
         //will rework this in future so it will be possible to read all types of properties from file
-        uint32_t GetProperty(std::string a_name);
+        std::pair<std::shared_ptr<uint8_t>,uint8_t> GetPropertyRaw(std::string a_name);  //get raw property <data,type>
+
+        uint32_t GetPropertyOBJ(std::string a_name,bool a_silence);  //get object (internal form id)
+        int32_t  GetPropertyINT(std::string a_name);  //get int
+        float    GetPropertyFLT(std::string a_name);  //get float
+        bool     GetPropertyBOL(std::string a_name);  //get bool
+        std::string GetPropertySTR(std::string a_name);  //get string
     };
 
     struct DeviceGroup
@@ -103,7 +109,7 @@ namespace DeviousDevices
         DeviceGroup group_ARMO;
         size_t      size;
         uint8_t*    rawdata = nullptr;
-        std::vector<std::unique_ptr<DeviceHandle>> devicerecords;
+        std::vector<std::shared_ptr<DeviceHandle>> devicerecords;
         std::vector<std::string>   masters;
     };
 
@@ -111,17 +117,41 @@ namespace DeviousDevices
     {
     SINGLETONHEADER(DeviceReader)
     public:
+        struct DeviceUnit
+        {
+            RE::TESObjectARMO*              deviceInventory;
+            RE::TESObjectARMO*              deviceRendered;
+            std::shared_ptr<DeviceHandle>   deviceHandle;
+            std::shared_ptr<DeviceMod>      deviceMod;
+        
+        };
+
         void Setup();
 
         RE::TESObjectARMO* GetDeviceRender(RE::TESObjectARMO* a_invdevice); 
+        DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_invdevice);
     private:
         void LoadDDMods();
 
         void ParseMods();
 
         std::vector<RE::TESFile*>                       _ddmods;
-        std::vector<std::unique_ptr<DeviceMod>>         _ddmodspars;
-        std::map<RE::TESObjectARMO*,RE::TESObjectARMO*> _database;
+        std::vector<std::shared_ptr<DeviceMod>>         _ddmodspars;
+        std::map<RE::TESObjectARMO*,DeviceUnit>         _database;
+
         void LoadDB();
     };
+
+    //=== Papyrus native functions
+    RE::TESObjectARMO* GetRenderDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);
+
+    //read interface
+    RE::TESForm*    GetPropertyForm(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname);
+    int             GetPropertyInt(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname);
+    float           GetPropertyFloat(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname);
+    bool            GetPropertyBool(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname);
+    std::string     GetPropertyString(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname);
+    //TODO: Arrays (pain)
+
+
 }

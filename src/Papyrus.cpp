@@ -2,6 +2,7 @@
 #include "Expression.h"
 #include "Hider.h"
 #include "NodeHider.h"
+#include "DeviceReader.h"
 #include <functional>
 #include <algorithm>
 
@@ -95,6 +96,14 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     //node hider
     REGISTERPAPYRUSFUNC(HideWeapons,true);
     REGISTERPAPYRUSFUNC(ShowWeapons,true);
+
+    //device reader
+    REGISTERPAPYRUSFUNC(GetRenderDevice,true);
+    REGISTERPAPYRUSFUNC(GetPropertyForm,true);
+    REGISTERPAPYRUSFUNC(GetPropertyInt,true);
+    REGISTERPAPYRUSFUNC(GetPropertyFloat,true);
+    REGISTERPAPYRUSFUNC(GetPropertyBool,true);
+    REGISTERPAPYRUSFUNC(GetPropertyString,true);
 
     #undef REGISTERPAPYRUSFUNC
     return true;
