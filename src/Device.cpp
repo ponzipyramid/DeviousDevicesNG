@@ -34,7 +34,7 @@ bool Device::CanEquip(RE::Actor* actor) {
 
     RE::TESObjectREFR::InventoryItemMap itemMap = actor->GetInventory();
     
-    // add generic keyword conflict map
+    // add generic script name checks
 
 
     for (auto& [item, value] : itemMap) {

@@ -38,8 +38,14 @@ namespace DeviousDevices {
             RE::BSString desc;
             msg->GetDescription(desc, msg->ownerQuest);
 
+            auto playerRef = RE::PlayerCharacter::GetSingleton();
+
             std::vector<std::string> buttonTextValues;
-            for (const auto& btn : msg->menuButtons) buttonTextValues.push_back(std::string(btn->text.c_str()));
+            for (const auto& btn : msg->menuButtons) {
+                if (btn->conditions.IsTrue(playerRef, playerRef)) {
+                    buttonTextValues.push_back(std::string(btn->text.c_str()));
+                }
+            }
 
             Show(std::string(desc.c_str()), buttonTextValues, callback);
         }

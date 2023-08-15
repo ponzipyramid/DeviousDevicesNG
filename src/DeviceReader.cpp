@@ -102,30 +102,35 @@ DeviousDevices::DeviceReader::DeviceUnit DeviousDevices::DeviceReader::GetDevice
     return DeviceUnit();
 }
 
-RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
-{
-    auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
+template <typename T>
+T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                                 int a_mode) {
+    auto loc_unit = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
-    
-    if (loc_handle != nullptr)
-    {
-        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname,false);
-        
-        //we need to convert it to correct ID and get the form
-        if (loc_formID > 0)
-        {
-            RE::TESForm* loc_form = loc_unit.deviceMod->GetForm(loc_formID);
-            if (loc_form != nullptr) 
-            {   
-                //LOG("GetPropertyForm({} 0x{:08X} , {}) called - Result = {:X} ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_form->GetFormID())
-                return loc_form;
-            } 
-            else LOG("!!!Form 0x{:08X} not found!!!",loc_formID)
-        }
 
+    if (loc_handle != nullptr) {
+        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname, false);
+
+        // we need to convert it to correct ID and get the form
+        if (loc_formID > 0) {
+            auto loc_form = loc_unit.deviceMod->GetForm<T>(loc_formID);
+            if (loc_form != nullptr) {
+                // LOG("GetPropertyForm({} 0x{:08X} , {}) called - Result = {:X}
+                // ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_form->GetFormID())
+                return loc_form;
+            } else
+                LOG("!!!Form 0x{:08X} not found!!!", loc_formID)
+        }
     }
     return nullptr;
 }
+
+
+RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode = 0)
+{
+    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname, a_mode);
+}
+
 
 int DeviousDevices::DeviceReader::GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
 {
@@ -183,7 +188,8 @@ std::string DeviousDevices::DeviceReader::GetPropertyString(RE::TESObjectARMO* a
     return "";
 }
 
-std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+template <typename T>
+std::vector<T*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode = 0)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
@@ -191,7 +197,7 @@ std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE:
     if (loc_handle != nullptr)
     {
         std::vector<uint32_t> loc_formIDs = loc_handle->GetPropertyOBJA(a_propertyname);
-        std::vector<RE::TESForm*> loc_res;
+        std::vector<T*> loc_res;
         //we need to convert it to correct ID and get the form
         if (loc_formIDs.size() > 0)
         {
@@ -200,7 +206,7 @@ std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE:
             {
                 if (it > 0)
                 {
-                    RE::TESForm* loc_form = loc_unit.deviceMod->GetForm(it);
+                    T* loc_form = loc_unit.deviceMod->GetForm<T>(it);
                     loc_res.push_back(loc_form);
                 }
                 else loc_res.push_back(nullptr);
@@ -211,7 +217,12 @@ std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE:
             return loc_res;
         }
     }
-    return std::vector<RE::TESForm*>();
+    return std::vector<T*>();
+}
+
+std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice,
+                                                                   std::string a_propertyname, int a_mode = 0) {
+    return GetPropertyFormArray<RE::TESForm>(a_invdevice, a_propertyname, a_mode);
 }
 
 std::vector<int> DeviousDevices::DeviceReader::GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
@@ -303,17 +314,30 @@ void DeviousDevices::DeviceReader::LoadDB()
                     _database[loc_ID].deviceRendered  = loc_RD;
                     _database[loc_ID].deviceHandle    = it2;
                     _database[loc_ID].deviceMod       = it1;
-                    _database[loc_ID].kwd = it1->GetForm<RE::BGSKeyword>(it2->GetPropertyOBJ("zad_DeviousDevice", true));
-                    _database[loc_ID].equipMenu =
-                        it1->GetForm<RE::BGSMessage>(it2->GetPropertyOBJ("zad_DeviceMsg", true));
-                    
+
+                    // keywords
+                    _database[loc_ID].kwd = GetPropertyForm<RE::BGSKeyword>(loc_ID, "zad_DeviousDevice", 0);
+                    _database[loc_ID].equipConflictingDeviceKwds =
+                        GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "EquipConflictingDevices", 0);
+                    _database[loc_ID].unequipConflictingDeviceKwds =
+                        GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "UnEquipConflictingDevices", 0);
+                    _database[loc_ID].requiredDeviceKwds =
+                        GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "EquipRequiredDevices", 0);
+
+                    // menus
+                    _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
+                    _database[loc_ID].zad_EquipRequiredFailMsg =
+                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg", 0);
+                    _database[loc_ID].zad_EquipConflictFailMsg =
+                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg", 0);
+
                     devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
 
                     std::vector<RE::BGSKeyword*> loc_keywords(_database[loc_ID].deviceHandle->keywords.ksiz.keywordcount);
                     for (int i = 0; i < loc_keywords.size(); i++)
                     {
                         const uint32_t loc_formId = _database[loc_ID].deviceHandle->keywords.kwda.data.get()[i];
-                        RE::BGSKeyword* loc_kw = reinterpret_cast<RE::BGSKeyword*>(it1->GetForm(loc_formId));
+                        RE::BGSKeyword* loc_kw = it1->GetForm<RE::BGSKeyword>(loc_formId);
                         loc_keywords[i] = loc_kw;
                     }
 

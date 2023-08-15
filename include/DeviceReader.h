@@ -154,18 +154,16 @@ namespace DeviousDevices
             inline std::string GetName() { return deviceInventory->GetFormEditorID(); }
             inline RE::FormID GetFormID() { return deviceInventory->GetFormID(); }
 
-
-            // start new
-            
             RE::BGSKeyword* kwd;
+
             RE::BGSMessage* equipMenu;
+            RE::BGSMessage* zad_EquipRequiredFailMsg;
+            RE::BGSMessage* zad_EquipConflictFailMsg;
 
             std::vector<RE::BGSKeyword*> equipConflictingDeviceKwds;
             std::vector<RE::BGSKeyword*> requiredDeviceKwds;
             std::vector<RE::BGSKeyword*> unequipConflictingDeviceKwds;
-
-            // end new
-
+          
             RE::TESObjectARMO*              deviceInventory;
             RE::TESObjectARMO*              deviceRendered;
 
@@ -202,17 +200,27 @@ namespace DeviousDevices
 
         DeviceUnit GetDeviceUnit(std::string a_name);
 
+        template <typename T>
+        T* GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                             int a_mode);  // NOT TESTED
+        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
 
-        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      
+
         int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
         float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
         bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      //NOT TESTED
         std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                    
-        std::vector<RE::TESForm*>   GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
         std::vector<int>            GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);      //NOT TESTED
         std::vector<float>          GetPropertyFloatArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);    //NOT TESTED
         std::vector<bool>           GetPropertyBoolArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
         std::vector<std::string>    GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
+
+        template <typename T>
+        std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                                       int a_mode);  // NOT TESTED
+        std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                                       int a_mode);  // NOT TESTED
+
 
     private:
         void LoadDDMods();
