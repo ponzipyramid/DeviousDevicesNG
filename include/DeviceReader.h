@@ -72,7 +72,7 @@ namespace DeviousDevices
         //will rework this in future so it will be possible to read all types of properties from file
         std::pair<std::shared_ptr<uint8_t>,uint8_t> GetPropertyRaw(std::string a_name);  //get raw property <data,type>
 
-        uint32_t GetPropertyOBJ(std::string a_name,bool a_silence);  //get object (internal form id)
+        RE::FormID GetPropertyOBJ(std::string a_name, bool a_silence);  // get object (internal form id)
         int32_t  GetPropertyINT(std::string a_name);  //get int
         float    GetPropertyFLT(std::string a_name);  //get float
         bool     GetPropertyBOL(std::string a_name);  //get bool
@@ -104,6 +104,9 @@ namespace DeviousDevices
         RE::TESForm* GetForm(const DeviceHandle* a_handle);
         RE::TESForm* GetForm(const uint32_t a_formID); //have to be internal esp formID !!!
 
+        template <typename T>
+        T* GetForm(const uint32_t a_formID);  // have to be internal esp formID !!!
+
         std::string name;
         DeviceGroup group_TES4;
         DeviceGroup group_ARMO;
@@ -119,6 +122,24 @@ namespace DeviousDevices
     public:
         struct DeviceUnit
         {
+            bool CanEquip(RE::Actor* actor);
+            inline RE::TESObjectARMO* GetRenderedDevice() { return deviceRendered; }
+            inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
+            inline std::string GetName() { return deviceInventory->GetFormEditorID(); }
+            inline RE::FormID GetFormID() { return deviceInventory->GetFormID(); }
+
+
+            // start new
+            
+            RE::BGSKeyword* kwd;
+            RE::BGSMessage* equipMenu;
+
+            std::vector<RE::BGSKeyword*> equipConflictingDeviceKwds;
+            std::vector<RE::BGSKeyword*> requiredDeviceKwds;
+            std::vector<RE::BGSKeyword*> unequipConflictingDeviceKwds;
+
+            // end new
+
             RE::TESObjectARMO*              deviceInventory;
             RE::TESObjectARMO*              deviceRendered;
             std::shared_ptr<DeviceHandle>   deviceHandle;
@@ -130,17 +151,30 @@ namespace DeviousDevices
 
         RE::TESObjectARMO* GetDeviceRender(RE::TESObjectARMO* a_invdevice); 
         DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_invdevice);
+
+        inline bool IsInventoryDevice(RE::TESForm* obj) {
+            return obj->HasKeywordInArray(invDeviceKwds, true);
+        }
+
+        bool CanEquipDevice(RE::Actor* actor, RE::TESForm* obj);
+
+        bool EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device);
+
+        void ShowEquipMenu(RE::TESForm* device, std::function<void(bool)> callback);
+
+
     private:
         void LoadDDMods();
-
         void ParseMods();
-
+        void LoadDB();
+        
         std::vector<RE::TESFile*>                       _ddmods;
         std::vector<std::shared_ptr<DeviceMod>>         _ddmodspars;
-        std::map<RE::TESObjectARMO*,DeviceUnit>         _database;
-
-        void LoadDB();
+        std::map<RE::TESObjectARMO*, DeviceUnit>         _database;
+        std::unordered_map<RE::FormID, DeviceUnit*> devices;
+        std::vector<RE::BGSKeyword*> invDeviceKwds;
     };
+
 
     //=== Papyrus native functions
     RE::TESObjectARMO* GetRenderDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);

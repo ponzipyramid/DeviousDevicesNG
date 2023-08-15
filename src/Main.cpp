@@ -1,6 +1,5 @@
 #include "Papyrus.h"
 #include "Hooks.h"
-#include "DeviceManager.h"
 #include "Hider.h"
 #include "NodeHider.h"
 #include "UpdateHook.h"
@@ -52,9 +51,6 @@ namespace {
         if (!g_messaging->RegisterListener([](MessagingInterface::Message* message) {
                 switch (message->type) {
                     // Skyrim lifecycle events.
-                    case MessagingInterface::kPostLoad:  // Called after all plugins have finished running
-                        DeviousDevices::DeviceManager::GetSingleton().LoadConfig();
-                        break;
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
                         DeviousDevices::Hooks::Install();
                         break;
@@ -62,7 +58,7 @@ namespace {
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        DeviousDevices::DeviceManager::GetSingleton().Setup();
+                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
@@ -73,11 +69,6 @@ namespace {
                             DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         #endif
                         DeviousDevices::UpdateHook::GetSingleton()->Setup();
-                        break;
-                    case MessagingInterface::kSaveGame:  // The player has saved a game.
-                                                         // Data will be the save name.
-                        // It is now safe to access form data.
-                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         break;
                 }
             })) {

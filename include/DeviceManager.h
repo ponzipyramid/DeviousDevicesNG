@@ -7,8 +7,6 @@ namespace DeviousDevices {
     public:
         [[nodiscard]] static DeviceManager& GetSingleton() noexcept;
         
-        void LoadConfig();
-
         void Setup();
         
         inline bool IsInventoryDevice(RE::TESForm* obj) { return obj->HasKeywordInArray(invDeviceKwds, true); } // might be faster to check if in devices

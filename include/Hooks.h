@@ -1,12 +1,12 @@
 #pragma once
 
-#include "DeviceManager.h"
+#include "DeviceReader.h"
 #include <detours/detours.h>
 #include "Script.hpp"
 
 namespace DeviousDevices {
     namespace Hooks {
-        DeviceManager* dManager;
+        DeviceReader* dManager;
 
         typedef void(WINAPI* OriginalEquipObject)(RE::ActorEquipManager* a_1, RE::Actor* a_actor,
                                                   RE::TESBoundObject* a_object, RE::ExtraDataList* a_extraData,
@@ -70,7 +70,7 @@ namespace DeviousDevices {
         }
 
         inline void Install() {
-            dManager = &DeviceManager::GetSingleton();
+            dManager = DeviceReader::GetSingleton();
 
             const auto equipTargetAddress = RE::Offset::ActorEquipManager::EquipObject.address();
             const auto equipFuncAddress = &EquipObject;
