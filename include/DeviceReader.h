@@ -168,6 +168,19 @@ namespace DeviousDevices
         RE::TESObjectARMO* GetDeviceRender(RE::TESObjectARMO* a_invdevice); 
         DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_invdevice);
         DeviceUnit GetDeviceUnit(std::string a_name);
+
+
+        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      
+        int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
+        float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
+        bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      //NOT TESTED
+        std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                    
+        std::vector<RE::TESForm*>   GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
+        std::vector<int>            GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);      //NOT TESTED
+        std::vector<float>          GetPropertyFloatArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);    //NOT TESTED
+        std::vector<bool>           GetPropertyBoolArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
+        std::vector<std::string>    GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
+
     private:
         void LoadDDMods();
 
