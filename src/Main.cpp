@@ -62,6 +62,7 @@ namespace {
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
+                        DeviousDevices::Settings::GetSingleton().Setup();
 
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
@@ -69,7 +70,6 @@ namespace {
                                                              // successful.
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        DeviousDevices::Settings::GetSingleton().Setup();
 
                         #if (DD_USEINVENTORYFILTER_S == 1U)
                             DeviousDevices::InventoryFilter::GetSingleton()->Setup();

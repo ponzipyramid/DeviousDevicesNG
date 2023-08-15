@@ -327,6 +327,9 @@ void DeviousDevices::DeviceReader::LoadDB()
 
                     // menus
                     _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
+                    _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
+
+
                     _database[loc_ID].zad_EquipRequiredFailMsg =
                         GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg", 0);
                     _database[loc_ID].zad_EquipConflictFailMsg =
