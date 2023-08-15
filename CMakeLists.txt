@@ -34,6 +34,7 @@ set(headers
         include/UpdateHook.h
         include/Switches.h
         include/DeviceReader.h
+        include/Settings.h
 )
 
 set(sources

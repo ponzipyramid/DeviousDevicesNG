@@ -198,6 +198,8 @@ namespace DeviousDevices
 
         void ShowEquipMenu(RE::TESForm* device, std::function<void(bool)> callback);
 
+        void ShowEquipConfirmation(RE::TESForm* device);
+
         DeviceUnit GetDeviceUnit(std::string a_name);
 
         template <typename T>

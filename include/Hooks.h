@@ -52,7 +52,6 @@ namespace DeviousDevices {
                 } else if (dManager->EquipRenderedDevice(actor, item)) {
                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
                                     a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
-                    
                 }
             } else {
                 _EquipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,

@@ -1,5 +1,6 @@
 #include <DeviceReader.h>
 #include "UI.h"
+#include "Settings.h"
 
 using namespace DeviousDevices;
 
@@ -406,15 +407,37 @@ bool DeviceReader::CanEquipDevice(RE::Actor* actor, RE::TESForm* item) {
     }
 }
 
+bool IsManipulationEnabled() {
+    return Settings::GetSingleton().GetSetting<bool>("UseItemManipulation");
+}
+
 void DeviceReader::ShowEquipMenu(RE::TESForm* item, std::function<void(bool)> callback) {
     if (!devices.count(item->GetFormID())) return;
 
     RE::BGSMessage* equipMenu = devices[item->GetFormID()]->GetEquipMenu();
 
+    bool canManipulate = true;
+
     if (equipMenu != nullptr)
-        MessageBox::Show(equipMenu, [callback](uint32_t result) { callback(result == 0); });
+        MessageBox::Show(equipMenu, [callback](uint32_t result) { 
+            if (result == 0) {
+                callback(result == 0);
+
+                // potentially show manipulate menu
+                if (IsManipulationEnabled()) {
+                    
+                
+                } else {
+                    
+                }
+            }    
+        });
     else
         SKSE::log::info("Could not fetch message box for {}", item->GetFormID());
+}
+
+void DeviceReader::ShowEquipConfirmation(RE::TESForm* device) {
+
 }
 
 bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device) {

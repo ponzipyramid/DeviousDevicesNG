@@ -4,6 +4,7 @@
 #include "NodeHider.h"
 #include "UpdateHook.h"
 #include "DeviceReader.h"
+#include "Settings.h"
 #include <stddef.h>
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
@@ -54,18 +55,22 @@ namespace {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
                         DeviousDevices::Hooks::Install();
+
                         break;
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
+
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
+                        DeviousDevices::Settings::GetSingleton().Setup();
+
                         #if (DD_USEINVENTORYFILTER_S == 1U)
                             DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         #endif
