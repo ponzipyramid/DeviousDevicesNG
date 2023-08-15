@@ -16,6 +16,7 @@ using namespace SKSE::log;
 using namespace SKSE::stl;
  
 namespace {
+#if (DD_LOGENABLED == 1U)
     void InitializeLogging() {
         auto path = log_directory();
         if (!path) {
@@ -36,7 +37,7 @@ namespace {
         spdlog::set_default_logger(std::move(log));
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
     }
-
+#endif
     void InitializePapyrus() {
         log::trace("Initializing Papyrus binding...");
         if (GetPapyrusInterface()->Register(DeviousDevices::RegisterFunctions)) {
@@ -78,8 +79,9 @@ namespace {
 }
 
 SKSEPluginLoad(const LoadInterface* skse) {
+#if (DD_LOGENABLED == 1U)
     InitializeLogging();
-
+#endif
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
     log::info("{} {} is loading...", plugin->GetName(), version);

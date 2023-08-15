@@ -46,7 +46,7 @@ void DeviousDevices::NodeHider::HideWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    SKSE::log::info("HideWeapons called for {}",a_actor->GetName());
+    LOG("HideWeapons called for {}",a_actor->GetName());
 
     for (auto&& it : WeaponNodes)
     {
@@ -58,7 +58,13 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    SKSE::log::info("ShowWeapons called for {}",a_actor->GetName());
+    LOG("ShowWeapons called for {}",a_actor->GetName());
+
+    if (_slots.find(a_actor) == _slots.end())
+    {
+        LOG("Actor {} have no hiden nodes",a_actor->GetName());
+        return;
+    }
 
     for (auto&& it : WeaponNodes)
     {
@@ -150,6 +156,12 @@ bool DeviousDevices::NodeHider::RemoveHideNode(RE::Actor* a_actor, std::string a
 {
     if (a_actor == nullptr) return false;
 
+    if (_slots.find(a_actor) == _slots.end())
+    {
+        LOG("Actor {} have no hiden nodes",a_actor->GetName());
+        return false;
+    }
+
     RE::NiNode* loc_thirdpersonNode = a_actor->Get3D(false)->AsNode();
     
     if (loc_thirdpersonNode == nullptr) return false;
@@ -161,7 +173,6 @@ bool DeviousDevices::NodeHider::RemoveHideNode(RE::Actor* a_actor, std::string a
         {
             _slots[a_actor].nodes.erase(std::find(_slots[a_actor].nodes.begin(),_slots[a_actor].nodes.end(), loc_node->AsNode()));
             loc_node->AsNode()->local.scale = 1.00f;
-            SKSE::log::info("RemoveHideNode({},{})",a_actor->GetName(),a_nodename);
             return true;
         }
     }

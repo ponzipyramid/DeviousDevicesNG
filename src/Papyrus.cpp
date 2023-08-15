@@ -103,7 +103,13 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(GetPropertyFloat,true);
     REGISTERPAPYRUSFUNC(GetPropertyBool,true);
     REGISTERPAPYRUSFUNC(GetPropertyString,true);
-
+    REGISTERPAPYRUSFUNC(GetPropertyFormArray,true);
+    REGISTERPAPYRUSFUNC(GetPropertyIntArray,true);
+    REGISTERPAPYRUSFUNC(GetPropertyFloatArray,true);
+    REGISTERPAPYRUSFUNC(GetPropertyBoolArray,true);
+    REGISTERPAPYRUSFUNC(GetPropertyStringArray,true);
+    REGISTERPAPYRUSFUNC(GetEditingMods,true);
+    REGISTERPAPYRUSFUNC(GetDeviceByName,true);
     #undef REGISTERPAPYRUSFUNC
     return true;
 }
