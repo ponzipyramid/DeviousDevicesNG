@@ -151,12 +151,14 @@ namespace DeviousDevices
             bool CanEquip(RE::Actor* actor);
             inline RE::TESObjectARMO* GetRenderedDevice() { return deviceRendered; }
             inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
+            inline RE::BGSMessage* GetManipulationMenu() { return zad_DD_OnPutOnDevice; }
             inline std::string GetName() { return deviceInventory->GetFormEditorID(); }
             inline RE::FormID GetFormID() { return deviceInventory->GetFormID(); }
 
             RE::BGSKeyword* kwd;
 
             RE::BGSMessage* equipMenu;
+            RE::BGSMessage* zad_DD_OnPutOnDevice;
             RE::BGSMessage* zad_EquipRequiredFailMsg;
             RE::BGSMessage* zad_EquipConflictFailMsg;
 
@@ -164,6 +166,9 @@ namespace DeviousDevices
             std::vector<RE::BGSKeyword*> requiredDeviceKwds;
             std::vector<RE::BGSKeyword*> unequipConflictingDeviceKwds;
           
+            bool lockable;
+            bool canManipulate;
+
             RE::TESObjectARMO*              deviceInventory;
             RE::TESObjectARMO*              deviceRendered;
 
@@ -192,13 +197,17 @@ namespace DeviousDevices
             return obj->HasKeywordInArray(invDeviceKwds, true);
         }
 
-        bool CanEquipDevice(RE::Actor* actor, RE::TESForm* obj);
+        inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return devices.count(obj->GetFormID()) ? devices[obj->GetFormID()] : nullptr; }
 
-        bool EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device);
+        bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
 
-        void ShowEquipMenu(RE::TESForm* device, std::function<void(bool)> callback);
+        bool EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device);
 
-        void ShowEquipConfirmation(RE::TESForm* device);
+        void ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> callback);
+
+        void ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device);
+
+        void ShowEquipConfirmation(DeviceUnit* device);
 
         DeviceUnit GetDeviceUnit(std::string a_name);
 
@@ -223,11 +232,24 @@ namespace DeviousDevices
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
                                                        int a_mode);  // NOT TESTED
 
+        inline void SetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) { 
+            auto pair = std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID());
+            if (manip)
+                manipulated.insert(pair);
+            else
+                manipulated.erase(pair);
+        
+        }
+
+        inline bool GetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv) {
+            return manipulated.contains(std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID())); 
+        }
 
     private:
         void LoadDDMods();
         void ParseMods();
         void LoadDB();
+
         
         std::vector<RE::TESFile*>                       _ddmods;
         std::vector<std::shared_ptr<DeviceMod>>         _ddmodspars;
@@ -235,6 +257,8 @@ namespace DeviousDevices
 
         std::unordered_map<RE::FormID, DeviceUnit*> devices;
         std::vector<RE::BGSKeyword*> invDeviceKwds;
+
+        std::set<std::pair<RE::FormID, RE::FormID>> manipulated; // serde
     };
 
 
@@ -254,6 +278,14 @@ namespace DeviousDevices
     std::vector<bool>           GetPropertyBoolArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
     std::vector<std::string>    GetPropertyStringArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
 
+
+    // device manipulation
+    inline void SetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) {
+        DeviceReader::GetSingleton()->SetManipulated(actor, inv, manip);
+    }
+    inline bool GetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv) {
+        return DeviceReader::GetSingleton()->GetManipulated(actor, inv);
+    }
 
     //returns all mods which edited the device
     std::vector<std::string>    GetEditingMods(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);

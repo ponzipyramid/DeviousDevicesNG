@@ -26,7 +26,6 @@ set(headers
         include/Hooks.h
         include/Script.hpp
         include/UI.h
-        include/Device.h
         include/Hider.h
         include/NodeHider.h
         include/InventoryFilter.h
@@ -40,7 +39,6 @@ set(sources
         src/Main.cpp
         src/Papyrus.cpp
         src/Expression.cpp
-        src/Device.cpp
         src/Hider.cpp
         src/NodeHider.cpp
         src/InventoryFilter.cpp

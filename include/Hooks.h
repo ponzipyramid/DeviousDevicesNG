@@ -30,26 +30,26 @@ namespace DeviousDevices {
                                 RE::ExtraDataList* a_extraData, std::uint32_t a_count, RE::BGSEquipSlot* a_slot,
                                 bool a_queueEquip, bool a_forceEquip, bool a_playSounds, bool a_applyNow) {
 
-            if (dManager->IsInventoryDevice(item)) {
-                if (!dManager->CanEquipDevice(actor, item)) {
+            if (auto device = dManager->GetInventoryDevice(item)) {
+                if (!dManager->CanEquipDevice(actor, device)) {
                     return;
                 }
 
                 if (actor->GetFormID() == 20) {
                     auto invMenu = GetInventoryMenu();
                     if (invMenu.get())
-                        dManager->ShowEquipMenu(item, [=](bool equip) {
+                        dManager->ShowEquipMenu(device, [=](bool equip) {
                             if (equip) {
-                                // show manipulate menu
-                                if (dManager->EquipRenderedDevice(actor, item)) {
+                                if (dManager->EquipRenderedDevice(actor, device)) {
                                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
                                                  a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
+                                    dManager->ShowManipulateMenu(actor, device);
                                 }
 
                                 invMenu.get()->GetRuntimeData().itemList->Update();
                             }
                         });
-                } else if (dManager->EquipRenderedDevice(actor, item)) {
+                } else if (dManager->EquipRenderedDevice(actor, device)) {
                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
                                     a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
                 }

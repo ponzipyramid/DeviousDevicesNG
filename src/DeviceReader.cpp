@@ -286,8 +286,17 @@ std::vector<std::string> DeviousDevices::DeviceReader::GetPropertyStringArray(RE
     return std::vector<std::string>();
 }
 
-void DeviousDevices::DeviceReader::LoadDB()
+void DeviceReader::LoadDB()
 {
+    std::string integrationName = "Devious Devices - Integration.esm";
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    RE::BGSKeyword* lockableKwd = dataHandler->LookupForm<RE::BGSKeyword>(0x003894, "Devious Devices - Assets.esm");
+    std::vector<RE::BGSKeyword*> preventManipKwds = {
+        dataHandler->LookupForm<RE::BGSKeyword>(0x05AEA8, integrationName), // quest item
+        dataHandler->LookupForm<RE::BGSKeyword>(0x0429FB, integrationName)   // block generic
+    };
+
+
     LOG("=== Building database")
     for (auto && it1 : _ddmodspars)
     {
@@ -298,7 +307,7 @@ void DeviousDevices::DeviceReader::LoadDB()
             RE::FormID loc_formid2 = it2->GetPropertyOBJ("deviceRendered", true);
 
             //LOG("FormID {} , {} found",loc_formid1,loc_formid2)
-            if (loc_formid1 > 0 && loc_formid2 > 0)
+            if (loc_formid1 > 0 && loc_formid2 > 0) 
             {
                 auto loc_ID = it1->GetForm<RE::TESObjectARMO>(loc_formid1);
                 auto loc_RD = it1->GetForm<RE::TESObjectARMO>(loc_formid2);
@@ -327,13 +336,13 @@ void DeviousDevices::DeviceReader::LoadDB()
 
                     // menus
                     _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
-                    _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
-
+                    _database[loc_ID].zad_DD_OnPutOnDevice = Settings::GetSingleton().GetDefault<RE::BGSMessage*>("zad_DD_OnPutOnDevice");
 
                     _database[loc_ID].zad_EquipRequiredFailMsg =
                         GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg", 0);
                     _database[loc_ID].zad_EquipConflictFailMsg =
                         GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg", 0);
+                   
 
                     devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
 
@@ -400,52 +409,52 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor) {
     return seen.size() == requiredDeviceKwds.size();
 }
 
-bool DeviceReader::CanEquipDevice(RE::Actor* actor, RE::TESForm* item) {
-    RE::FormID formId = item->GetFormID();
-
-    if (devices.count(formId)) {
-        return devices[formId]->CanEquip(actor);
+bool DeviceReader::CanEquipDevice(RE::Actor* actor, DeviceUnit* device) {
+    if (device) {
+        return device->CanEquip(actor);
     } else {
         return false;
     }
 }
 
-bool IsManipulationEnabled() {
-    return Settings::GetSingleton().GetSetting<bool>("UseItemManipulation");
-}
+void DeviceReader::ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> callback) {
+    if (!device) return;
 
-void DeviceReader::ShowEquipMenu(RE::TESForm* item, std::function<void(bool)> callback) {
-    if (!devices.count(item->GetFormID())) return;
-
-    RE::BGSMessage* equipMenu = devices[item->GetFormID()]->GetEquipMenu();
+    RE::BGSMessage* equipMenu = device->GetEquipMenu();
 
     bool canManipulate = true;
 
     if (equipMenu != nullptr)
-        MessageBox::Show(equipMenu, [callback](uint32_t result) { 
-            if (result == 0) {
-                callback(result == 0);
-
-                // potentially show manipulate menu
-                if (IsManipulationEnabled()) {
-                    
-                
-                } else {
-                    
-                }
-            }    
+        MessageBox::Show(equipMenu, [callback](uint32_t result) {
+            callback(result == 0);
         });
     else
-        SKSE::log::info("Could not fetch message box for {}", item->GetFormID());
+        SKSE::log::info("Could not fetch equip menu for {}", device->GetFormID());
 }
 
-void DeviceReader::ShowEquipConfirmation(RE::TESForm* device) {
+void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) { 
+    SetManipulated(actor, device->deviceInventory, false);
+    SKSE::log::info("{} {} {}", Settings::GetSingleton().GetSetting<bool>("UseItemManipulation"), device->lockable,
+                    device->canManipulate);
+    if (Settings::GetSingleton().GetSetting<bool>("UseItemManipulation") && device->lockable && device->canManipulate) {
+        auto menu = device->GetManipulationMenu();
+        if (menu != nullptr)
+            MessageBox::Show(menu, [actor, device](uint32_t result) { 
+                DeviceReader::GetSingleton()->SetManipulated(actor, device->deviceInventory, result);
+            });
+        else {
+            SKSE::log::info("Could not fetch message box for {}", device->GetFormID());
+        }
+    }
+}
+
+void DeviceReader::ShowEquipConfirmation(DeviceUnit* device) {
 
 }
 
-bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device) {
-    if (devices.count(device->GetFormID())) {
-        RE::TESObjectARMO* rendered = devices[device->GetFormID()]->GetRenderedDevice();
+bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
+    if (device) {
+        RE::TESObjectARMO* rendered = device->GetRenderedDevice();
 
         if (rendered != nullptr) {
             return actor->AddWornItem(rendered, 1, false, 0, 0);
@@ -454,8 +463,6 @@ bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, RE::TESForm* device) {
             return false;
         }
     } else {
-        SKSE::log::info("Could not find device {} {} {} in registry", device->GetFormID(), device->GetRawFormID(),
-                        device->GetLocalFormID());
         return false;
     }
 }

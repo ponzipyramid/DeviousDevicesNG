@@ -110,6 +110,9 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(GetPropertyStringArray,true);
     REGISTERPAPYRUSFUNC(GetEditingMods,true);
     REGISTERPAPYRUSFUNC(GetDeviceByName,true);
+
+    REGISTERPAPYRUSFUNC(SetManipulated, true);
+    REGISTERPAPYRUSFUNC(GetManipulated, true);
     #undef REGISTERPAPYRUSFUNC
     return true;
 }
