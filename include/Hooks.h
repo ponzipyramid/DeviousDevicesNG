@@ -37,18 +37,20 @@ namespace DeviousDevices {
 
                 if (actor->GetFormID() == 20) {
                     auto invMenu = GetInventoryMenu();
-                    if (invMenu.get())
+                    if (invMenu.get()) {
+                        bool shouldEquipSilently = dManager->ShouldEquipSilently(actor);
                         dManager->ShowEquipMenu(device, [=](bool equip) {
                             if (equip) {
                                 if (dManager->EquipRenderedDevice(actor, device)) {
                                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
                                                  a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
-                                    dManager->ShowManipulateMenu(actor, device);
+                                    if (!shouldEquipSilently) dManager->ShowManipulateMenu(actor, device);
                                 }
 
                                 invMenu.get()->GetRuntimeData().itemList->Update();
                             }
                         });
+                    }
                 } else if (dManager->EquipRenderedDevice(actor, device)) {
                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
                                     a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);

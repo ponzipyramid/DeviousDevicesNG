@@ -245,11 +245,26 @@ namespace DeviousDevices
             return manipulated.contains(std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID())); 
         }
 
+        
+
+        inline bool ShouldEquipSilently(RE::Actor* akActor) {
+            if (zad_AlwaysSilent->HasForm(akActor)) {
+                return true;
+            }
+
+            auto ui = RE::UI::GetSingleton();
+            auto invMenu = ui->GetMenu(RE::InventoryMenu::MENU_NAME);
+            auto containerMenu = ui->GetMenu(RE::ContainerMenu::MENU_NAME);
+
+            return !containerMenu.get() && !(akActor->GetFormID() == 20 && invMenu.get());
+        }
+
     private:
         void LoadDDMods();
         void ParseMods();
         void LoadDB();
 
+        RE::BGSListForm* zad_AlwaysSilent;
         
         std::vector<RE::TESFile*>                       _ddmods;
         std::vector<std::shared_ptr<DeviceMod>>         _ddmodspars;

@@ -13,6 +13,8 @@ void DeviceReader::Setup()
     RE::BGSKeyword* kwd = handler->LookupForm<RE::BGSKeyword>(zadInventoryKwdId, "Devious Devices - Integration.esm");
     invDeviceKwds.push_back(kwd);
 
+    zad_AlwaysSilent = handler->LookupForm<RE::BGSListForm>(0x08A209, "Devious Devices - Integration.esm");
+
     LoadDDMods();
     ParseMods();
     LoadDB();
