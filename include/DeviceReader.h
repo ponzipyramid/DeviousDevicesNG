@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ConflictMap.h"
+
 namespace DeviousDevices
 {
     struct Property
@@ -148,12 +150,14 @@ namespace DeviousDevices
     public:
         struct DeviceUnit
         {
-            bool CanEquip(RE::Actor* actor);
+            bool CanEquip(RE::Actor* actor, std::vector<Conflict>& conflicts);
             inline RE::TESObjectARMO* GetRenderedDevice() { return deviceRendered; }
             inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
             inline RE::BGSMessage* GetManipulationMenu() { return zad_DD_OnPutOnDevice; }
             inline std::string GetName() { return deviceInventory->GetFormEditorID(); }
             inline RE::FormID GetFormID() { return deviceInventory->GetFormID(); }
+
+            std::string scriptName;
 
             RE::BGSKeyword* kwd;
 
@@ -263,6 +267,9 @@ namespace DeviousDevices
         void LoadDDMods();
         void ParseMods();
         void LoadDB();
+        void ParseConfig();
+
+       std::unordered_map<std::string, std::vector<Conflict>> deviceConflicts;
 
         RE::BGSListForm* zad_AlwaysSilent;
         

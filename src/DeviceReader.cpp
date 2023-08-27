@@ -1,8 +1,10 @@
 #include <DeviceReader.h>
 #include "UI.h"
 #include "Settings.h"
+#include <articuno/archives/ryml/ryml.h>
 
 using namespace DeviousDevices;
+using namespace articuno::ryml;
 
 SINGLETONBODY(DeviceReader)
 
@@ -18,6 +20,22 @@ void DeviceReader::Setup()
     LoadDDMods();
     ParseMods();
     LoadDB();
+    ParseConfig();
+}
+
+void DeviceReader::ParseConfig() {
+    std::string dir("Data\\SKSE\\Plugins\\Devious Devices NG");
+
+    std::ifstream inputFile(dir + "\\device_conflicts.yaml");
+    if (inputFile.good()) {
+        yaml_source ar(inputFile);
+        std::vector<ConflictMap> conflicts;
+        ar >> conflicts;
+
+        for (auto conflict : conflicts) {
+            deviceConflicts[conflict.type] = conflict.conflicts;
+        }
+    }
 }
 
 RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
@@ -316,7 +334,8 @@ void DeviceReader::LoadDB() {
 
                     //LOG("Device {} , {:X} found",loc_ID->GetName(),loc_RD->GetFormID())
 
-                    DeviceUnit device;
+                    if (!it2->scripts.scripts.empty())
+                        _database[loc_ID].scriptName = it2->scripts.scripts[0].get()->scriptName;
 
                     _database[loc_ID].deviceInventory = loc_ID;
                     _database[loc_ID].deviceRendered  = loc_RD;
@@ -392,26 +411,34 @@ void DeviceReader::LoadDB() {
     #endif
 }
 
-bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor) {
-    std::vector<RE::BGSKeyword*> conflictKwds = equipConflictingDeviceKwds;
 
-    conflictKwds.push_back(kwd);
+bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor, std::vector<Conflict>& conflicts) {
+    std::vector<RE::BGSKeyword*> conflictKwds = equipConflictingDeviceKwds;
 
     std::unordered_set<RE::BGSKeyword*> seen;
 
     RE::TESObjectREFR::InventoryItemMap itemMap = actor->GetInventory();
 
-    // add generic keyword conflict map
+    SKSE::log::info("Devious Kwd: {}", kwd->GetFormEditorID());
 
     for (auto& [item, value] : itemMap) {
-        RE::TESObjectREFR* refr = item->As<RE::TESObjectREFR>();
-
+       auto refr = item->As<RE::TESObjectARMO>();
         if (!refr) continue;
+        
+        SKSE::log::info("Checking inventory item {}", refr->GetFormEditorID());
+
+        if (refr->HasKeyword(kwd)) return false;
 
         if (refr->HasKeywordInArray(conflictKwds, false)) return false;
 
         for (auto kwd : requiredDeviceKwds)
             if (refr->HasKeyword(kwd)) seen.insert(kwd);
+
+        for (auto conflict : conflicts) {
+            if (refr->HasKeyword(conflict.kwd) && (conflict.has == nullptr || !deviceRendered->HasKeyword(conflict.has))) {
+                return false;
+            }
+        }
     }
 
     return seen.size() == requiredDeviceKwds.size();
@@ -419,7 +446,8 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor) {
 
 bool DeviceReader::CanEquipDevice(RE::Actor* actor, DeviceUnit* device) {
     if (device) {
-        return device->CanEquip(actor);
+        std::vector<Conflict> conflicts = deviceConflicts[device->scriptName];
+        return device->CanEquip(actor, conflicts);
     } else {
         return false;
     }

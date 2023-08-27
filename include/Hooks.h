@@ -32,7 +32,11 @@ namespace DeviousDevices {
 
             if (auto device = dManager->GetInventoryDevice(item)) {
                 if (!dManager->CanEquipDevice(actor, device)) {
+                    // log a message
+                    SKSE::log::info("Equipping conflicting device");
                     return;
+                } else {
+                    SKSE::log::info("Not equipping conflicting device");
                 }
 
                 if (actor->GetFormID() == 20) {
@@ -41,6 +45,8 @@ namespace DeviousDevices {
                         bool shouldEquipSilently = dManager->ShouldEquipSilently(actor);
                         dManager->ShowEquipMenu(device, [=](bool equip) {
                             if (equip) {
+                                
+
                                 if (dManager->EquipRenderedDevice(actor, device)) {
                                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
                                                  a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
@@ -50,6 +56,11 @@ namespace DeviousDevices {
                                 invMenu.get()->GetRuntimeData().itemList->Update();
                             }
                         });
+                    } else {
+                        if (dManager->EquipRenderedDevice(actor, device)) {
+                            _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
+                                         a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
+                        }
                     }
                 } else if (dManager->EquipRenderedDevice(actor, device)) {
                     _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
@@ -85,6 +96,8 @@ namespace DeviousDevices {
             else
                 logger::warn("Failed to install papyrus hook on EquipObject");
 
+
+            /*
             const auto unequipTargetAddress = RE::Offset::ActorEquipManager::UnequipObject.address();
             const auto unequipFuncAddress = &UnequipObject;
             _UnequipObject = (OriginalUnequipObject)unequipTargetAddress;
@@ -96,6 +109,8 @@ namespace DeviousDevices {
                              unequipTargetAddress, (void*)unequipFuncAddress);
             else
                 logger::warn("Failed to install papyrus hook on UnequipObject");
+
+            */
         }
     }
 } 
