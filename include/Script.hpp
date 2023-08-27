@@ -20,8 +20,6 @@ namespace ScriptUtils {
         ObjectPtr object = nullptr;
         bool found = vm->FindBoundObject(handle, a_class, object);
 
-        SKSE::log::info("Found script ptr {}", found);
-
         if (!found && a_create) {
             vm->CreateObject2(a_class, object);
             vm->BindObject(object, handle, false);

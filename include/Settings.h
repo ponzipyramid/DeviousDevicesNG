@@ -10,29 +10,21 @@ namespace DeviousDevices {
             return set;
         }
 
-        inline void Setup() {
-            auto quest = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESQuest>(
-                0x01A282, "Devious Devices - Integration.esm");
-            settings = ScriptUtils::GetScriptObject(quest, "zadconfig");
-
-            quest = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESQuest>(0x00F624,
-                                                                                 "Devious Devices - Integration.esm");
-            lib = ScriptUtils::GetScriptObject(quest, "zadlibs");
-        }
-
         template <typename T>
         inline T GetSetting(std::string name) {
+            auto configQuest = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESQuest>(
+                0x01A282, "Devious Devices - Integration.esm");
+            auto settings = ScriptUtils::GetScriptObject(configQuest, "zadconfig");
             return ScriptUtils::GetProperty<T>(settings, name);
         }
 
         template <typename T>
         inline T GetDefault(std::string name) {
+            auto libQuest = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESQuest>(
+                0x00F624, "Devious Devices - Integration.esm");
+            auto lib = ScriptUtils::GetScriptObject(libQuest, "zadlibs");
             return ScriptUtils::GetProperty<T>(lib, name);
         }
-
-    private:
-        ScriptUtils::ObjectPtr settings;
-        ScriptUtils::ObjectPtr lib;
     };
 }
 

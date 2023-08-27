@@ -61,7 +61,6 @@ namespace {
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        DeviousDevices::Settings::GetSingleton().Setup();
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
 
                         break;

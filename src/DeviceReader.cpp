@@ -286,16 +286,12 @@ std::vector<std::string> DeviousDevices::DeviceReader::GetPropertyStringArray(RE
     return std::vector<std::string>();
 }
 
-void DeviceReader::LoadDB()
-{
-    std::string integrationName = "Devious Devices - Integration.esm";
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    RE::BGSKeyword* lockableKwd = dataHandler->LookupForm<RE::BGSKeyword>(0x003894, "Devious Devices - Assets.esm");
-    std::vector<RE::BGSKeyword*> preventManipKwds = {
-        dataHandler->LookupForm<RE::BGSKeyword>(0x05AEA8, integrationName), // quest item
-        dataHandler->LookupForm<RE::BGSKeyword>(0x0429FB, integrationName)   // block generic
-    };
+void DeviceReader::LoadDB() {
 
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    auto defaultManipMenu = dataHandler->LookupForm<RE::BGSMessage>(0x07AA14, "Devious Devices - Integration.esm");
+    
+    SKSE::log::info("Manipulate Menu: {}", defaultManipMenu != nullptr);
 
     LOG("=== Building database")
     for (auto && it1 : _ddmodspars)
@@ -336,7 +332,7 @@ void DeviceReader::LoadDB()
 
                     // menus
                     _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
-                    _database[loc_ID].zad_DD_OnPutOnDevice = Settings::GetSingleton().GetDefault<RE::BGSMessage*>("zad_DD_OnPutOnDevice");
+                    _database[loc_ID].zad_DD_OnPutOnDevice = defaultManipMenu;
 
                     _database[loc_ID].zad_EquipRequiredFailMsg =
                         GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg", 0);
@@ -347,12 +343,22 @@ void DeviceReader::LoadDB()
                     devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
 
                     std::vector<RE::BGSKeyword*> loc_keywords(_database[loc_ID].deviceHandle->keywords.ksiz.keywordcount);
+ 
+                    _database[loc_ID].lockable = _database[loc_ID].deviceInventory->HasKeywordString("zad_Lockable") ||
+                                                 _database[loc_ID].deviceRendered->HasKeywordString("zad_Lockable");
+                    _database[loc_ID].canManipulate =
+                        !(_database[loc_ID].deviceInventory->HasKeywordString("zad_QuestItem") ||
+                          _database[loc_ID].deviceInventory->HasKeywordString("zad_BlockGeneric") ||
+                          _database[loc_ID].deviceRendered->HasKeywordString("zad_QuestItem") ||
+                          _database[loc_ID].deviceRendered->HasKeywordString("zad_BlockGeneric"));
+
                     for (int i = 0; i < loc_keywords.size(); i++)
                     {
                         const uint32_t loc_formId = _database[loc_ID].deviceHandle->keywords.kwda.data.get()[i];
                         RE::BGSKeyword* loc_kw = it1->GetForm<RE::BGSKeyword>(loc_formId);
                         loc_keywords[i] = loc_kw;
                     }
+
 
                     _database[loc_ID].keywords        = loc_keywords;
 
@@ -434,8 +440,6 @@ void DeviceReader::ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> c
 
 void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) { 
     SetManipulated(actor, device->deviceInventory, false);
-    SKSE::log::info("{} {} {}", Settings::GetSingleton().GetSetting<bool>("UseItemManipulation"), device->lockable,
-                    device->canManipulate);
     if (Settings::GetSingleton().GetSetting<bool>("UseItemManipulation") && device->lockable && device->canManipulate) {
         auto menu = device->GetManipulationMenu();
         if (menu != nullptr)
