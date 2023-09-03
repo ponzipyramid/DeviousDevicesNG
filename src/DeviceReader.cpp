@@ -34,6 +34,7 @@ void DeviceReader::ParseConfig() {
 
         for (auto conflict : conflicts) {
             deviceConflicts[conflict.type] = conflict.conflicts;
+            conflict.Init();
         }
     }
 }
@@ -413,23 +414,17 @@ void DeviceReader::LoadDB() {
 
 
 bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor, std::vector<Conflict>& conflicts) {
-    std::vector<RE::BGSKeyword*> conflictKwds = equipConflictingDeviceKwds;
-
     std::unordered_set<RE::BGSKeyword*> seen;
 
     RE::TESObjectREFR::InventoryItemMap itemMap = actor->GetInventory();
-
-    SKSE::log::info("Devious Kwd: {}", kwd->GetFormEditorID());
 
     for (auto& [item, value] : itemMap) {
        auto refr = item->As<RE::TESObjectARMO>();
         if (!refr) continue;
         
-        SKSE::log::info("Checking inventory item {}", refr->GetFormEditorID());
-
         if (refr->HasKeyword(kwd)) return false;
 
-        if (refr->HasKeywordInArray(conflictKwds, false)) return false;
+        if (refr->HasKeywordInArray(equipConflictingDeviceKwds, false)) return false;
 
         for (auto kwd : requiredDeviceKwds)
             if (refr->HasKeyword(kwd)) seen.insert(kwd);

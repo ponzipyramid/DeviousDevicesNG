@@ -29,42 +29,37 @@ namespace DeviousDevices {
         inline void EquipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
                                 RE::ExtraDataList* a_extraData, std::uint32_t a_count, RE::BGSEquipSlot* a_slot,
                                 bool a_queueEquip, bool a_forceEquip, bool a_playSounds, bool a_applyNow) {
-
+            
+           
             if (auto device = dManager->GetInventoryDevice(item)) {
                 if (!dManager->CanEquipDevice(actor, device)) {
-                    // log a message
-                    SKSE::log::info("Equipping conflicting device");
+                    RE::DebugNotification("You cannot equip this device");
                     return;
-                } else {
-                    SKSE::log::info("Not equipping conflicting device");
                 }
 
-                if (actor->GetFormID() == 20) {
-                    auto invMenu = GetInventoryMenu();
-                    if (invMenu.get()) {
-                        bool shouldEquipSilently = dManager->ShouldEquipSilently(actor);
-                        dManager->ShowEquipMenu(device, [=](bool equip) {
-                            if (equip) {
-                                
-
-                                if (dManager->EquipRenderedDevice(actor, device)) {
-                                    _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
-                                                 a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
-                                    if (!shouldEquipSilently) dManager->ShowManipulateMenu(actor, device);
-                                }
-
-                                invMenu.get()->GetRuntimeData().itemList->Update();
+                auto equipDevice = [=](bool equipSilently) {
+                    if (dManager->EquipRenderedDevice(actor, device)) {
+                        _EquipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
+                                     a_playSounds, a_applyNow);
+                    }
+                    if (!equipSilently) {
+                        dManager->ShowManipulateMenu(actor, device);
+                        if (auto invMenu = GetInventoryMenu().get()) {
+                            if (auto invMenu = GetInventoryMenu().get()) {
+                                invMenu->GetRuntimeData().itemList->Update();
                             }
-                        });
-                    } else {
-                        if (dManager->EquipRenderedDevice(actor, device)) {
-                            _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count,
-                                         a_slot, a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
                         }
                     }
-                } else if (dManager->EquipRenderedDevice(actor, device)) {
-                    _EquipObject(RE::ActorEquipManager::GetSingleton(), actor, item, a_extraData, a_count, a_slot,
-                                    a_queueEquip, a_forceEquip, a_playSounds, a_applyNow);
+                };
+
+                bool shouldEquipSilently = dManager->ShouldEquipSilently(actor);
+
+                if (!shouldEquipSilently) {
+                    dManager->ShowEquipMenu(device, [=](bool equip) {
+                        if (equip) equipDevice(false);
+                    });
+                } else {
+                    equipDevice(true);
                 }
             } else {
                 _EquipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
@@ -77,6 +72,8 @@ namespace DeviousDevices {
                                   std::uint64_t a_queueEquip, std::uint64_t a_forceEquip, std::uint64_t a_playSounds,
                                   std::uint64_t a_applyNow, std::uint64_t a_slotToReplace) {
             // handle unequip and escape logic
+
+            // api calls to remove the device should use the hooked func directly - this is for external attempts
             return _UnequipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
                                   a_playSounds, a_applyNow, a_slotToReplace);
         }

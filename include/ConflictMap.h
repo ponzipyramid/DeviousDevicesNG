@@ -31,6 +31,11 @@ namespace DeviousDevices {
     public:
         std::string type;
         std::vector<Conflict> conflicts;
+
+        inline void Init() {
+            for (auto conflict : conflicts) conflict.Init();
+        }
+
     private:
         articuno_serde(ar) {
             ar <=> articuno::kv(type, "type");
