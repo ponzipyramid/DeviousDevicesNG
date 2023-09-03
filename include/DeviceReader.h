@@ -206,6 +206,7 @@ namespace DeviousDevices
         bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
 
         bool EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device);
+        bool UnequipRenderedDevice(RE::Actor* actor, DeviceUnit* device);
 
         void ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> callback);
 

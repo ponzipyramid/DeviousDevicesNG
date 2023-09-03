@@ -131,7 +131,7 @@ T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice,
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
 
     if (loc_handle != nullptr) {
-        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname, false);
+        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname, true);
 
         // we need to convert it to correct ID and get the form
         if (loc_formID > 0) {
@@ -320,8 +320,8 @@ void DeviceReader::LoadDB() {
         //LOG("Checking devices in mod {}",it1->name)
         for (auto && it2 : it1->devicerecords)
         {
-            RE::FormID loc_formid1 = it2->GetPropertyOBJ("deviceInventory", true);
-            RE::FormID loc_formid2 = it2->GetPropertyOBJ("deviceRendered", true);
+            RE::FormID loc_formid1 = it2->GetPropertyOBJ("deviceInventory", false);
+            RE::FormID loc_formid2 = it2->GetPropertyOBJ("deviceRendered", false);
 
             //LOG("FormID {} , {} found",loc_formid1,loc_formid2)
             if (loc_formid1 > 0 && loc_formid2 > 0) 
@@ -417,24 +417,41 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor, std::vector<Conflict>&
     std::unordered_set<RE::BGSKeyword*> seen;
 
     RE::TESObjectREFR::InventoryItemMap itemMap = actor->GetInventory();
+    auto myFormId = std::format("{:x}", deviceInventory->GetFormID());
+
 
     for (auto& [item, value] : itemMap) {
-       auto refr = item->As<RE::TESObjectARMO>();
-        if (!refr) continue;
+        auto refr = item->As<RE::TESObjectARMO>();
+        if (!refr || refr->GetFormID() == deviceRendered->GetFormID()) continue;
         
-        if (refr->HasKeyword(kwd)) return false;
+        auto formId = std::format("{:x}", refr->GetFormID());
+        if (refr->HasKeyword(kwd)) {
+            SKSE::log::info("EQUIP {} {} FAILED: Another item {} in inventory has the same keyword",
+                            deviceInventory->GetName(), myFormId, formId);
+            return false;
+        }
 
-        if (refr->HasKeywordInArray(equipConflictingDeviceKwds, false)) return false;
+        if (refr->HasKeywordInArray(equipConflictingDeviceKwds, false)) {
+            SKSE::log::info("EQUIP {} {} FAILED: Another item {} in inventory has a conflicting keyword",
+                            deviceInventory->GetName(), myFormId, formId);
+            return false;
+        }
 
         for (auto kwd : requiredDeviceKwds)
             if (refr->HasKeyword(kwd)) seen.insert(kwd);
 
         for (auto conflict : conflicts) {
             if (refr->HasKeyword(conflict.kwd) && (conflict.has == nullptr || !deviceRendered->HasKeyword(conflict.has))) {
+                SKSE::log::info("EQUIP {} {} FAILED: Another item {} in inventory is a conflicting device type",
+                                deviceInventory->GetName(), myFormId, formId);
                 return false;
             }
         }
     }
+
+    if (seen.size() != requiredDeviceKwds.size())
+        SKSE::log::info("EQUIP {} FAILED: You don't have all required inventory devices equipped",
+                        deviceInventory->GetName());
 
     return seen.size() == requiredDeviceKwds.size();
 }
@@ -495,6 +512,23 @@ bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
         return false;
     }
 }
+
+bool DeviceReader::UnequipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
+    if (device) {
+        RE::TESObjectARMO* rendered = device->GetRenderedDevice();
+
+        if (rendered != nullptr) {
+            actor->UnequipItem(0, rendered);
+            return true;
+        } else {
+            SKSE::log::info("Cound not find rendered device");
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
 
 DeviceMod::DeviceMod(std::string a_name, uint8_t* a_data, size_t a_size)
 {
@@ -611,7 +645,7 @@ size_t DeviceMod::ParseDevices()
             devicerecords.back()->LoadVM();
             devicerecords.back()->LoadKeywords();
         }
-        else LOG("Could not find Form !!!")
+        //else LOG("Could not find Form !!!")
 
         loc_res++;
     }
@@ -851,7 +885,7 @@ RE::FormID DeviceHandle::GetPropertyOBJ(std::string a_name, bool a_silence) {
     }
     else
     {
-        if (!a_silence) LOG("ERROR: Could not find property {}",a_name)
+        //if (!a_silence) LOG("ERROR: Could not find property {}",a_name)
         return 0x00000000;
     }
 }

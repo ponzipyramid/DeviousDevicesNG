@@ -12,7 +12,8 @@ namespace DeviousDevices {
                                                   RE::TESBoundObject* a_object, RE::ExtraDataList* a_extraData,
                                                   std::uint32_t a_count, RE::BGSEquipSlot* a_slot, bool a_queueEquip,
                                                   bool a_forceEquip, bool a_playSounds, bool a_applyNow);
-        typedef bool(WINAPI* OriginalUnequipObject)(std::uint64_t a_1, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+        typedef bool(WINAPI* OriginalUnequipObject)(RE::ActorEquipManager* a_1, RE::Actor* a_actor,
+                                                    RE::TESBoundObject* a_object,
                                                     std::uint64_t a_extraData, std::uint64_t a_count,
                                                     std::uint64_t a_slot, std::uint64_t a_queueEquip,
                                                     std::uint64_t a_forceEquip, std::uint64_t a_playSounds,
@@ -29,37 +30,36 @@ namespace DeviousDevices {
         inline void EquipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
                                 RE::ExtraDataList* a_extraData, std::uint32_t a_count, RE::BGSEquipSlot* a_slot,
                                 bool a_queueEquip, bool a_forceEquip, bool a_playSounds, bool a_applyNow) {
-            
-           
+
             if (auto device = dManager->GetInventoryDevice(item)) {
+                SKSE::log::info("Handling {} equip", item->GetName());
+                bool shouldEquipSilently = dManager->ShouldEquipSilently(actor);
+                
+                // this is causing issues with DDe
                 if (!dManager->CanEquipDevice(actor, device)) {
-                    RE::DebugNotification("You cannot equip this device");
+                    if (!shouldEquipSilently) RE::DebugNotification("You cannot equip this device");
+                    SKSE::log::info("Failed to equip {}", item->GetName());
                     return;
                 }
 
                 auto equipDevice = [=](bool equipSilently) {
-                    if (dManager->EquipRenderedDevice(actor, device)) {
-                        _EquipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
-                                     a_playSounds, a_applyNow);
-                    }
+                    //dManager->EquipRenderedDevice(actor, device);
+                    _EquipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
+                                 a_playSounds, a_applyNow);
                     if (!equipSilently) {
                         dManager->ShowManipulateMenu(actor, device);
                         if (auto invMenu = GetInventoryMenu().get()) {
-                            if (auto invMenu = GetInventoryMenu().get()) {
-                                invMenu->GetRuntimeData().itemList->Update();
-                            }
+                            invMenu->GetRuntimeData().itemList->Update();
                         }
                     }
                 };
 
-                bool shouldEquipSilently = dManager->ShouldEquipSilently(actor);
-
                 if (!shouldEquipSilently) {
                     dManager->ShowEquipMenu(device, [=](bool equip) {
-                        if (equip) equipDevice(false);
+                        if (equip) equipDevice(shouldEquipSilently);
                     });
                 } else {
-                    equipDevice(true);
+                    equipDevice(shouldEquipSilently);
                 }
             } else {
                 _EquipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
@@ -67,13 +67,16 @@ namespace DeviousDevices {
             }
         }
 
-        inline bool UnequipObject(std::uint64_t a_1, RE::Actor* actor, RE::TESBoundObject* item,
+        inline bool UnequipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
                                   std::uint64_t a_extraData, std::uint64_t a_count, std::uint64_t a_slot,
                                   std::uint64_t a_queueEquip, std::uint64_t a_forceEquip, std::uint64_t a_playSounds,
                                   std::uint64_t a_applyNow, std::uint64_t a_slotToReplace) {
-            // handle unequip and escape logic
-
             // api calls to remove the device should use the hooked func directly - this is for external attempts
+
+            // cases: remove all items, external mod calling unequip, user trying through inventory
+
+            // need to check for quest item 
+
             return _UnequipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
                                   a_playSounds, a_applyNow, a_slotToReplace);
         }
@@ -94,7 +97,7 @@ namespace DeviousDevices {
                 logger::warn("Failed to install papyrus hook on EquipObject");
 
 
-            /*
+            
             const auto unequipTargetAddress = RE::Offset::ActorEquipManager::UnequipObject.address();
             const auto unequipFuncAddress = &UnequipObject;
             _UnequipObject = (OriginalUnequipObject)unequipTargetAddress;
@@ -107,7 +110,7 @@ namespace DeviousDevices {
             else
                 logger::warn("Failed to install papyrus hook on UnequipObject");
 
-            */
+            
         }
     }
 } 
