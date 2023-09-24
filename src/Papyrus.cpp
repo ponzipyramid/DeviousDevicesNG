@@ -20,7 +20,7 @@ namespace DeviousDevices {
 
     bool FormHasKeywordString(StaticFunctionTag* base, TESForm* obj, std::string kwd) {
         if (!obj) {
-            SKSE::log::info("FormHasKeywordString received none obj.");
+            LOG("FormHasKeywordString received none obj.");
             return false;
         }
                
@@ -45,13 +45,13 @@ namespace DeviousDevices {
     }
 
     bool Print(StaticFunctionTag* base, std::string msg) {
-        SKSE::log::info("Received string: {}", msg);
+        LOG("Received string: {}", msg);
         return false;
     }
 
     TESForm* FindMatchingDevice(StaticFunctionTag* base, Actor* obj, BGSKeyword* kwd) {
         if (!obj) {
-            SKSE::log::info("ReEquipExistingDevice received NULL obj.");
+            LOG("ReEquipExistingDevice received NULL obj.");
             return NULL;
         }
         

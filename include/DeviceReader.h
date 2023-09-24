@@ -4,6 +4,12 @@
 
 namespace DeviousDevices
 {
+    struct FormHandle
+    {
+        RE::FormID  id;
+        std::string mod;
+    };
+
     struct Property
     {
         enum class PropertyTypes
@@ -150,7 +156,7 @@ namespace DeviousDevices
     public:
         struct DeviceUnit
         {
-            bool CanEquip(RE::Actor* actor, std::vector<Conflict>& conflicts);
+            bool CanEquip(RE::Actor* actor);
             inline RE::TESObjectARMO* GetRenderedDevice() { return deviceRendered; }
             inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
             inline RE::BGSMessage* GetManipulationMenu() { return zad_DD_OnPutOnDevice; }
@@ -198,10 +204,10 @@ namespace DeviousDevices
 
 
         inline bool IsInventoryDevice(RE::TESForm* obj) {
-            return obj->HasKeywordInArray(invDeviceKwds, true);
+            return obj->HasKeywordInArray(_invDeviceKwds, true);
         }
 
-        inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return devices.count(obj->GetFormID()) ? devices[obj->GetFormID()] : nullptr; }
+        inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return _devices.count(obj->GetFormID()) ? _devices[obj->GetFormID()] : nullptr; }
 
         bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
 
@@ -240,20 +246,18 @@ namespace DeviousDevices
         inline void SetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) { 
             auto pair = std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID());
             if (manip)
-                manipulated.insert(pair);
+                _manipulated.insert(pair);
             else
-                manipulated.erase(pair);
+                _manipulated.erase(pair);
         
         }
 
         inline bool GetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv) {
-            return manipulated.contains(std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID())); 
+            return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID())); 
         }
 
-        
-
         inline bool ShouldEquipSilently(RE::Actor* akActor) {
-            if (zad_AlwaysSilent->HasForm(akActor)) {
+            if (_alwaysSilent->HasForm(akActor)) {
                 return true;
             }
 
@@ -270,18 +274,15 @@ namespace DeviousDevices
         void LoadDB();
         void ParseConfig();
 
-       std::unordered_map<std::string, std::vector<Conflict>> deviceConflicts;
-
-        RE::BGSListForm* zad_AlwaysSilent;
-        
-        std::vector<RE::TESFile*>                       _ddmods;
-        std::vector<std::shared_ptr<DeviceMod>>         _ddmodspars;
-        std::map<RE::TESObjectARMO*, DeviceUnit>         _database;
-
-        std::unordered_map<RE::FormID, DeviceUnit*> devices;
-        std::vector<RE::BGSKeyword*> invDeviceKwds;
-
-        std::set<std::pair<RE::FormID, RE::FormID>> manipulated; // serde
+        RE::BGSListForm*                                        _alwaysSilent;
+        std::vector<RE::TESFile*>                               _ddmods;
+        std::vector<std::shared_ptr<DeviceMod>>                 _ddmodspars;
+        std::map<RE::TESObjectARMO*, DeviceUnit>                _database;
+        std::unordered_map<std::string, std::vector<Conflict>>  _deviceConflicts;
+        std::unordered_map<RE::FormID, DeviceUnit*>             _devices;
+        std::vector<RE::BGSKeyword*>                            _invDeviceKwds;
+        std::set<std::pair<RE::FormID, RE::FormID>>             _manipulated; // serde
+        bool                                                    _installed = false;
     };
 
 

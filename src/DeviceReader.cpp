@@ -10,33 +10,37 @@ SINGLETONBODY(DeviceReader)
 
 void DeviceReader::Setup()
 {
-    RE::FormID zadInventoryKwdId = 0x02B5F0;
-    RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
-    RE::BGSKeyword* kwd = handler->LookupForm<RE::BGSKeyword>(zadInventoryKwdId, "Devious Devices - Integration.esm");
-    invDeviceKwds.push_back(kwd);
+    if (!_installed)
+    {
+        RE::FormID zadInventoryKwdId = 0x02B5F0;
+        RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
+        RE::BGSKeyword* kwd = handler->LookupForm<RE::BGSKeyword>(zadInventoryKwdId, "Devious Devices - Integration.esm");
+        _invDeviceKwds.push_back(kwd);
 
-    zad_AlwaysSilent = handler->LookupForm<RE::BGSListForm>(0x08A209, "Devious Devices - Integration.esm");
+        _alwaysSilent = handler->LookupForm<RE::BGSListForm>(0x08A209, "Devious Devices - Integration.esm");
 
-    LoadDDMods();
-    ParseMods();
-    LoadDB();
-    ParseConfig();
+        LoadDDMods();
+        ParseMods();
+        LoadDB();
+        ParseConfig();
+        _installed = true; // to prevent db reset on game reload
+    }
 }
 
 void DeviceReader::ParseConfig() {
-    std::string dir("Data\\SKSE\\Plugins\\Devious Devices NG");
-
-    std::ifstream inputFile(dir + "\\device_conflicts.yaml");
-    if (inputFile.good()) {
-        yaml_source ar(inputFile);
-        std::vector<ConflictMap> conflicts;
-        ar >> conflicts;
-
-        for (auto conflict : conflicts) {
-            deviceConflicts[conflict.type] = conflict.conflicts;
-            conflict.Init();
-        }
-    }
+        //std::string dir("Data\\SKSE\\Plugins\\Devious Devices NG");
+        //
+        //std::ifstream inputFile(dir + "\\device_conflicts.yaml");
+        //if (inputFile.good()) {
+        //    yaml_source ar(inputFile);
+        //    std::vector<ConflictMap> conflicts;
+        //    ar >> conflicts;
+        //
+        //    for (auto conflict : conflicts) {
+        //        deviceConflicts[conflict.type] = conflict.conflicts;
+        //        conflict.Init();
+        //    }
+        //}
 }
 
 RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
@@ -141,7 +145,7 @@ T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice,
                 // ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_form->GetFormID())
                 return loc_form;
             } else
-                LOG("!!!Form 0x{:08X} not found!!!", loc_formID)
+                LOG("!!!Form 0x{:08X} not found!!! a_invdevice={}, a_propertyname={}, a_mode={}", loc_formID,a_invdevice->GetName(),a_propertyname,a_mode)
         }
     }
     return nullptr;
@@ -211,7 +215,7 @@ std::string DeviousDevices::DeviceReader::GetPropertyString(RE::TESObjectARMO* a
 }
 
 template <typename T>
-std::vector<T*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode = 0)
+std::vector<T*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
@@ -312,7 +316,7 @@ void DeviceReader::LoadDB() {
     auto dataHandler = RE::TESDataHandler::GetSingleton();
     auto defaultManipMenu = dataHandler->LookupForm<RE::BGSMessage>(0x07AA14, "Devious Devices - Integration.esm");
     
-    SKSE::log::info("Manipulate Menu: {}", defaultManipMenu != nullptr);
+    LOG("Manipulate Menu: {}", defaultManipMenu != nullptr);
 
     LOG("=== Building database")
     for (auto && it1 : _ddmodspars)
@@ -362,7 +366,7 @@ void DeviceReader::LoadDB() {
                         GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg", 0);
                    
 
-                    devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
+                    _devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
 
                     std::vector<RE::BGSKeyword*> loc_keywords(_database[loc_ID].deviceHandle->keywords.ksiz.keywordcount);
  
@@ -412,55 +416,50 @@ void DeviceReader::LoadDB() {
     #endif
 }
 
+bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor) 
+{
+    // === Basic slot check
+    uint32_t loc_devicemask = static_cast<uint32_t>(deviceRendered->GetSlotMask());
+    for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask << 1U)
+    {
+        // check if the mask is not already out of bounds 
+        // If yes, it didnt encounter any conflict and we return true
+        if (loc_devicemask > loc_mask) return true;
 
-bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* actor, std::vector<Conflict>& conflicts) {
-    std::unordered_set<RE::BGSKeyword*> seen;
+        //check if there is any conflict
+        if (loc_mask & loc_devicemask)
+        {
+            //get armor which is in slot that device needs
+            RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(loc_mask);
 
-    RE::TESObjectREFR::InventoryItemMap itemMap = actor->GetInventory();
-    auto myFormId = std::format("{:x}", deviceInventory->GetFormID());
+            //get render device from db. If it returns nullptr, it means passed armor is not device
+            RE::TESObjectARMO* loc_device = DeviceReader::GetSingleton()->GetDeviceRender(loc_armor);
 
-
-    for (auto& [item, value] : itemMap) {
-        auto refr = item->As<RE::TESObjectARMO>();
-        if (!refr || refr->GetFormID() == deviceRendered->GetFormID()) continue;
-        
-        auto formId = std::format("{:x}", refr->GetFormID());
-        if (refr->HasKeyword(kwd)) {
-            SKSE::log::info("EQUIP {} {} FAILED: Another item {} in inventory has the same keyword",
-                            deviceInventory->GetName(), myFormId, formId);
-            return false;
-        }
-
-        if (refr->HasKeywordInArray(equipConflictingDeviceKwds, false)) {
-            SKSE::log::info("EQUIP {} {} FAILED: Another item {} in inventory has a conflicting keyword",
-                            deviceInventory->GetName(), myFormId, formId);
-            return false;
-        }
-
-        for (auto kwd : requiredDeviceKwds)
-            if (refr->HasKeyword(kwd)) seen.insert(kwd);
-
-        for (auto conflict : conflicts) {
-            if (refr->HasKeyword(conflict.kwd) && (conflict.has == nullptr || !deviceRendered->HasKeyword(conflict.has))) {
-                SKSE::log::info("EQUIP {} {} FAILED: Another item {} in inventory is a conflicting device type",
-                                deviceInventory->GetName(), myFormId, formId);
+            //is the amor device ? If yes, there is conflict, and we return false
+            if (loc_device != nullptr)
+            {
                 return false;
+            }
+            else
+            {
+                //do nothing, as all slots have to be checked
             }
         }
     }
 
-    if (seen.size() != requiredDeviceKwds.size())
-        SKSE::log::info("EQUIP {} FAILED: You don't have all required inventory devices equipped",
-                        deviceInventory->GetName());
+    // === Advanced filter check (from DD equip script)
+    // TODO
 
-    return seen.size() == requiredDeviceKwds.size();
+    return true;
 }
 
-bool DeviceReader::CanEquipDevice(RE::Actor* actor, DeviceUnit* device) {
-    if (device) {
-        std::vector<Conflict> conflicts = deviceConflicts[device->scriptName];
-        return device->CanEquip(actor, conflicts);
-    } else {
+bool DeviceReader::CanEquipDevice(RE::Actor* a_actor, DeviceUnit* a_device) {
+    if ((a_device != nullptr) && (a_actor != nullptr)) 
+    {
+        return a_device->CanEquip(a_actor);
+    } 
+    else 
+    {
         return false;
     }
 }
@@ -477,7 +476,7 @@ void DeviceReader::ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> c
             callback(result == 0);
         });
     else
-        SKSE::log::info("Could not fetch equip menu for {}", device->GetFormID());
+        LOG("Could not fetch equip menu for {}", device->GetFormID());
 }
 
 void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) { 
@@ -489,7 +488,7 @@ void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) {
                 DeviceReader::GetSingleton()->SetManipulated(actor, device->deviceInventory, result);
             });
         else {
-            SKSE::log::info("Could not fetch message box for {}", device->GetFormID());
+            LOG("Could not fetch message box for {}", device->GetFormID());
         }
     }
 }
@@ -521,7 +520,7 @@ bool DeviceReader::UnequipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
             actor->UnequipItem(0, rendered);
             return true;
         } else {
-            SKSE::log::info("Cound not find rendered device");
+            LOG("Cound not find rendered device");
             return false;
         }
     } else {
