@@ -116,6 +116,7 @@
 
 //print message to log file
 #define LOG(...)  {SKSE::log::info(__VA_ARGS__);}
+#define WARN(...)  {SKSE::log::warn(__VA_ARGS__);}
 //print message to console
 #define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print(std::format(__VA_ARGS__).c_str());} 
 

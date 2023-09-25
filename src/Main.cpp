@@ -69,10 +69,7 @@ namespace {
                                                              // successful.
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
-
-                        #if (DD_USEINVENTORYFILTER_S == 1U)
-                            DeviousDevices::InventoryFilter::GetSingleton()->Setup();
-                        #endif
+                        DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         DeviousDevices::UpdateHook::GetSingleton()->Setup();
                         break;
                 }
@@ -88,12 +85,12 @@ SKSEPluginLoad(const LoadInterface* skse) {
 #endif
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
-    log::info("{} {} is loading...", plugin->GetName(), version);
+    LOG("{} {} is loading...", plugin->GetName(), version);
 
     Init(skse);
     InitializePapyrus();
     InitializeMessaging();
 
-    log::info("{} has finished loading.", plugin->GetName());
+    LOG("{} has finished loading.", plugin->GetName());
     return true;
 }
