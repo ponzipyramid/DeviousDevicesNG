@@ -1,7 +1,15 @@
 #pragma once
 
+#include "ConflictMap.h"
+
 namespace DeviousDevices
 {
+    struct FormHandle
+    {
+        RE::FormID  id;
+        std::string mod;
+    };
+
     struct Property
     {
         enum class PropertyTypes
@@ -130,6 +138,9 @@ namespace DeviousDevices
         RE::TESForm* GetForm(const DeviceHandle* a_handle);
         RE::TESForm* GetForm(const uint32_t a_formID); //have to be internal esp formID !!!
 
+        template <typename T>
+        T* GetForm(const uint32_t a_formID);  // have to be internal esp formID !!!
+
         std::string name;
         DeviceGroup group_TES4;
         DeviceGroup group_ARMO;
@@ -145,6 +156,29 @@ namespace DeviousDevices
     public:
         struct DeviceUnit
         {
+            bool CanEquip(RE::Actor* actor);
+            inline RE::TESObjectARMO* GetRenderedDevice() { return deviceRendered; }
+            inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
+            inline RE::BGSMessage* GetManipulationMenu() { return zad_DD_OnPutOnDevice; }
+            inline std::string GetName() { return deviceInventory->GetFormEditorID(); }
+            inline RE::FormID GetFormID() { return deviceInventory->GetFormID(); }
+
+            std::string scriptName;
+
+            RE::BGSKeyword* kwd;
+
+            RE::BGSMessage* equipMenu;
+            RE::BGSMessage* zad_DD_OnPutOnDevice;
+            RE::BGSMessage* zad_EquipRequiredFailMsg;
+            RE::BGSMessage* zad_EquipConflictFailMsg;
+
+            std::vector<RE::BGSKeyword*> equipConflictingDeviceKwds;
+            std::vector<RE::BGSKeyword*> requiredDeviceKwds;
+            std::vector<RE::BGSKeyword*> unequipConflictingDeviceKwds;
+          
+            bool lockable;
+            bool canManipulate;
+
             RE::TESObjectARMO*              deviceInventory;
             RE::TESObjectARMO*              deviceRendered;
 
@@ -167,32 +201,90 @@ namespace DeviousDevices
 
         RE::TESObjectARMO* GetDeviceRender(RE::TESObjectARMO* a_invdevice); 
         DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_invdevice);
+
+
+        inline bool IsInventoryDevice(RE::TESForm* obj) {
+            return obj->HasKeywordInArray(_invDeviceKwds, true);
+        }
+
+        inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return _devices.count(obj->GetFormID()) ? _devices[obj->GetFormID()] : nullptr; }
+
+        bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
+
+        bool EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device);
+        bool UnequipRenderedDevice(RE::Actor* actor, DeviceUnit* device);
+
+        void ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> callback);
+
+        void ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device);
+
+        void ShowEquipConfirmation(DeviceUnit* device);
+
         DeviceUnit GetDeviceUnit(std::string a_name);
 
+        template <typename T>
+        T* GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                             int a_mode);  // NOT TESTED
+        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
 
-        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      
+
         int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
         float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
         bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      //NOT TESTED
         std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                    
-        std::vector<RE::TESForm*>   GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
         std::vector<int>            GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);      //NOT TESTED
         std::vector<float>          GetPropertyFloatArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);    //NOT TESTED
         std::vector<bool>           GetPropertyBoolArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
         std::vector<std::string>    GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
 
+        template <typename T>
+        std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                                       int a_mode);  // NOT TESTED
+        std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                                       int a_mode);  // NOT TESTED
+
+        inline void SetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) { 
+            auto pair = std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID());
+            if (manip)
+                _manipulated.insert(pair);
+            else
+                _manipulated.erase(pair);
+        
+        }
+
+        inline bool GetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv) {
+            return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID())); 
+        }
+
+        inline bool ShouldEquipSilently(RE::Actor* akActor) {
+            if (_alwaysSilent->HasForm(akActor)) {
+                return true;
+            }
+
+            auto ui = RE::UI::GetSingleton();
+            auto invMenu = ui->GetMenu(RE::InventoryMenu::MENU_NAME);
+            auto containerMenu = ui->GetMenu(RE::ContainerMenu::MENU_NAME);
+
+            return !containerMenu.get() && !(akActor->GetFormID() == 20 && invMenu.get());
+        }
+
     private:
         void LoadDDMods();
-
         void ParseMods();
-
-        std::vector<RE::TESFile*>                       _ddmods;
-        std::vector<std::shared_ptr<DeviceMod>>         _ddmodspars;
-        std::map<RE::TESObjectARMO*,DeviceUnit>         _database;
-
         void LoadDB();
+        void ParseConfig();
 
+        RE::BGSListForm*                                        _alwaysSilent;
+        std::vector<RE::TESFile*>                               _ddmods;
+        std::vector<std::shared_ptr<DeviceMod>>                 _ddmodspars;
+        std::map<RE::TESObjectARMO*, DeviceUnit>                _database;
+        std::unordered_map<std::string, std::vector<Conflict>>  _deviceConflicts;
+        std::unordered_map<RE::FormID, DeviceUnit*>             _devices;
+        std::vector<RE::BGSKeyword*>                            _invDeviceKwds;
+        std::set<std::pair<RE::FormID, RE::FormID>>             _manipulated; // serde
+        bool                                                    _installed = false;
     };
+
 
     //=== Papyrus native functions
     RE::TESObjectARMO* GetRenderDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);
@@ -210,6 +302,14 @@ namespace DeviousDevices
     std::vector<bool>           GetPropertyBoolArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
     std::vector<std::string>    GetPropertyStringArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
 
+
+    // device manipulation
+    inline void SetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) {
+        DeviceReader::GetSingleton()->SetManipulated(actor, inv, manip);
+    }
+    inline bool GetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv) {
+        return DeviceReader::GetSingleton()->GetManipulated(actor, inv);
+    }
 
     //returns all mods which edited the device
     std::vector<std::string>    GetEditingMods(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);

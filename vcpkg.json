@@ -26,8 +26,9 @@
         "plugin": {
             "description": "Build the SKSE plugin.",
             "dependencies": [
-                "articuno",
-                "commonlibsse-ng"
+              "articuno",
+              "commonlibsse-ng",
+              "detours"
             ]
         },
         "tests": {

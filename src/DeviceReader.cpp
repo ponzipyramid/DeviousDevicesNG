@@ -1,20 +1,54 @@
 #include <DeviceReader.h>
+#include "UI.h"
+#include "Settings.h"
+#include <articuno/archives/ryml/ryml.h>
 
-SINGLETONBODY(DeviousDevices::DeviceReader)
+using namespace DeviousDevices;
+using namespace articuno::ryml;
 
-void DeviousDevices::DeviceReader::Setup()
+SINGLETONBODY(DeviceReader)
+
+void DeviceReader::Setup()
 {
-    LoadDDMods();
-    ParseMods();
-    LoadDB();
+    if (!_installed)
+    {
+        RE::FormID zadInventoryKwdId = 0x02B5F0;
+        RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
+        RE::BGSKeyword* kwd = handler->LookupForm<RE::BGSKeyword>(zadInventoryKwdId, "Devious Devices - Integration.esm");
+        _invDeviceKwds.push_back(kwd);
+
+        _alwaysSilent = handler->LookupForm<RE::BGSListForm>(0x08A209, "Devious Devices - Integration.esm");
+
+        LoadDDMods();
+        ParseMods();
+        LoadDB();
+        ParseConfig();
+        _installed = true; // to prevent db reset on game reload
+    }
 }
 
-RE::TESObjectARMO* DeviousDevices::DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
+void DeviceReader::ParseConfig() {
+        //std::string dir("Data\\SKSE\\Plugins\\Devious Devices NG");
+        //
+        //std::ifstream inputFile(dir + "\\device_conflicts.yaml");
+        //if (inputFile.good()) {
+        //    yaml_source ar(inputFile);
+        //    std::vector<ConflictMap> conflicts;
+        //    ar >> conflicts;
+        //
+        //    for (auto conflict : conflicts) {
+        //        deviceConflicts[conflict.type] = conflict.conflicts;
+        //        conflict.Init();
+        //    }
+        //}
+}
+
+RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
 {
     return _database[a_invdevice].deviceRendered;
 }
 
-void DeviousDevices::DeviceReader::LoadDDMods()
+void DeviceReader::LoadDDMods()
 {
     LOG("=== Checking DD mods")
 
@@ -27,7 +61,7 @@ void DeviousDevices::DeviceReader::LoadDDMods()
     
     for (auto && it : *loc_filelist)
     {
-      if ( std::any_of(loc_masters.begin(), loc_masters.end(), 
+      if (std::any_of(loc_masters.begin(), loc_masters.end(), 
           [&](std::string a_ddmaster)
           {
             if (it->GetFilename() == a_ddmaster)
@@ -61,7 +95,7 @@ void DeviousDevices::DeviceReader::LoadDDMods()
     }
 }
 
-void DeviousDevices::DeviceReader::ParseMods()
+void DeviceReader::ParseMods()
 {
     for (auto && it : _ddmods)
     {
@@ -80,7 +114,7 @@ void DeviousDevices::DeviceReader::ParseMods()
     }
 }
 
-DeviousDevices::DeviceReader::DeviceUnit DeviousDevices::DeviceReader::GetDeviceUnit(RE::TESObjectARMO* a_invdevice)
+DeviceReader::DeviceUnit DeviceReader::GetDeviceUnit(RE::TESObjectARMO* a_invdevice)
 {
     return _database[a_invdevice];
 }
@@ -94,30 +128,35 @@ DeviousDevices::DeviceReader::DeviceUnit DeviousDevices::DeviceReader::GetDevice
     return DeviceUnit();
 }
 
-RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
-{
-    auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
+template <typename T>
+T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
+                                                 int a_mode) {
+    auto loc_unit = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
-    
-    if (loc_handle != nullptr)
-    {
-        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname,false);
-        
-        //we need to convert it to correct ID and get the form
-        if (loc_formID > 0)
-        {
-            RE::TESForm* loc_form = loc_unit.deviceMod->GetForm(loc_formID);
-            if (loc_form != nullptr) 
-            {   
-                //LOG("GetPropertyForm({} 0x{:08X} , {}) called - Result = {:X} ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_form->GetFormID())
-                return loc_form;
-            } 
-            else LOG("!!!Form 0x{:08X} not found!!!",loc_formID)
-        }
 
+    if (loc_handle != nullptr) {
+        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname, true);
+
+        // we need to convert it to correct ID and get the form
+        if (loc_formID > 0) {
+            auto loc_form = loc_unit.deviceMod->GetForm<T>(loc_formID);
+            if (loc_form != nullptr) {
+                // LOG("GetPropertyForm({} 0x{:08X} , {}) called - Result = {:X}
+                // ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_form->GetFormID())
+                return loc_form;
+            } else
+                LOG("!!!Form 0x{:08X} not found!!! a_invdevice={}, a_propertyname={}, a_mode={}", loc_formID,a_invdevice->GetName(),a_propertyname,a_mode)
+        }
     }
     return nullptr;
 }
+
+
+RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode = 0)
+{
+    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname, a_mode);
+}
+
 
 int DeviousDevices::DeviceReader::GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
 {
@@ -175,7 +214,8 @@ std::string DeviousDevices::DeviceReader::GetPropertyString(RE::TESObjectARMO* a
     return "";
 }
 
-std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+template <typename T>
+std::vector<T*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
@@ -183,7 +223,7 @@ std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE:
     if (loc_handle != nullptr)
     {
         std::vector<uint32_t> loc_formIDs = loc_handle->GetPropertyOBJA(a_propertyname);
-        std::vector<RE::TESForm*> loc_res;
+        std::vector<T*> loc_res;
         //we need to convert it to correct ID and get the form
         if (loc_formIDs.size() > 0)
         {
@@ -192,18 +232,23 @@ std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE:
             {
                 if (it > 0)
                 {
-                    RE::TESForm* loc_form = loc_unit.deviceMod->GetForm(it);
+                    T* loc_form = loc_unit.deviceMod->GetForm<T>(it);
                     loc_res.push_back(loc_form);
                 }
                 else loc_res.push_back(nullptr);
             }
 
-            //LOG("GetPropertyFormArray({} 0x{:08X} , {}) called - Result¨:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
+            //LOG("GetPropertyFormArray({} 0x{:08X} , {}) called - Resultï¿½:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
             //for (auto&& it2 : loc_res) LOG("\t0x{:08X} - {}",it2->GetFormID(),it2->GetName())
             return loc_res;
         }
     }
-    return std::vector<RE::TESForm*>();
+    return std::vector<T*>();
+}
+
+std::vector<RE::TESForm*> DeviousDevices::DeviceReader::GetPropertyFormArray(RE::TESObjectARMO* a_invdevice,
+                                                                   std::string a_propertyname, int a_mode = 0) {
+    return GetPropertyFormArray<RE::TESForm>(a_invdevice, a_propertyname, a_mode);
 }
 
 std::vector<int> DeviousDevices::DeviceReader::GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
@@ -214,7 +259,7 @@ std::vector<int> DeviousDevices::DeviceReader::GetPropertyIntArray(RE::TESObject
     if (loc_handle != nullptr)
     {
         std::vector<int> loc_res = loc_handle->GetPropertyINTA(a_propertyname);
-        //LOG("GetPropertyIntArray({} 0x{:08X} , {}) called - Result¨:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
+        //LOG("GetPropertyIntArray({} 0x{:08X} , {}) called - Resultï¿½:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
         //for (auto&& it2 : loc_res) LOG("\t{}",it2)
         return loc_res;
     }
@@ -229,7 +274,7 @@ std::vector<float> DeviousDevices::DeviceReader::GetPropertyFloatArray(RE::TESOb
     if (loc_handle != nullptr)
     {
         std::vector<float> loc_res = loc_handle->GetPropertyFLTA(a_propertyname);
-        //LOG("GetPropertyFloatArray({} 0x{:08X} , {}) called - Result¨:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
+        //LOG("GetPropertyFloatArray({} 0x{:08X} , {}) called - Resultï¿½:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
         //for (auto&& it2 : loc_res) LOG("\t{}",it2)
         return loc_res;
     }
@@ -244,7 +289,7 @@ std::vector<bool> DeviousDevices::DeviceReader::GetPropertyBoolArray(RE::TESObje
     if (loc_handle != nullptr)
     {
         std::vector<bool> loc_res = loc_handle->GetPropertyBOLA(a_propertyname);
-        //LOG("GetPropertyBoolArray({} 0x{:08X} , {}) called - Result¨:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
+        //LOG("GetPropertyBoolArray({} 0x{:08X} , {}) called - Resultï¿½:",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname)
         //for (auto&& it2 : loc_res) LOG("\t{}",it2)
         return loc_res;
     }
@@ -266,38 +311,80 @@ std::vector<std::string> DeviousDevices::DeviceReader::GetPropertyStringArray(RE
     return std::vector<std::string>();
 }
 
-void DeviousDevices::DeviceReader::LoadDB()
-{
+void DeviceReader::LoadDB() {
+
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    auto defaultManipMenu = dataHandler->LookupForm<RE::BGSMessage>(0x07AA14, "Devious Devices - Integration.esm");
+    
+    LOG("Manipulate Menu: {}", defaultManipMenu != nullptr);
+
     LOG("=== Building database")
     for (auto && it1 : _ddmodspars)
     {
         //LOG("Checking devices in mod {}",it1->name)
         for (auto && it2 : it1->devicerecords)
         {
-            uint32_t loc_formid1 = it2->GetPropertyOBJ("deviceInventory",true);
-            uint32_t loc_formid2 = it2->GetPropertyOBJ("deviceRendered",true);
+            RE::FormID loc_formid1 = it2->GetPropertyOBJ("deviceInventory", false);
+            RE::FormID loc_formid2 = it2->GetPropertyOBJ("deviceRendered", false);
+
             //LOG("FormID {} , {} found",loc_formid1,loc_formid2)
-            if (loc_formid1 > 0 && loc_formid2 > 0)
+            if (loc_formid1 > 0 && loc_formid2 > 0) 
             {
-                RE::TESObjectARMO* loc_ID = reinterpret_cast<RE::TESObjectARMO*>(it1->GetForm(loc_formid1));
-                RE::TESObjectARMO* loc_RD = reinterpret_cast<RE::TESObjectARMO*>(it1->GetForm(loc_formid2));
+                auto loc_ID = it1->GetForm<RE::TESObjectARMO>(loc_formid1);
+                auto loc_RD = it1->GetForm<RE::TESObjectARMO>(loc_formid2);
+
                 if (loc_ID && loc_RD) 
                 {   
                     const bool loc_original = (_database.find(loc_ID) == _database.end());
 
                     //LOG("Device {} , {:X} found",loc_ID->GetName(),loc_RD->GetFormID())
+
+                    if (!it2->scripts.scripts.empty())
+                        _database[loc_ID].scriptName = it2->scripts.scripts[0].get()->scriptName;
+
                     _database[loc_ID].deviceInventory = loc_ID;
                     _database[loc_ID].deviceRendered  = loc_RD;
                     _database[loc_ID].deviceHandle    = it2;
                     _database[loc_ID].deviceMod       = it1;
 
+                    // keywords
+                    _database[loc_ID].kwd = GetPropertyForm<RE::BGSKeyword>(loc_ID, "zad_DeviousDevice", 0);
+                    _database[loc_ID].equipConflictingDeviceKwds =
+                        GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "EquipConflictingDevices", 0);
+                    _database[loc_ID].unequipConflictingDeviceKwds =
+                        GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "UnEquipConflictingDevices", 0);
+                    _database[loc_ID].requiredDeviceKwds =
+                        GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "EquipRequiredDevices", 0);
+
+                    // menus
+                    _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
+                    _database[loc_ID].zad_DD_OnPutOnDevice = defaultManipMenu;
+
+                    _database[loc_ID].zad_EquipRequiredFailMsg =
+                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg", 0);
+                    _database[loc_ID].zad_EquipConflictFailMsg =
+                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg", 0);
+                   
+
+                    _devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
+
                     std::vector<RE::BGSKeyword*> loc_keywords(_database[loc_ID].deviceHandle->keywords.ksiz.keywordcount);
+ 
+                    _database[loc_ID].lockable = _database[loc_ID].deviceInventory->HasKeywordString("zad_Lockable") ||
+                                                 _database[loc_ID].deviceRendered->HasKeywordString("zad_Lockable");
+                    _database[loc_ID].canManipulate =
+                        !(_database[loc_ID].deviceInventory->HasKeywordString("zad_QuestItem") ||
+                          _database[loc_ID].deviceInventory->HasKeywordString("zad_BlockGeneric") ||
+                          _database[loc_ID].deviceRendered->HasKeywordString("zad_QuestItem") ||
+                          _database[loc_ID].deviceRendered->HasKeywordString("zad_BlockGeneric"));
+
                     for (int i = 0; i < loc_keywords.size(); i++)
                     {
                         const uint32_t loc_formId = _database[loc_ID].deviceHandle->keywords.kwda.data.get()[i];
-                        RE::BGSKeyword* loc_kw = reinterpret_cast<RE::BGSKeyword*>(it1->GetForm(loc_formId));
+                        RE::BGSKeyword* loc_kw = it1->GetForm<RE::BGSKeyword>(loc_formId);
                         loc_keywords[i] = loc_kw;
                     }
+
 
                     _database[loc_ID].keywords        = loc_keywords;
 
@@ -307,7 +394,6 @@ void DeviousDevices::DeviceReader::LoadDB()
                     loc_changes.keywords        = loc_keywords;
 
                     _database[loc_ID].history.push_back(loc_changes); //add changes to history stack
-
                 } 
                 else LOG("!!!Device not found!!!")
             }
@@ -330,7 +416,120 @@ void DeviousDevices::DeviceReader::LoadDB()
     #endif
 }
 
-DeviousDevices::DeviceMod::DeviceMod(std::string a_name, uint8_t* a_data, size_t a_size)
+bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor) 
+{
+    // === Basic slot check
+    uint32_t loc_devicemask = static_cast<uint32_t>(deviceRendered->GetSlotMask());
+    for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask << 1U)
+    {
+        // check if the mask is not already out of bounds 
+        // If yes, it didnt encounter any conflict and we return true
+        if (loc_devicemask > loc_mask) return true;
+
+        //check if there is any conflict
+        if (loc_mask & loc_devicemask)
+        {
+            //get armor which is in slot that device needs
+            RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(loc_mask);
+
+            //get render device from db. If it returns nullptr, it means passed armor is not device
+            RE::TESObjectARMO* loc_device = DeviceReader::GetSingleton()->GetDeviceRender(loc_armor);
+
+            //is the amor device ? If yes, there is conflict, and we return false
+            if (loc_device != nullptr)
+            {
+                return false;
+            }
+            else
+            {
+                //do nothing, as all slots have to be checked
+            }
+        }
+    }
+
+    // === Advanced filter check (from DD equip script)
+    // TODO
+
+    return true;
+}
+
+bool DeviceReader::CanEquipDevice(RE::Actor* a_actor, DeviceUnit* a_device) {
+    if ((a_device != nullptr) && (a_actor != nullptr)) 
+    {
+        return a_device->CanEquip(a_actor);
+    } 
+    else 
+    {
+        return false;
+    }
+}
+
+void DeviceReader::ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> callback) {
+    if (!device) return;
+
+    RE::BGSMessage* equipMenu = device->GetEquipMenu();
+
+    bool canManipulate = true;
+
+    if (equipMenu != nullptr)
+        MessageBox::Show(equipMenu, [callback](uint32_t result) {
+            callback(result == 0);
+        });
+    else
+        LOG("Could not fetch equip menu for {}", device->GetFormID());
+}
+
+void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) { 
+    SetManipulated(actor, device->deviceInventory, false);
+    if (Settings::GetSingleton().GetSetting<bool>("UseItemManipulation") && device->lockable && device->canManipulate) {
+        auto menu = device->GetManipulationMenu();
+        if (menu != nullptr)
+            MessageBox::Show(menu, [actor, device](uint32_t result) { 
+                DeviceReader::GetSingleton()->SetManipulated(actor, device->deviceInventory, result);
+            });
+        else {
+            LOG("Could not fetch message box for {}", device->GetFormID());
+        }
+    }
+}
+
+void DeviceReader::ShowEquipConfirmation(DeviceUnit* device) {
+
+}
+
+bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
+    if (device) {
+        RE::TESObjectARMO* rendered = device->GetRenderedDevice();
+
+        if (rendered != nullptr) {
+            return actor->AddWornItem(rendered, 1, false, 0, 0);
+        } else {
+            SKSE::log::info("Cound not find rendered device");
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+bool DeviceReader::UnequipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
+    if (device) {
+        RE::TESObjectARMO* rendered = device->GetRenderedDevice();
+
+        if (rendered != nullptr) {
+            actor->UnequipItem(0, rendered);
+            return true;
+        } else {
+            LOG("Cound not find rendered device");
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+
+DeviceMod::DeviceMod(std::string a_name, uint8_t* a_data, size_t a_size)
 {
     size = a_size;
     rawdata = a_data;
@@ -376,7 +575,7 @@ DeviousDevices::DeviceMod::DeviceMod(std::string a_name, uint8_t* a_data, size_t
     ParseDevices();
 }
 
-void DeviousDevices::DeviceMod::ParseInfo()
+void DeviceMod::ParseInfo()
 {
     masters.clear();
 
@@ -410,7 +609,7 @@ void DeviousDevices::DeviceMod::ParseInfo()
 
 }
 
-size_t DeviousDevices::DeviceMod::ParseDevices()
+size_t DeviceMod::ParseDevices()
 {
     size_t loc_fptr     = 0x00000000;
     size_t loc_res      = 0;
@@ -445,7 +644,7 @@ size_t DeviousDevices::DeviceMod::ParseDevices()
             devicerecords.back()->LoadVM();
             devicerecords.back()->LoadKeywords();
         }
-        else LOG("Could not find Form !!!")
+        //else LOG("Could not find Form !!!")
 
         loc_res++;
     }
@@ -453,22 +652,29 @@ size_t DeviousDevices::DeviceMod::ParseDevices()
     return loc_res;
 }
 
-RE::TESForm* DeviousDevices::DeviceMod::GetForm(const DeviceHandle* a_handle)
+RE::TESForm* DeviceMod::GetForm(const DeviceHandle* a_handle)
 {
     RE::TESForm* loc_form = RE::TESDataHandler::GetSingleton()->LookupForm(0x00FFFFFF & a_handle->record.formId,a_handle->source);
 
     return loc_form;
 }
 
-RE::TESForm* DeviousDevices::DeviceMod::GetForm(const uint32_t a_formID)
+RE::TESForm* DeviceMod::GetForm(const uint32_t a_formID)
 {
     const uint8_t  loc_modindex = (a_formID & 0xFF000000) >> 24;
     const std::string loc_modsource = masters[loc_modindex];
-    RE::TESForm* loc_form = RE::TESDataHandler::GetSingleton()->LookupForm(0x00FFFFFF & a_formID,loc_modsource);
+    RE::TESForm* loc_form = RE::TESDataHandler::GetSingleton()->LookupForm(0x00FFFFFF & a_formID, loc_modsource);
     return loc_form;
 }
 
-void DeviousDevices::DeviceHandle::LoadVM()
+template <typename T>
+T* DeviceMod::GetForm(const uint32_t a_formID) {
+    const uint8_t loc_modindex = (a_formID & 0xFF000000) >> 24;
+    const std::string loc_modsource = masters[loc_modindex];
+    return RE::TESDataHandler::GetSingleton()->LookupForm<T>(0x00FFFFFF & a_formID, loc_modsource);
+}
+
+void DeviceHandle::LoadVM()
 {
     size_t loc_fptr = 0x00000000;
     while ((loc_fptr) < (record.size))
@@ -655,15 +861,14 @@ std::pair<std::shared_ptr<uint8_t>, uint8_t> DeviousDevices::DeviceHandle::GetPr
 
             if (loc_propertyname == a_name)
             {
-                return std::pair<std::shared_ptr<uint8_t>, uint8_t>(it2->data,it2->propertyType);
+                return std::pair<std::shared_ptr<uint8_t>, uint8_t>(it2->data, it2->propertyType);
             }
         }
     }
     return std::pair<std::shared_ptr<uint8_t>, uint8_t>(nullptr,0);
 }
 
-uint32_t DeviousDevices::DeviceHandle::GetPropertyOBJ(std::string a_name,bool a_silence)
-{
+RE::FormID DeviceHandle::GetPropertyOBJ(std::string a_name, bool a_silence) {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
     {
@@ -673,18 +878,18 @@ uint32_t DeviousDevices::DeviceHandle::GetPropertyOBJ(std::string a_name,bool a_
         }
         else
         {
-            if (!a_silence) LOG("ERROR: Property {} is of incorrect type. Type = {}",a_name,loc_property.second)
+            if (!a_silence) LOG("ERROR: Property {} is of incorrect type. Type = {}", a_name, loc_property.second)
             return 0x00000000;
         }
     }
     else
     {
-        if (!a_silence) LOG("ERROR: Could not find property {}",a_name)
+        //if (!a_silence) LOG("ERROR: Could not find property {}",a_name)
         return 0x00000000;
     }
 }
 
-int32_t DeviousDevices::DeviceHandle::GetPropertyINT(std::string a_name)
+int32_t DeviceHandle::GetPropertyINT(std::string a_name)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -706,7 +911,7 @@ int32_t DeviousDevices::DeviceHandle::GetPropertyINT(std::string a_name)
     }
 }
 
-float DeviousDevices::DeviceHandle::GetPropertyFLT(std::string a_name)
+float DeviceHandle::GetPropertyFLT(std::string a_name)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -728,7 +933,7 @@ float DeviousDevices::DeviceHandle::GetPropertyFLT(std::string a_name)
     }
 }
 
-bool DeviousDevices::DeviceHandle::GetPropertyBOL(std::string a_name)
+bool DeviceHandle::GetPropertyBOL(std::string a_name)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -960,8 +1165,7 @@ RE::TESObjectARMO* DeviousDevices::GetRenderDevice(PAPYRUSFUNCHANDLE, RE::TESObj
     return loc_res;
 }
 
-RE::TESObjectARMO* DeviousDevices::GetDeviceByName(PAPYRUSFUNCHANDLE, std::string a_name)
-{
+RE::TESObjectARMO* DeviousDevices::GetDeviceByName(PAPYRUSFUNCHANDLE, std::string a_name) {
     auto loc_reader = DeviceReader::GetSingleton();
     auto loc_unit = loc_reader->GetDeviceUnit(a_name);
     return loc_unit.deviceInventory;

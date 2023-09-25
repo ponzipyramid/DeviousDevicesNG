@@ -115,11 +115,10 @@
 #define PAPYRUSFUNCHANDLE RE::BSScript::Internal::VirtualMachine* a_vm, const RE::VMStackID a_stackID, RE::StaticFunctionTag*
 
 //print message to log file
-#if (DD_LOGENABLED == 1U)
-    #define LOG(...)  {SKSE::log::info(__VA_ARGS__);}
-#else
-    #define LOG(...)  {}
-#endif
+#define LOG(...)  {SKSE::log::info(__VA_ARGS__);}
+#define WARN(...)  {SKSE::log::warn(__VA_ARGS__);}
+//print message to console
+#define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print(std::format(__VA_ARGS__).c_str());} 
 
 //print message to console
 #define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print((std::string("[DD] ") + std::format(__VA_ARGS__)).c_str());} 
