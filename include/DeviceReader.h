@@ -200,7 +200,8 @@ namespace DeviousDevices
         void Setup();
 
         RE::TESObjectARMO* GetDeviceRender(RE::TESObjectARMO* a_invdevice); 
-        DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_invdevice);
+        RE::TESObjectARMO* GetDeviceInventory(RE::TESObjectARMO* a_renddevice); 
+        DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_device, int a_mode = 0);
 
 
         inline bool IsInventoryDevice(RE::TESForm* obj) {
@@ -288,6 +289,7 @@ namespace DeviousDevices
 
     //=== Papyrus native functions
     RE::TESObjectARMO* GetRenderDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);
+    RE::TESObjectARMO* GeInventoryDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_renddevice);
     RE::TESObjectARMO* GetDeviceByName(PAPYRUSFUNCHANDLE,std::string a_name); //just because this exist doesn't mean that it should be used ;)
 
     //read interface

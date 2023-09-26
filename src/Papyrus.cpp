@@ -98,6 +98,7 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
 
     //device reader
     REGISTERPAPYRUSFUNC(GetRenderDevice,true);
+    REGISTERPAPYRUSFUNC(GeInventoryDevice,true);
     REGISTERPAPYRUSFUNC(GetPropertyForm,true);
     REGISTERPAPYRUSFUNC(GetPropertyInt,true);
     REGISTERPAPYRUSFUNC(GetPropertyFloat,true);
@@ -113,6 +114,12 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
 
     REGISTERPAPYRUSFUNC(SetManipulated, true);
     REGISTERPAPYRUSFUNC(GetManipulated, true);
+
+    //LibFunctions
+
+    REGISTERPAPYRUSFUNC(SetManipulated, true);
+    REGISTERPAPYRUSFUNC(GetManipulated, true);
+
     #undef REGISTERPAPYRUSFUNC
     return true;
 }

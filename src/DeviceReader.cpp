@@ -48,6 +48,17 @@ RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
     return _database[a_invdevice].deviceRendered;
 }
 
+RE::TESObjectARMO* DeviousDevices::DeviceReader::GetDeviceInventory(RE::TESObjectARMO* a_renddevice)
+{
+    //RE::TESObjectARMO* loc_res;
+    auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
+    {
+        return (p.second.deviceRendered == a_renddevice);
+    });
+    
+    return loc_res->first;
+}
+
 void DeviceReader::LoadDDMods()
 {
     LOG("=== Checking DD mods")
@@ -114,9 +125,16 @@ void DeviceReader::ParseMods()
     }
 }
 
-DeviceReader::DeviceUnit DeviceReader::GetDeviceUnit(RE::TESObjectARMO* a_invdevice)
+DeviceReader::DeviceUnit DeviceReader::GetDeviceUnit(RE::TESObjectARMO* a_device, int a_mode)
 {
-    return _database[a_invdevice];
+    auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
+    {
+        if (a_mode == 0x00) return (p.second.deviceInventory == a_device);
+        else return (p.second.deviceRendered == a_device);
+
+    });
+    
+    return loc_res->second;
 }
 
 DeviousDevices::DeviceReader::DeviceUnit DeviousDevices::DeviceReader::GetDeviceUnit(std::string a_name)
@@ -420,7 +438,7 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor)
 {
     // === Basic slot check
     uint32_t loc_devicemask = static_cast<uint32_t>(deviceRendered->GetSlotMask());
-    for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask << 1U)
+    for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
     {
         // check if the mask is not already out of bounds 
         // If yes, it didnt encounter any conflict and we return true
@@ -433,7 +451,7 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor)
             RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(loc_mask);
 
             //get render device from db. If it returns nullptr, it means passed armor is not device
-            RE::TESObjectARMO* loc_device = DeviceReader::GetSingleton()->GetDeviceRender(loc_armor);
+            RE::TESObjectARMO* loc_device = DeviceReader::GetSingleton()->GetDeviceInventory(loc_armor);
 
             //is the amor device ? If yes, there is conflict, and we return false
             if (loc_device != nullptr)
@@ -1156,6 +1174,22 @@ RE::TESObjectARMO* DeviousDevices::GetRenderDevice(PAPYRUSFUNCHANDLE, RE::TESObj
     if (loc_res == nullptr)
     {
         LOG("ERROR: Cant find device {}",a_invdevice->GetName())
+    }
+    else
+    {
+        //LOG("GetRenderDevice({} 0x{:08X}) called - Result = {:X} ",a_invdevice->GetName(),a_invdevice->GetFormID(),loc_res->GetFormID())
+    }
+
+    return loc_res;
+}
+
+RE::TESObjectARMO* DeviousDevices::GeInventoryDevice(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_renddevice)
+{
+    RE::TESObjectARMO* loc_res = DeviceReader::GetSingleton()->GetDeviceInventory(a_renddevice);
+
+    if (loc_res == nullptr)
+    {
+        LOG("ERROR: Cant find device {}",(uintptr_t)a_renddevice)
     }
     else
     {

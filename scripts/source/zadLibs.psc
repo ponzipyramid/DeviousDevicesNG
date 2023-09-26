@@ -589,31 +589,13 @@ Bool Function UntightenDevice(actor akActor, armor deviceInventory)
 EndFunction
 
 ; checks if a given inventory device can be tightened
-Bool Function CanTightenDevice(actor akActor, armor deviceInventory)	
-    Bool retval = false
-    ObjectReference tmpORef = PlayerRef.placeAtMe(deviceInventory, abInitiallyDisabled = true)
-    zadEquipScript tmpZRef = tmpORef as zadEquipScript
-    if tmpZRef != none
-        retval = (tmpZRef.LinkedDeviceEquipOnTighten != None)
-    Else
-        Warn("CanTightenDevice received non DD argument.")
-    Endif
-    tmpORef.delete()
-	return retval
+Bool Function CanTightenDevice(actor akActor, armor akDeviceInventory)
+    return zadNativeFunctions.GetPropertyForm(akDeviceInventory,"LinkedDeviceEquipOnTighten")
 EndFunction
 
 ; checks if a given inventory device can be untightened
-Bool Function CanUntightenDevice(actor akActor, armor deviceInventory)	
-    Bool retval = false
-    ObjectReference tmpORef = PlayerRef.placeAtMe(deviceInventory, abInitiallyDisabled = true)
-    zadEquipScript tmpZRef = tmpORef as zadEquipScript
-    if tmpZRef != none
-        retval = (tmpZRef.LinkedDeviceEquipOnUntighten != None)
-    Else
-        Warn("CanUntightenDevice received non DD argument.")
-    Endif
-    tmpORef.delete()
-	return retval
+Bool Function CanUntightenDevice(actor akActor, Armor akDeviceInventory)
+    return zadNativeFunctions.GetPropertyForm(akDeviceInventory,"LinkedDeviceEquipOnUntighten")
 EndFunction
 
 ; checks if the lock for a given device slot is jammed, works only on the player for now. Will return 1 if the lock is jammed, 0 if it isn't and -1 if an error occured.
@@ -766,103 +748,50 @@ EndFunction
 
 ; Returns the currently equipped inventory device matching the supplied keyword.
 Armor Function GetWornDevice(Actor akActor, Keyword kw)
-	Armor retval = none
-	Int iFormIndex = akActor.GetNumItems()
-	bool breakFlag = false
-	While iFormIndex > 0 && !breakFlag
-		iFormIndex -= 1
-		Form kForm = akActor.GetNthForm(iFormIndex)
-		If kForm.HasKeyword(zad_InventoryDevice) && (akActor.IsEquipped(kForm) || akActor != playerRef)
-			ObjectReference tmpORef = akActor.placeAtMe(kForm, abInitiallyDisabled = true)
-			zadEquipScript tmpZRef = tmpORef as zadEquipScript
-			if tmpZRef != none && tmpZRef.zad_DeviousDevice == kw && akActor.GetItemCount(tmpZRef.deviceRendered) > 0
-				retval = kForm as Armor
-				breakFlag = true
-			Endif
-			tmpORef.delete()
-		EndIf
-	EndWhile
-	return retval
+    return zadNativeFunctions.GetWornDevice(akActor,kw)
 EndFunction
 
 ; Returns the name of a given inventory device
 String Function GetDeviceName(armor device)
-	String retval = ""
-    ObjectReference tmpORef = PlayerRef.placeAtMe(device, abInitiallyDisabled = true)
-    zadEquipScript tmpZRef = tmpORef as zadEquipScript
-    if tmpZRef != none
-        retval = tmpZRef.deviceName
-    Else
-        Warn("GetDeviceName received non DD argument.")
-    Endif
-    tmpORef.delete()
-    return retval
+    return zadNativeFunctions.GetPropertyString(device,"deviceName")
 EndFunction
 
 ; Finds device based on rendered device keywords (e.g. keyword zad_DeviousBelt also returns a harness)
 ; Useful for situation where you just want to get the device occupying a specific slot without further differentiation
 Armor Function GetWornDeviceFuzzyMatch(Actor akActor, Keyword kw)
-    Armor retval = none
-    Int iFormIndex = akActor.GetNumItems()
-    bool breakFlag = false
-    While iFormIndex > 0 && !breakFlag
-        iFormIndex -= 1
-        Form kForm = akActor.GetNthForm(iFormIndex)
-        If kForm.HasKeyword(zad_InventoryDevice) && (akActor.IsEquipped(kForm) || akActor != playerRef)
-            ObjectReference tmpORef = akActor.placeAtMe(kForm, abInitiallyDisabled = true)
-            zadEquipScript tmpZRef = tmpORef as zadEquipScript
-            if tmpZRef != none && tmpZRef.deviceRendered.hasKeyword(kw) && akActor.GetItemCount(tmpZRef.deviceRendered) > 0
-                retval = kForm as Armor
-                breakFlag = true
-            Endif
-            tmpORef.delete()
-        EndIf
+    Armor   loc_retval      = none
+    Armor[] loc_rds         = zadNativeFunctions.GetDevices(akActor,1,true)
+    Int     loc_iFormIndex  = loc_rds.length
+    bool    loc_breakFlag   = false
+    While loc_iFormIndex > 0 && !loc_iFormIndex
+        loc_iFormIndex -= 1
+        
+        Armor loc_rd = loc_rds[loc_iFormIndex]
+        
+        if loc_rd.hasKeyword(kw) && akActor.GetItemCount(loc_rd) > 0
+            loc_retval      = loc_rd
+            loc_breakFlag   = true
+        Endif
+        
     EndWhile
-    return retval
+    return loc_retval
 EndFunction
 
 ; Retrieves correct key for a given inventory device
 Key Function GetDeviceKey(armor device)
-    Key retval = none
-    ObjectReference tmpORef = PlayerRef.placeAtMe(device, abInitiallyDisabled = true)
-    zadEquipScript tmpZRef = tmpORef as zadEquipScript
-    if tmpZRef != none
-        retval = tmpZRef.deviceKey
-    Else
-        Warn("GetDeviceKey received non DD argument.")
-    Endif
-    tmpORef.delete()
-    return retval
+    return zadNativeFunctions.GetPropertyForm(device,"deviceKey") as Key
 EndFunction
 
 ; Retrieves device keyword for a given inventory device
 Keyword Function GetDeviceKeyword(armor device)
-    Keyword retval = none
-    ObjectReference tmpORef = PlayerRef.placeAtMe(device, abInitiallyDisabled = true)
-    zadEquipScript tmpZRef = tmpORef as zadEquipScript
-    if tmpZRef != none
-        retval = tmpZRef.zad_DeviousDevice
-    Else
-        Warn("GetDeviceKeyword received non DD argument.")
-    Endif
-    tmpORef.delete()
-    return retval
+    return zadNativeFunctions.GetPropertyForm(device,"zad_DeviousDevice") as Keyword
 EndFunction
 
 
 ; Retrieves rendered device for a given inventory device
 ; Useful to check for keywords only present on the rendered device
 Armor Function GetRenderedDevice(armor device)
-    Armor retval = none
-    ObjectReference tmpORef = PlayerRef.placeAtMe(device, abInitiallyDisabled = true)
-    zadEquipScript tmpZRef = tmpORef as zadEquipScript
-    if tmpZRef != none
-        retval = tmpZRef.deviceRendered
-    Else
-        Warn("GetRenderedDevice received non DD argument.")
-    Endif
-    tmpORef.delete()
-    return retval
+    return zadNativeFunctions.GetRenderDevice(device) as Armor
 EndFunction
 
 ; for the sake of cleaner coding
@@ -3420,33 +3349,27 @@ EndFunction
 ; Returns true if a device was successfully manipulated.
 ; Deprecated: Use either LockDevice() or UnlockDevice() with genericonly = true
 bool Function ManipulateGenericDevice(actor akActor, armor device, bool equipOrUnequip, bool skipEvents = false , bool skipMutex = false)
-	ObjectReference tmpORef = akActor.placeAtMe(device, abInitiallyDisabled = true)
-	zadEquipScript tmpZRef = tmpORef as zadEquipScript
-	bool manipulated = false
-	if tmpZRef != none
-	   	Keyword kw = tmpZRef.zad_DeviousDevice
-		if tmpZref.HasKeyword(zad_BlockGeneric) || tmpZref.HasKeyword(zad_QuestItem)
-			Warn("ManipulateGenericDevice called on non-generic device.")
-		Else
-			; First, check to see if the actor is already wearing this device. If he is, save processing time.
-			Form tmpInv = StorageUtil.GetFormValue(akActor, "zad_Equipped" + LookupDeviceType(kw) + "_Inventory")
-			if !equipOrUnequip && tmpInv
-				Form tmpRend = StorageUtil.GetFormValue(akActor, "zad_Equipped" + LookupDeviceType(kw) + "_Rendered")
-	     			RemoveDevice(akActor, tmpInv as Armor, tmpRend as Armor, kw, skipEvents=skipEvents, skipMutex=skipMutex)
-				return true
-        		EndIf
-			if equipOrUnequip
-				EquipDevice(akActor, device, tmpZRef.deviceRendered, tmpZRef.zad_DeviousDevice, skipEvents = skipEvents, skipMutex = skipMutex)
-			else
-				RemoveDevice(akActor, device, tmpZRef.deviceRendered, tmpZRef.zad_DeviousDevice, skipEvents = skipEvents, skipMutex = skipMutex)
-			EndIf
-			manipulated = true
-		EndIf
-	Else
-		Warn("ManipulateGenericDevice received non DD argument.")
-	Endif
-	tmpORef.delete()
-	return manipulated
+    bool manipulated = false
+    Keyword kw = GetDeviceKeyword(device)
+    Armor loc_rd = GetRenderDevice(device)
+    if loc_rd.HasKeyword(zad_BlockGeneric) || loc_rd.HasKeyword(zad_QuestItem)
+        Warn("ManipulateGenericDevice called on non-generic device.")
+    Else
+        ; First, check to see if the actor is already wearing this device. If he is, save processing time.
+        Form tmpInv = StorageUtil.GetFormValue(akActor, "zad_Equipped" + LookupDeviceType(kw) + "_Inventory")
+        if !equipOrUnequip && tmpInv
+            Form tmpRend = StorageUtil.GetFormValue(akActor, "zad_Equipped" + LookupDeviceType(kw) + "_Rendered")
+                RemoveDevice(akActor, tmpInv as Armor, tmpRend as Armor, kw, skipEvents=skipEvents, skipMutex=skipMutex)
+            return true
+            EndIf
+        if equipOrUnequip
+            EquipDevice(akActor, device, loc_rd, kw, skipEvents = skipEvents, skipMutex = skipMutex)
+        else
+            RemoveDevice(akActor, device, loc_rd, kw, skipEvents = skipEvents, skipMutex = skipMutex)
+        EndIf
+        manipulated = true
+    EndIf
+    return manipulated
 EndFunction
 
 ; Returns true if a device was successfully manipulated.

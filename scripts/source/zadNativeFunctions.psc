@@ -38,6 +38,8 @@ Int     Function FilterMask     (Actor akActor, int aiSlotMask)                 
 ; === Device database
 ; return render device based on passed inventory device
 Armor    Function GetRenderDevice(Armor akInvDevice)                                global native
+; return inventory device based on passed render device
+Armor    Function GetInventoryDevice(Armor akRendDevice)                            global native
 ; return render device based on passed inventory device name - note that if there are multiple devices with same name, only first found will be returned
 ; I do not recommend using this, as when the device name will be edited, this function will stop returning intended device
 Armor    Function GetDeviceByName(String asName)                                    global native
@@ -50,18 +52,31 @@ String[] Function GetEditingMods(Armor akInvDevice)                             
 ; These functions returns properties from passed inventory devices
 ;   if aiMode == 0 -> Property is read from LAST iteration of device after device is overwritten by other mods
 ;   if aiMode != 0 -> Property is read from FIRST iteretion of device before it gets overwritten by other mods (original value)
-Form        Function GetPropertyForm        (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Int         Function GetPropertyInt         (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Float       Function GetPropertyFloat       (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Bool        Function GetPropertyBool        (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-String      Function GetPropertyString      (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Form[]      Function GetPropertyFormArray   (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Int[]       Function GetPropertyIntArray    (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Float[]     Function GetPropertyFloatArray  (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-Bool[]      Function GetPropertyBoolArray   (Armor akInvDevice, String asPropertyName, int aiMode)  global native
-String[]    Function GetPropertyStringArray (Armor akInvDevice, String asPropertyName, int aiMode)  global native
+Form        Function GetPropertyForm        (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Int         Function GetPropertyInt         (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Float       Function GetPropertyFloat       (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Bool        Function GetPropertyBool        (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+String      Function GetPropertyString      (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Form[]      Function GetPropertyFormArray   (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Int[]       Function GetPropertyIntArray    (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Float[]     Function GetPropertyFloatArray  (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Bool[]      Function GetPropertyBoolArray   (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+String[]    Function GetPropertyStringArray (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
 
 
 ; === equip rework
         Function SetManipulated (Actor akActor, Armor akInvDevice, bool abManip)    global native
 bool    Function GetManipulated (Actor akActor, Armor akInvDevice)                  global native
+
+; === Lib functions
+; Return all devices
+; aiMode - What type of device should be returned
+;   aiMode = 0 -> Return all inventory devices
+;   aiMode = 1 -> Return all render devices
+; abWorn - If only worn devices should be returned
+;   abWorn = False -> All devices will be returned
+;   abWorn = True  -> Only worn devices will be returned
+Armor[]  Function GetDevices(Actor akActor, int aiMode = 0, bool abWorn = False)    global native
+
+; Return worn device based on passed main keyword (set on equip script)
+Armor    Function GetWornDevice(Actor akActor, Keyword akKeyword)                   global native

@@ -34,6 +34,7 @@ set(headers
         include/DeviceReader.h
         include/Settings.h
         include/ConflictMap.h
+        include/LibFunctions.h
 )
 
 set(sources
@@ -45,6 +46,7 @@ set(sources
         src/InventoryFilter.cpp
         src/UpdateHook.cpp
         src/DeviceReader.cpp
+        src/LibFunctions.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 set(tests
