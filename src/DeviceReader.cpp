@@ -127,14 +127,29 @@ void DeviceReader::ParseMods()
 
 DeviceReader::DeviceUnit DeviceReader::GetDeviceUnit(RE::TESObjectARMO* a_device, int a_mode)
 {
+    if (a_device == nullptr) 
+    {
+        return DeviceUnit();
+    }
+
     auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
     {
-        if (a_mode == 0x00) return (p.second.deviceInventory == a_device);
-        else return (p.second.deviceRendered == a_device);
-
+        if (a_mode == 0) 
+        {
+            return (p.second.deviceInventory == a_device);
+        }
+        else 
+        {
+            return (p.second.deviceRendered == a_device);
+        }
     });
-    
-    return loc_res->second;
+
+    if (loc_res == _database.end())
+    {
+        //not found
+        return DeviceUnit();
+    }
+    else return loc_res->second;
 }
 
 DeviousDevices::DeviceReader::DeviceUnit DeviousDevices::DeviceReader::GetDeviceUnit(std::string a_name)
@@ -448,7 +463,7 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor)
         if (loc_mask & loc_devicemask)
         {
             //get armor which is in slot that device needs
-            RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(loc_mask);
+            RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
 
             //get render device from db. If it returns nullptr, it means passed armor is not device
             RE::TESObjectARMO* loc_device = DeviceReader::GetSingleton()->GetDeviceInventory(loc_armor);

@@ -117,11 +117,9 @@
 //print message to log file
 #define LOG(...)  {SKSE::log::info(__VA_ARGS__);}
 #define WARN(...)  {SKSE::log::warn(__VA_ARGS__);}
-//print message to console
-#define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print(std::format(__VA_ARGS__).c_str());} 
 
 //print message to console
-#define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print((std::string("[DD] ") + std::format(__VA_ARGS__)).c_str());} 
+#define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print((std::string("[DDNG] ") + std::format(__VA_ARGS__)).c_str());} 
 
 #define SINGLETONHEADER(cname)                          \
         public:                                         \

@@ -165,12 +165,12 @@ namespace DeviousDevices
 
             std::string scriptName;
 
-            RE::BGSKeyword* kwd;
+            RE::BGSKeyword* kwd                         = nullptr;
 
-            RE::BGSMessage* equipMenu;
-            RE::BGSMessage* zad_DD_OnPutOnDevice;
-            RE::BGSMessage* zad_EquipRequiredFailMsg;
-            RE::BGSMessage* zad_EquipConflictFailMsg;
+            RE::BGSMessage* equipMenu                   = nullptr;
+            RE::BGSMessage* zad_DD_OnPutOnDevice        = nullptr;
+            RE::BGSMessage* zad_EquipRequiredFailMsg    = nullptr;
+            RE::BGSMessage* zad_EquipConflictFailMsg    = nullptr;
 
             std::vector<RE::BGSKeyword*> equipConflictingDeviceKwds;
             std::vector<RE::BGSKeyword*> requiredDeviceKwds;
@@ -179,8 +179,8 @@ namespace DeviousDevices
             bool lockable;
             bool canManipulate;
 
-            RE::TESObjectARMO*              deviceInventory;
-            RE::TESObjectARMO*              deviceRendered;
+            RE::TESObjectARMO*              deviceInventory = nullptr;
+            RE::TESObjectARMO*              deviceRendered  = nullptr;
 
             //following values are set to last values found on last mod (so last overriding mod)
             std::shared_ptr<DeviceHandle>   deviceHandle;               //device handle with raw data
@@ -228,7 +228,6 @@ namespace DeviousDevices
                                              int a_mode);  // NOT TESTED
         RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
 
-
         int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
         float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
         bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      //NOT TESTED
@@ -268,6 +267,8 @@ namespace DeviousDevices
 
             return !containerMenu.get() && !(akActor->GetFormID() == 20 && invMenu.get());
         }
+
+        DeviceUnit EmptyDeviceUnit;
 
     private:
         void LoadDDMods();

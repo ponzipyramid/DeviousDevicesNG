@@ -3,7 +3,8 @@ scriptName zadNativeFunctions Hidden
 Form Function FindMatchingDevice(Actor akActor, Keyword kwd)  global native
 bool Function FormHasKeywordString(form theForm, string kwd)  global native
 bool Function Print(string msg) global native
-
+     Function CTrace(string msg) global native ;print message to console
+     
 ; Apply expression from aaExpression to actor akActor
 ; aiControl & 0x01 -> Apply phonems     (0-15)
 ; aiControl & 0x02 -> Apply modifiers   (16-29)

@@ -3,6 +3,7 @@
 #include "Hider.h"
 #include "NodeHider.h"
 #include "DeviceReader.h"
+#include "LibFunctions.h"
 #include <functional>
 #include <algorithm>
 
@@ -65,6 +66,14 @@ namespace DeviousDevices {
 
         return NULL;
     }
+
+    void CTrace(PAPYRUSFUNCHANDLE, std::string a_msg)
+    {
+        if (RE::ConsoleLog::GetSingleton() != nullptr)
+        {
+            RE::ConsoleLog::GetSingleton()->Print((std::string("[DD] ") + a_msg).c_str());
+        }
+    }
 }
 
 bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
@@ -80,6 +89,7 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(GetName,true);
     REGISTERPAPYRUSFUNC(FormHasKeywordString,true);
     REGISTERPAPYRUSFUNC(FindMatchingDevice,true);
+    REGISTERPAPYRUSFUNC(CTrace,true);
 
     //Expression.h
     REGISTERPAPYRUSFUNC(ApplyExpression,true);
@@ -116,9 +126,8 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(GetManipulated, true);
 
     //LibFunctions
-
-    REGISTERPAPYRUSFUNC(SetManipulated, true);
-    REGISTERPAPYRUSFUNC(GetManipulated, true);
+    REGISTERPAPYRUSFUNC(GetDevices, true);
+    REGISTERPAPYRUSFUNC(GetWornDevice, true);
 
     #undef REGISTERPAPYRUSFUNC
     return true;

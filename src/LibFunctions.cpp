@@ -6,18 +6,19 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
 {
     std::vector<RE::TESObjectARMO*> loc_res;
     if (a_actor == nullptr) return loc_res;
+
     if (a_worn)
     {
         for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
         {
-            RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(loc_mask);
+            RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
             if (loc_deviceRD != nullptr)
             {
-                RE::TESObjectARMO* loc_deviceID = DeviceReader::GetSingleton()->GetDeviceInventory(loc_deviceRD);
-                if (loc_deviceID != nullptr)
+                DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
+                if (loc_device.deviceInventory != nullptr && loc_device.deviceRendered != nullptr && (std::memcmp(&loc_device,&DeviceReader::GetSingleton()->EmptyDeviceUnit,sizeof(DeviceReader::DeviceUnit)) != 0))
                 {
-                    if (a_mode == 0x00) loc_res.push_back(loc_deviceID);
-                    else loc_res.push_back(loc_deviceRD);
+                    if (a_mode == 0) loc_res.push_back(loc_device.deviceInventory);
+                    else loc_res.push_back(loc_device.deviceRendered);
                 }
             }
         }
@@ -28,12 +29,15 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
         for (auto&& it : loc_inv)
         {
             RE::TESBoundObject* loc_obj = it.first;
-            if (loc_obj->IsArmor())
+            if ((loc_obj != nullptr) && loc_obj->IsArmor())
             {
                 RE::TESObjectARMO* loc_deviceID = loc_obj->As<RE::TESObjectARMO>();
                 RE::TESObjectARMO* loc_deviceRD = DeviceReader::GetSingleton()->GetDeviceRender(loc_deviceID);
-                if (a_mode == 0x00) loc_res.push_back(loc_deviceID);
-                else loc_res.push_back(loc_deviceRD);
+                if ((loc_deviceID != nullptr) && (loc_deviceRD != nullptr))
+                {
+                    if (a_mode == 0) loc_res.push_back(loc_deviceID);
+                    else loc_res.push_back(loc_deviceRD);
+                }
             }
         }
     }
@@ -44,10 +48,10 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
 {
     for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
     {
-        RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(loc_mask);
+        RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
         if (loc_deviceRD != nullptr)
         {
-            auto loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,0x01);
+            DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
             if (loc_device.kwd == a_kw)
             {
                 return loc_device.deviceRendered;
