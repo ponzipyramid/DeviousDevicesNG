@@ -12,10 +12,11 @@ namespace DeviousDevices
         int FilterMask(RE::Actor* a_actor, int a_slotmask);
         bool IsValidForHide(RE::TESObjectARMO* a_armor);
     protected:
-        RE::BGSKeyword* _kwnohide = nullptr;
+        bool _setup                 = false;
+        RE::BGSKeyword* _kwnohide   = nullptr;
         RE::BGSKeyword* _kwlockable = nullptr;
-        RE::BGSKeyword* _kwplug = nullptr;
-        RE::BGSKeyword* _kwsos = nullptr;
+        RE::BGSKeyword* _kwplug     = nullptr;
+        RE::BGSKeyword* _kwsos      = nullptr;
         std::vector<RE::BGSKeyword*> _hidekeywords;
         std::vector<RE::BGSKeyword*> _nohidekeywords;
     };
