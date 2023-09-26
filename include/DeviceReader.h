@@ -165,12 +165,12 @@ namespace DeviousDevices
 
             std::string scriptName;
 
-            RE::BGSKeyword* kwd;
+            RE::BGSKeyword* kwd                         = nullptr;
 
-            RE::BGSMessage* equipMenu;
-            RE::BGSMessage* zad_DD_OnPutOnDevice;
-            RE::BGSMessage* zad_EquipRequiredFailMsg;
-            RE::BGSMessage* zad_EquipConflictFailMsg;
+            RE::BGSMessage* equipMenu                   = nullptr;
+            RE::BGSMessage* zad_DD_OnPutOnDevice        = nullptr;
+            RE::BGSMessage* zad_EquipRequiredFailMsg    = nullptr;
+            RE::BGSMessage* zad_EquipConflictFailMsg    = nullptr;
 
             std::vector<RE::BGSKeyword*> equipConflictingDeviceKwds;
             std::vector<RE::BGSKeyword*> requiredDeviceKwds;
@@ -179,8 +179,8 @@ namespace DeviousDevices
             bool lockable;
             bool canManipulate;
 
-            RE::TESObjectARMO*              deviceInventory;
-            RE::TESObjectARMO*              deviceRendered;
+            RE::TESObjectARMO*              deviceInventory = nullptr;
+            RE::TESObjectARMO*              deviceRendered  = nullptr;
 
             //following values are set to last values found on last mod (so last overriding mod)
             std::shared_ptr<DeviceHandle>   deviceHandle;               //device handle with raw data
@@ -200,7 +200,8 @@ namespace DeviousDevices
         void Setup();
 
         RE::TESObjectARMO* GetDeviceRender(RE::TESObjectARMO* a_invdevice); 
-        DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_invdevice);
+        RE::TESObjectARMO* GetDeviceInventory(RE::TESObjectARMO* a_renddevice); 
+        DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_device, int a_mode = 0);
 
 
         inline bool IsInventoryDevice(RE::TESForm* obj) {
@@ -226,7 +227,6 @@ namespace DeviousDevices
         T* GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
                                              int a_mode);  // NOT TESTED
         RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
-
 
         int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
         float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
@@ -268,6 +268,8 @@ namespace DeviousDevices
             return !containerMenu.get() && !(akActor->GetFormID() == 20 && invMenu.get());
         }
 
+        DeviceUnit EmptyDeviceUnit;
+
     private:
         void LoadDDMods();
         void ParseMods();
@@ -288,6 +290,7 @@ namespace DeviousDevices
 
     //=== Papyrus native functions
     RE::TESObjectARMO* GetRenderDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);
+    RE::TESObjectARMO* GeInventoryDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_renddevice);
     RE::TESObjectARMO* GetDeviceByName(PAPYRUSFUNCHANDLE,std::string a_name); //just because this exist doesn't mean that it should be used ;)
 
     //read interface

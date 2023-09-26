@@ -358,7 +358,7 @@ Event OnUnequipped(Actor akActor)
 			endIf
 			StorageUtil.UnsetIntValue(akActor, "zad_RemovalToken"+deviceInventory)
 			if akActor == libs.PlayerRef
-				zadNativeFunctions.SetManipulated(akActor, zad_DeviousDevice, false)
+				zadNativeFunctions.SetManipulated(akActor, deviceInventory, false)
 				StorageUtil.UnsetIntValue(akActor, "zad_Equipped" + libs.LookupDeviceType(zad_DeviousDevice) + "_LockJammedStatus")
 			EndIf
 			unequipMutex = false
@@ -576,7 +576,7 @@ bool Function RemoveDeviceWithKey(actor akActor = none, bool destroyDevice=false
 	if akActor == none
 		akActor = libs.PlayerRef
 	EndIf   
-	If zadNativeFunctions.GetManipulated(akActor, zad_DeviousDevice)
+	If zadNativeFunctions.GetManipulated(akActor, deviceInventory)
 		libs.Notify("As you have manipulated the " + deviceName + ", you are able to slip out of the device with ease!", messageBox = True)
 		; could call ProcessLinkedDeviceOnUnlock(Actor akActor)	here, but there is a theoretical chance that OnUnequipped() will not be completed before the new device will get locked on, so we're just signaling OnUnequipped() to do it.
 		StorageUtil.SetIntValue(akActor, "zad_UntightenToken" + deviceInventory, 1)
@@ -844,7 +844,7 @@ Bool Function CheckLockAccess()
 			ModValue = 95.0
 		EndIf
 		If Utility.RandomFloat(0.0, 99.9) < ModValue
-			If DeviceKey != None || zadNativeFunctions.GetManipulated(libs.PlayerRef, zad_DeviousDevice)
+			If DeviceKey != None || zadNativeFunctions.GetManipulated(libs.PlayerRef, deviceInventory)
 				If LockAccessDifficulty < 50.0
 					libs.notify("You try to insert the key into the " + DeviceName + "'s lock, but find the locks a bit outsides of your reach. After a few failed attempts to slide the key into the lock, you have no choice but to give up for now. You should still eventually be able to unlock yourself. Just try again a bit later!", messageBox = True)
 				ElseIf LockAccessDifficulty < 100.0

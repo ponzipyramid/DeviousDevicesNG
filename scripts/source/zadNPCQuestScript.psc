@@ -78,6 +78,7 @@ Event OnUpdateGameTime()
 EndEvent
 
 Event OnUpdate()
+    Test()
     int i = 0
     actor akActor
     while i < libs.Config.NumNpcs
@@ -98,4 +99,15 @@ Function ProcessArmbinderEffect(actor akActor)
     else
         zadNativeFunctions.ShowWeapons(akActor)
     endif
+EndFunction
+
+; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!!!!!!! REMOVE BEFORE RELEASE !!!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Function Test()
+    ;Actor loc_player = Game.GetPlayer()
+    ;zadNativeFunctions.CTrace(zadNativeFunctions.GetDevices(loc_player,0,true))
+    ;zadNativeFunctions.CTrace(zadNativeFunctions.GetDevices(loc_player,1,true))
+    ;zadNativeFunctions.CTrace(zadNativeFunctions.GetDevices(loc_player,0,false))
+    ;zadNativeFunctions.CTrace(zadNativeFunctions.GetDevices(loc_player,1,false))
 EndFunction
