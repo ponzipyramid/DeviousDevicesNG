@@ -15,7 +15,7 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
             if (loc_deviceRD != nullptr)
             {
                 DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
-                if (loc_device.deviceInventory != nullptr && loc_device.deviceRendered != nullptr && (std::memcmp(&loc_device,&DeviceReader::GetSingleton()->EmptyDeviceUnit,sizeof(DeviceReader::DeviceUnit)) != 0))
+                if (loc_device.deviceInventory != nullptr && loc_device.deviceRendered != nullptr)
                 {
                     if (a_mode == 0) loc_res.push_back(loc_device.deviceInventory);
                     else loc_res.push_back(loc_device.deviceRendered);
