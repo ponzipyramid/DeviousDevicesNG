@@ -100,11 +100,11 @@ namespace DeviousDevices
         //will rework this in future so it will be possible to read all types of properties from file
         std::pair<std::shared_ptr<uint8_t>,uint8_t> GetPropertyRaw(std::string a_name);  //get raw property <data,type>
 
-        uint32_t    GetPropertyOBJ(std::string a_name,bool a_silence);  //get object (internal form id)
-        int32_t     GetPropertyINT(std::string a_name);  //get int
-        float       GetPropertyFLT(std::string a_name);  //get float
-        bool        GetPropertyBOL(std::string a_name);  //get bool
-        std::string GetPropertySTR(std::string a_name);  //get string
+        uint32_t    GetPropertyOBJ(std::string a_name, uint32_t     a_defvalue, bool a_silence);  //get object (internal form id)
+        int32_t     GetPropertyINT(std::string a_name, int32_t      a_defvalue);  //get int
+        float       GetPropertyFLT(std::string a_name, float        a_defvalue);  //get float
+        bool        GetPropertyBOL(std::string a_name, bool         a_defvalue);  //get bool
+        std::string GetPropertySTR(std::string a_name, std::string  a_defvalue);  //get string
 
         std::vector<uint32_t>       GetPropertyOBJA(std::string a_name);  //get object (internal form id) array
         std::vector<int32_t>        GetPropertyINTA(std::string a_name);  //get int array
@@ -224,22 +224,20 @@ namespace DeviousDevices
         DeviceUnit GetDeviceUnit(std::string a_name);
 
         template <typename T>
-        T* GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
-                                             int a_mode);  // NOT TESTED
-        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
+        T* GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,uint32_t a_defvalue,int a_mode);  // NOT TESTED
+        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode);
 
-        int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
-        float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
-        bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      //NOT TESTED
-        std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                    
+        int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_defvalue, int a_mode);                       
+        float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, float a_defvalue, int a_mode);                     
+        bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, bool a_defvalue, int a_mode);                      //NOT TESTED
+        std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, std::string a_defvalue, int a_mode);                    
         std::vector<int>            GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);      //NOT TESTED
         std::vector<float>          GetPropertyFloatArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);    //NOT TESTED
         std::vector<bool>           GetPropertyBoolArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
         std::vector<std::string>    GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
 
         template <typename T>
-        std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
-                                                       int a_mode);  // NOT TESTED
+        std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);  // NOT TESTED
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
                                                        int a_mode);  // NOT TESTED
 
@@ -294,16 +292,16 @@ namespace DeviousDevices
     RE::TESObjectARMO* GetDeviceByName(PAPYRUSFUNCHANDLE,std::string a_name); //just because this exist doesn't mean that it should be used ;)
 
     //read interface
-    RE::TESForm*    GetPropertyForm(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      
-    int             GetPropertyInt(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                       
-    float           GetPropertyFloat(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                     
-    bool            GetPropertyBool(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                      //NOT TESTED
-    std::string     GetPropertyString(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);                    
-    std::vector<RE::TESForm*>   GetPropertyFormArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
-    std::vector<int>            GetPropertyIntArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);      //NOT TESTED
-    std::vector<float>          GetPropertyFloatArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);    //NOT TESTED
-    std::vector<bool>           GetPropertyBoolArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
-    std::vector<std::string>    GetPropertyStringArray(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
+    RE::TESForm*    GetPropertyForm(    PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname,RE::TESForm*   a_defvalue, int a_mode);
+    int             GetPropertyInt(     PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname,int            a_defvalue, int a_mode);
+    float           GetPropertyFloat(   PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname,float          a_defvalue, int a_mode);
+    bool            GetPropertyBool(    PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname,bool           a_defvalue, int a_mode);
+    std::string     GetPropertyString(  PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname,std::string    a_defvalue, int a_mode);
+    std::vector<RE::TESForm*>   GetPropertyFormArray(   PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
+    std::vector<int>            GetPropertyIntArray(    PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
+    std::vector<float>          GetPropertyFloatArray(  PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
+    std::vector<bool>           GetPropertyBoolArray(   PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
+    std::vector<std::string>    GetPropertyStringArray( PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
 
 
     // device manipulation

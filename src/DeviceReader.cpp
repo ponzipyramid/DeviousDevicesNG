@@ -162,17 +162,16 @@ DeviousDevices::DeviceReader::DeviceUnit DeviousDevices::DeviceReader::GetDevice
 }
 
 template <typename T>
-T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
-                                                 int a_mode) {
+T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,uint32_t a_defvalue, int a_mode) {
     auto loc_unit = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
 
     if (loc_handle != nullptr) {
-        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname, true);
+        uint32_t loc_formID = loc_handle->GetPropertyOBJ(a_propertyname,a_defvalue, true);
 
         // we need to convert it to correct ID and get the form
         if (loc_formID > 0) {
-            auto loc_form = loc_unit.deviceMod->GetForm<T>(loc_formID);
+            T* loc_form = loc_unit.deviceMod->GetForm<T>(loc_formID);
             if (loc_form != nullptr) {
                 // LOG("GetPropertyForm({} 0x{:08X} , {}) called - Result = {:X}
                 // ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_form->GetFormID())
@@ -185,62 +184,62 @@ T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice,
 }
 
 
-RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode = 0)
+RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode = 0)
 {
-    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname, a_mode);
+    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname,a_defvalue->GetFormID(), a_mode);
 }
 
 
-int DeviousDevices::DeviceReader::GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+int DeviousDevices::DeviceReader::GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_defvalue, int a_mode)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
     
     if (loc_handle != nullptr)
     {
-        int loc_res = loc_handle->GetPropertyINT(a_propertyname);
+        int loc_res = loc_handle->GetPropertyINT(a_propertyname,a_defvalue);
         //LOG("GetPropertyInt({} 0x{:08X} , {}) called - Result = {} ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_res)
         return loc_res;
     }
     return 0;
 }
 
-float DeviousDevices::DeviceReader::GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+float DeviousDevices::DeviceReader::GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, float a_defvalue, int a_mode)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
     
     if (loc_handle != nullptr)
     {
-        float loc_res = loc_handle->GetPropertyFLT(a_propertyname);
+        float loc_res = loc_handle->GetPropertyFLT(a_propertyname,a_defvalue);
         //LOG("GetPropertyFloat({} 0x{:08X} , {}) called - Result = {} ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_res)
         return loc_res;
     }
-    return 0.0;
+    return 0.0f;
 }
 
-bool DeviousDevices::DeviceReader::GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+bool DeviousDevices::DeviceReader::GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, bool a_defvalue, int a_mode)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
     
     if (loc_handle != nullptr)
     {
-        bool loc_res = loc_handle->GetPropertyBOL(a_propertyname);
+        bool loc_res = loc_handle->GetPropertyBOL(a_propertyname,a_defvalue);
         //LOG("GetPropertyBool({} 0x{:08X} , {}) called - Result = {} ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_res)
         return loc_res;
     }
     return false;
 }
 
-std::string DeviousDevices::DeviceReader::GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+std::string DeviousDevices::DeviceReader::GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, std::string a_defvalue, int a_mode)
 {
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
     
     if (loc_handle != nullptr)
     {
-        std::string loc_res = loc_handle->GetPropertySTR(a_propertyname);
+        std::string loc_res = loc_handle->GetPropertySTR(a_propertyname,a_defvalue);
         //LOG("GetPropertyString({} 0x{:08X} , {}) called - Result = {} ",a_invdevice->GetName(),a_invdevice->GetFormID(),a_propertyname,loc_res)
         return loc_res;
     }
@@ -357,8 +356,8 @@ void DeviceReader::LoadDB() {
         //LOG("Checking devices in mod {}",it1->name)
         for (auto && it2 : it1->devicerecords)
         {
-            RE::FormID loc_formid1 = it2->GetPropertyOBJ("deviceInventory", false);
-            RE::FormID loc_formid2 = it2->GetPropertyOBJ("deviceRendered", false);
+            RE::FormID loc_formid1 = it2->GetPropertyOBJ("deviceInventory", NULL, false);
+            RE::FormID loc_formid2 = it2->GetPropertyOBJ("deviceRendered" , NULL, false);
 
             //LOG("FormID {} , {} found",loc_formid1,loc_formid2)
             if (loc_formid1 > 0 && loc_formid2 > 0) 
@@ -381,7 +380,7 @@ void DeviceReader::LoadDB() {
                     _database[loc_ID].deviceMod       = it1;
 
                     // keywords
-                    _database[loc_ID].kwd = GetPropertyForm<RE::BGSKeyword>(loc_ID, "zad_DeviousDevice", 0);
+                    _database[loc_ID].kwd = GetPropertyForm<RE::BGSKeyword>(loc_ID, "zad_DeviousDevice",NULL, 0);
                     _database[loc_ID].equipConflictingDeviceKwds =
                         GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "EquipConflictingDevices", 0);
                     _database[loc_ID].unequipConflictingDeviceKwds =
@@ -390,13 +389,13 @@ void DeviceReader::LoadDB() {
                         GetPropertyFormArray<RE::BGSKeyword>(loc_ID, "EquipRequiredDevices", 0);
 
                     // menus
-                    _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg", 0);
+                    _database[loc_ID].equipMenu = GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_DeviceMsg",NULL, 0);
                     _database[loc_ID].zad_DD_OnPutOnDevice = defaultManipMenu;
 
                     _database[loc_ID].zad_EquipRequiredFailMsg =
-                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg", 0);
+                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipRequiredFailMsg",NULL, 0);
                     _database[loc_ID].zad_EquipConflictFailMsg =
-                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg", 0);
+                        GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg",NULL, 0);
                    
 
                     _devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
@@ -901,7 +900,7 @@ std::pair<std::shared_ptr<uint8_t>, uint8_t> DeviousDevices::DeviceHandle::GetPr
     return std::pair<std::shared_ptr<uint8_t>, uint8_t>(nullptr,0);
 }
 
-RE::FormID DeviceHandle::GetPropertyOBJ(std::string a_name, bool a_silence) {
+RE::FormID DeviceHandle::GetPropertyOBJ(std::string a_name, uint32_t a_defvalue, bool a_silence) {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
     {
@@ -917,12 +916,11 @@ RE::FormID DeviceHandle::GetPropertyOBJ(std::string a_name, bool a_silence) {
     }
     else
     {
-        //if (!a_silence) LOG("ERROR: Could not find property {}",a_name)
-        return 0x00000000;
+        return a_defvalue;
     }
 }
 
-int32_t DeviceHandle::GetPropertyINT(std::string a_name)
+int32_t DeviceHandle::GetPropertyINT(std::string a_name, int32_t a_defvalue)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -940,11 +938,11 @@ int32_t DeviceHandle::GetPropertyINT(std::string a_name)
     else
     {
         LOG("ERROR: Could not find property {}",a_name)
-        return 0x00000000;
+        return a_defvalue;
     }
 }
 
-float DeviceHandle::GetPropertyFLT(std::string a_name)
+float DeviceHandle::GetPropertyFLT(std::string a_name, float a_defvalue)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -962,11 +960,11 @@ float DeviceHandle::GetPropertyFLT(std::string a_name)
     else
     {
         LOG("ERROR: Could not find property {}",a_name)
-        return 0.0f;
+        return a_defvalue;
     }
 }
 
-bool DeviceHandle::GetPropertyBOL(std::string a_name)
+bool DeviceHandle::GetPropertyBOL(std::string a_name, bool a_defvalue)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -984,7 +982,7 @@ bool DeviceHandle::GetPropertyBOL(std::string a_name)
     else
     {
         LOG("ERROR: Could not find property {}",a_name)
-        return false;
+        return a_defvalue;
     }
 }
 
@@ -1123,7 +1121,7 @@ std::vector<bool> DeviousDevices::DeviceHandle::GetPropertyBOLA(std::string a_na
     }
 }
 
-std::string DeviousDevices::DeviceHandle::GetPropertySTR(std::string a_name)
+std::string DeviousDevices::DeviceHandle::GetPropertySTR(std::string a_name, std::string a_defvalue)
 {
     auto loc_property = GetPropertyRaw(a_name);
     if (loc_property.first != nullptr)
@@ -1143,7 +1141,7 @@ std::string DeviousDevices::DeviceHandle::GetPropertySTR(std::string a_name)
     else
     {
         LOG("ERROR: Could not find property {}",a_name)
-        return "";
+        return a_defvalue;
     }
 }
 
@@ -1220,29 +1218,29 @@ RE::TESObjectARMO* DeviousDevices::GetDeviceByName(PAPYRUSFUNCHANDLE, std::strin
     return loc_unit.deviceInventory;
 }
 
-RE::TESForm* DeviousDevices::GetPropertyForm(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+RE::TESForm* DeviousDevices::GetPropertyForm(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode)
 {
-    return DeviceReader::GetSingleton()->GetPropertyForm(a_invdevice,a_propertyname,a_mode);
+    return DeviceReader::GetSingleton()->GetPropertyForm(a_invdevice,a_propertyname,a_defvalue,a_mode);
 }
 
-int DeviousDevices::GetPropertyInt(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+int DeviousDevices::GetPropertyInt(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_defvalue, int a_mode)
 {
-    return DeviceReader::GetSingleton()->GetPropertyInt(a_invdevice,a_propertyname,a_mode);
+    return DeviceReader::GetSingleton()->GetPropertyInt(a_invdevice,a_propertyname,a_defvalue,a_mode);
 }
 
-float DeviousDevices::GetPropertyFloat(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+float DeviousDevices::GetPropertyFloat(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, float a_defvalue, int a_mode)
 {
-    return DeviceReader::GetSingleton()->GetPropertyFloat(a_invdevice,a_propertyname,a_mode);
+    return DeviceReader::GetSingleton()->GetPropertyFloat(a_invdevice,a_propertyname,a_defvalue,a_mode);
 }
 
-bool DeviousDevices::GetPropertyBool(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+bool DeviousDevices::GetPropertyBool(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, bool a_defvalue, int a_mode)
 {
-    return DeviceReader::GetSingleton()->GetPropertyBool(a_invdevice,a_propertyname,a_mode);
+    return DeviceReader::GetSingleton()->GetPropertyBool(a_invdevice,a_propertyname,a_defvalue,a_mode);
 }
 
-std::string DeviousDevices::GetPropertyString(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
+std::string DeviousDevices::GetPropertyString(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, std::string a_defvalue, int a_mode)
 {
-    return DeviceReader::GetSingleton()->GetPropertyString(a_invdevice,a_propertyname,a_mode);
+    return DeviceReader::GetSingleton()->GetPropertyString(a_invdevice,a_propertyname,a_defvalue,a_mode);
 }
 
 std::vector<RE::TESForm*> DeviousDevices::GetPropertyFormArray(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
