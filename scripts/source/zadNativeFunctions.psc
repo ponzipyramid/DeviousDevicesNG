@@ -53,16 +53,16 @@ String[] Function GetEditingMods(Armor akInvDevice)                             
 ; These functions returns properties from passed inventory devices
 ;   if aiMode == 0 -> Property is read from LAST iteration of device after device is overwritten by other mods
 ;   if aiMode != 0 -> Property is read from FIRST iteretion of device before it gets overwritten by other mods (original value)
-Form        Function GetPropertyForm        (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Int         Function GetPropertyInt         (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Float       Function GetPropertyFloat       (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Bool        Function GetPropertyBool        (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-String      Function GetPropertyString      (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Form[]      Function GetPropertyFormArray   (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Int[]       Function GetPropertyIntArray    (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Float[]     Function GetPropertyFloatArray  (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-Bool[]      Function GetPropertyBoolArray   (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
-String[]    Function GetPropertyStringArray (Armor akInvDevice, String asPropertyName, int aiMode = 0)  global native
+Form        Function GetPropertyForm        (Armor akInvDevice, String asPropertyName, Form     akDefValue = none   , Int aiMode = 0)  global native
+Int         Function GetPropertyInt         (Armor akInvDevice, String asPropertyName, Int      akDefValue = 0      , Int aiMode = 0)  global native
+Float       Function GetPropertyFloat       (Armor akInvDevice, String asPropertyName, Float    akDefValue = 0.0    , Int aiMode = 0)  global native
+Bool        Function GetPropertyBool        (Armor akInvDevice, String asPropertyName, Bool     akDefValue = false  , Int aiMode = 0)  global native
+String      Function GetPropertyString      (Armor akInvDevice, String asPropertyName, String   akDefValue = ""     , Int aiMode = 0)  global native
+Form[]      Function GetPropertyFormArray   (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
+Int[]       Function GetPropertyIntArray    (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
+Float[]     Function GetPropertyFloatArray  (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
+Bool[]      Function GetPropertyBoolArray   (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
+String[]    Function GetPropertyStringArray (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
 
 
 ; === equip rework
