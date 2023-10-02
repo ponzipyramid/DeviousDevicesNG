@@ -54,12 +54,13 @@ bool DeviousDevices::InventoryFilter::Filter(RE::Actor* a_actor, RE::TESBoundObj
     }
     else if (a_item->Is(RE::FormType::AlchemyItem)) //remove all food and potions (which are not poisons)
     {
-        RE::AlchemyItem* loc_alchitem = reinterpret_cast<RE::AlchemyItem*>(a_item);
+        RE::AlchemyItem* loc_alchitem = a_item->As<RE::AlchemyItem>();
         if (!loc_alchitem->IsPoison()) loc_needgagcheck = true;
     }
     if (loc_needgagcheck && ActorHaveGag(a_actor)) 
     {
         // item is food, and actor have gag -> prevent item from being consumed
+        RE::DebugNotification("You cannot eat or drink while wearing this gag.");
         return true;
     }
 

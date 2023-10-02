@@ -52,58 +52,13 @@ namespace DeviousDevices {
         {
 
             // Apply inventory filter
-            if (InventoryFilter::GetSingleton()->Filter(a_actor,a_item))
+            if (InventoryFilter::GetSingleton()->Filter(a_actor, a_item))
             {
                 return;
             }
 
-            #if (DD_EQREWORKON == 1U)
-            DeviceReader::DeviceUnit* loc_device = g_dManager->GetInventoryDevice(a_item);
-            if (loc_device != nullptr) 
-            {
-                LOG("Handling {} equip", a_item->GetName());
-                bool loc_shouldEquipSilently = g_dManager->ShouldEquipSilently(a_actor);
-                
-                // this is causing issues with DDe
-                if (!g_dManager->CanEquipDevice(a_actor, loc_device)) 
-                {
-                    if (!loc_shouldEquipSilently) RE::DebugNotification("You cannot equip this device");
-                    LOG("Failed to equip {}", a_item->GetName());
-                    return;
-                }
-
-                auto loc_equipDevice = [=](bool equipSilently) {
-                    //dManager->EquipRenderedDevice(actor, device);
-                    _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
-                                 a_playSounds, a_applyNow);
-
-                    if (!equipSilently)
-                    {
-                        g_dManager->ShowManipulateMenu(a_actor, loc_device);
-                        if (auto invMenu = GetInventoryMenu().get())
-                        {
-                            invMenu->GetRuntimeData().itemList->Update();
-                        }
-                    }
-                };
-
-                if (!loc_shouldEquipSilently) 
-                {
-                    g_dManager->ShowEquipMenu(loc_device, [=](bool equip) {
-                        if (equip) loc_equipDevice(loc_shouldEquipSilently);
-                    });
-                } 
-                else 
-                {
-                    loc_equipDevice(loc_shouldEquipSilently);
-                }
-            } 
-            else 
-            #endif
-            {
-                _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
-                             a_applyNow);
-            }
+            _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
+                         a_applyNow);
         }
 
         inline bool UnequipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
