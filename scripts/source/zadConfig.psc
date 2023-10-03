@@ -403,6 +403,14 @@ endfunction
 Event OnPageReset(string page)
 	Libs.Log("OnPageReset("+page+")")
 	if (page == "")
+		int offset = 100
+
+		int width = Utility.GetIniInt("iSize W:Display")
+
+		if width && width >= 0
+			offset = width / 20
+		endIf
+
 		LoadCustomContent("DeviousIntegrationTitle.dds", 100, 0)
 		return
 	else

@@ -103,8 +103,8 @@ Event OnSit(ObjectReference akFurniture)
 		EndIf
 		i += 1
 	endwhile
-
-	if akFurniture.GetBaseObject().GetName() == "This Should Not Be Visible"
+ 
+	if StringUtil.Find(akFurniture.GetBaseObject().GetName(), "Vein") != -1
 		; Player is mining. No message to display!
 		return
 	endif
@@ -165,20 +165,7 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
 				libs.ShowBelly(libs.PlayerRef)
 			EndIf
 		EndIf
-	EndIf
-	;Allow script-equipped items through as long as they're not weapons, spells or torches
-	if !Utility.IsInMenuMode() && !((akBaseObject as Weapon) || (akBaseObject as Spell) || (akBaseObject as Light))
-		Return
-	EndIf
-	If akActor.WornHasKeyword(libs.zad_DeviousHeavyBondage) && ((akBaseObject as Weapon) || (akBaseObject as Spell) || (akBaseObject as Light) || ((akBaseObject as Armor) && (!isDeviousDevice(akBaseObject) && !isStrapOn(akBaseObject) && (akBaseObject != zad_DeviceHider))))
-		If UI.IsMenuOpen("InventoryMenu")
-			libs.notify("You can't equip this with your hands tied!")	
-		Endif		
-		libs.playerRef.UnequipItem(akBaseObject)
-		while libs.hasAnyWeaponEquipped(libs.playerRef)
-			libs.stripweapons(libs.playerRef)
-		EndWhile				
-	Endif		
+	EndIf		
 EndEvent
  
  
