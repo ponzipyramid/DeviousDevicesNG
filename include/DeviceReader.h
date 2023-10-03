@@ -241,8 +241,9 @@ namespace DeviousDevices
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
                                                        int a_mode);  // NOT TESTED
 
-        inline void SetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) { 
-            auto pair = std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID());
+        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) {
+            if ((a_actor == nullptr) || (a_inv == nullptr)) return;
+            auto pair = std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID());
             if (manip)
                 _manipulated.insert(pair);
             else
@@ -250,12 +251,15 @@ namespace DeviousDevices
         
         }
 
-        inline bool GetManipulated(RE::Actor* actor, RE::TESObjectARMO* inv) {
-            return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(actor->GetFormID(), inv->GetFormID())); 
+        inline bool GetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv) {
+            if ((a_actor == nullptr) || (a_inv == nullptr)) return false;
+            return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID())); 
         }
 
-        inline bool ShouldEquipSilently(RE::Actor* akActor) {
-            if (_alwaysSilent->HasForm(akActor)) {
+        inline bool ShouldEquipSilently(RE::Actor* a_actor) {
+            if (a_actor == nullptr) return false;
+
+            if (_alwaysSilent->HasForm(a_actor)) {
                 return true;
             }
 
@@ -263,7 +267,7 @@ namespace DeviousDevices
             auto invMenu = ui->GetMenu(RE::InventoryMenu::MENU_NAME);
             auto containerMenu = ui->GetMenu(RE::ContainerMenu::MENU_NAME);
 
-            return !containerMenu.get() && !(akActor->GetFormID() == 20 && invMenu.get());
+            return !containerMenu.get() && !(a_actor->GetFormID() == 20 && invMenu.get());
         }
 
         DeviceUnit EmptyDeviceUnit;

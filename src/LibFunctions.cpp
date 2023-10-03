@@ -46,6 +46,7 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
 
 RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw)
 {
+    if ((a_actor == nullptr) || (a_kw == nullptr)) return nullptr;
     for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
     {
         RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
