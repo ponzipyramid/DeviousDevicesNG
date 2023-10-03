@@ -44,7 +44,7 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
         return false;
 
     RE::FormType type = obj->GetFormType();
-    if (obj->Is(RE::FormType::Weapon) || obj->Is(RE::FormType::KeyMaster) || (obj->Is(RE::FormType::Armor) && !IsDevious(obj)))
+    if (!obj->Is(RE::FormType::Weapon) && !obj->Is(RE::FormType::KeyMaster) && (!obj->Is(RE::FormType::Armor) || IsDevious(obj)))
         return false;
 
     auto hasGloves = GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
@@ -121,8 +121,8 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         auto heavyBondage = GetWornWithDeviousKeyword(a_actor, _deviousHeavyBondageKwd);
 
         if (mittens || heavyBondage) {
-            std::string msg = mittens ? "You can't equip this while locked in bondage mittens!"
-                                      : "You can't equip this with your hands tied!";
+            std::string msg = heavyBondage ? "You can't equip this with your hands tied!"
+                                      : "You can't equip this while locked in bondage mittens!";
 
             if (invMenu.get()) {
                 RE::DebugNotification(msg.c_str());
@@ -140,7 +140,7 @@ bool DeviousDevices::InventoryFilter::IsDevious(RE::TESBoundObject* obj) {
     loc_deviousKwds.push_back(_lockableKwd);
     loc_deviousKwds.push_back(_inventoryDeviceKwd);
 
-    return obj->HasKeywordInArray(loc_deviousKwds, false) || obj->GetFormID() != _deviceHiderId;
+    return obj->HasKeywordInArray(loc_deviousKwds, false) || obj->GetFormID() == _deviceHiderId;
 }
 
 bool DeviousDevices::InventoryFilter::IsStrapon(RE::TESBoundObject* obj) {

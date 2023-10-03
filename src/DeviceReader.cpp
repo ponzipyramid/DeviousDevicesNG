@@ -186,12 +186,15 @@ T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice,
 
 RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode = 0)
 {
-    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname,a_defvalue->GetFormID(), a_mode);
+    if (!a_defvalue) return nullptr;
+
+    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname, a_defvalue->GetFormID(), a_mode);
 }
 
 
 int DeviousDevices::DeviceReader::GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_defvalue, int a_mode)
 {
+
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
     auto loc_handle = (a_mode == 0) ? loc_unit.deviceHandle : loc_unit.history.front().deviceHandle;
     
