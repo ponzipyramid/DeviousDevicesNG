@@ -9,6 +9,41 @@ namespace DeviousDevices {
     namespace Hooks {
         DeviceReader* g_dManager;
 
+        template <class F, class T>
+        static void write_vfunc() {
+            REL::Relocation<std::uintptr_t> vtbl{F::VTABLE[0]};
+            T::func = vtbl.write_vfunc(T::idx, T::thunk);
+        }
+
+        struct AddObjectToContainerHook {
+            static void thunk(RE::PlayerCharacter* player, RE::TESBoundObject* a_object, RE::ExtraDataList* a_extraList,
+                              int32_t a_count, RE::TESObjectREFR* a_fromRefr) {
+                if (InventoryFilter::GetSingleton()->TakeFilter(player, a_object)) return;
+                func(player, a_object, a_extraList, a_count, a_fromRefr);
+            }
+
+            static inline REL::Relocation<decltype(thunk)> func;
+
+            static inline int idx = 0x5A;
+
+            static inline void Install() { write_vfunc<RE::PlayerCharacter, AddObjectToContainerHook>(); }
+        };
+
+        struct PickUpObjectHook {
+            static void thunk(RE::PlayerCharacter* player, RE::TESObjectREFR* a_item, uint32_t a_count, bool a_arg3,
+                              bool a_playSound) {
+                if (InventoryFilter::GetSingleton()->TakeFilter(player, a_item->GetBaseObject())) return;
+                func(player, a_item, a_count, a_arg3, a_playSound);
+            }
+
+
+            static inline REL::Relocation<decltype(thunk)> func;
+
+            static inline int idx = REL::Module::GetRuntime() != REL::Module::Runtime::VR ? 0xCC : 0xCE;
+
+            static inline void Install() { write_vfunc<RE::PlayerCharacter, PickUpObjectHook>(); }
+        };
+
         typedef void(WINAPI* OriginalEquipObject)(  RE::ActorEquipManager* a_1, 
                                                     RE::Actor* a_actor,
                                                     RE::TESBoundObject* a_object, 
@@ -33,12 +68,6 @@ namespace DeviousDevices {
         inline OriginalEquipObject   _EquipObject;
         inline OriginalUnequipObject _UnequipObject;
 
-        inline RE::GPtr<RE::InventoryMenu> GetInventoryMenu() {
-            auto ui = RE::UI::GetSingleton();
-            auto invMenu = ui->GetMenu<RE::InventoryMenu>(RE::InventoryMenu::MENU_NAME);
-            return invMenu;
-        }
-
         inline void EquipObject(RE::ActorEquipManager*      a_1,
                                 RE::Actor*                  a_actor,
                                 RE::TESBoundObject*         a_item,
@@ -52,10 +81,7 @@ namespace DeviousDevices {
         {
 
             // Apply inventory filter
-            if (InventoryFilter::GetSingleton()->Filter(a_actor, a_item))
-            {
-                return;
-            }
+            if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) return;
 
             _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
                          a_applyNow);
@@ -77,6 +103,9 @@ namespace DeviousDevices {
 
         inline void Install() {
             g_dManager = DeviceReader::GetSingleton();
+
+            AddObjectToContainerHook::Install();
+            PickUpObjectHook::Install();
 
             const uintptr_t loc_equipTargetAddress = RE::Offset::ActorEquipManager::EquipObject.address();
             _EquipObject = (OriginalEquipObject)loc_equipTargetAddress;

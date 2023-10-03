@@ -504,7 +504,7 @@ void DeviceReader::ShowEquipMenu(DeviceUnit* device, std::function<void(bool)> c
     bool canManipulate = true;
 
     if (equipMenu != nullptr)
-        MessageBox::Show(equipMenu, [callback](uint32_t result) {
+        UI::MessageBox::Show(equipMenu, [callback](uint32_t result) {
             callback(result == 0);
         });
     else
@@ -516,7 +516,7 @@ void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) {
     if (Settings::GetSingleton().GetSetting<bool>("UseItemManipulation") && device->lockable && device->canManipulate) {
         auto menu = device->GetManipulationMenu();
         if (menu != nullptr)
-            MessageBox::Show(menu, [actor, device](uint32_t result) { 
+            UI::MessageBox::Show(menu, [actor, device](uint32_t result) { 
                 DeviceReader::GetSingleton()->SetManipulated(actor, device->deviceInventory, result);
             });
         else {
