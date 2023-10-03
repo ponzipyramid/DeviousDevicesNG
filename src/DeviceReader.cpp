@@ -186,9 +186,7 @@ T* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice,
 
 RE::TESForm* DeviousDevices::DeviceReader::GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode = 0)
 {
-    if (!a_defvalue) return nullptr;
-
-    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname, a_defvalue->GetFormID(), a_mode);
+    return GetPropertyForm<RE::TESForm>(a_invdevice, a_propertyname, (a_defvalue == nullptr) ? NULL : a_defvalue->GetFormID(), a_mode);
 }
 
 
