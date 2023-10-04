@@ -73,7 +73,9 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 }
 
 void DeviousDevices::NodeHider::Setup()
-{
+{ 
+    SKSE::log::info("START");
+    SKSE::log::info("STOP");
 }
 
 void DeviousDevices::NodeHider::Update(const float& a_delta)

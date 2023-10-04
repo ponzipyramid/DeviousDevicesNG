@@ -4,6 +4,7 @@ SINGLETONBODY(DeviousDevices::DeviceHiderManager)
 
 void DeviousDevices::DeviceHiderManager::Setup()
 {
+    SKSE::log::info("START");
     LOG("DeviceHiderManager::Setup() - called")
 
     if (!_setup)
@@ -43,6 +44,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
         LOG("DeviceHiderManager::Setup() - hide={}, nohide={}",_hidekeywords.size(),_nohidekeywords.size())
         _setup = true;
     }
+    SKSE::log::info("STOP");
 }
 
 std::vector<int> DeviousDevices::RebuildSlotMask(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, std::vector<int> a_slotfilter)

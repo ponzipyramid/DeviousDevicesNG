@@ -10,6 +10,8 @@ SINGLETONBODY(DeviceReader)
 
 void DeviceReader::Setup()
 {
+    SKSE::log::info("START");
+
     if (!_installed)
     {
         RE::FormID zadInventoryKwdId = 0x02B5F0;
@@ -25,6 +27,7 @@ void DeviceReader::Setup()
         ParseConfig();
         _installed = true; // to prevent db reset on game reload
     }
+    SKSE::log::info("STOP");
 }
 
 void DeviceReader::ParseConfig() {

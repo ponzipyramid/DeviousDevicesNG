@@ -199,6 +199,7 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
 
 void DeviousDevices::InventoryFilter::Setup() {
     if (!_init) {
+        SKSE::log::info("START");
         _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
@@ -248,5 +249,6 @@ void DeviousDevices::InventoryFilter::Setup() {
 
        _lockableKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_Lockable");
        _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
+       SKSE::log::info("STOP");
     }
 }

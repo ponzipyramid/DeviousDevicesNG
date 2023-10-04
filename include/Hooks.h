@@ -102,6 +102,7 @@ namespace DeviousDevices {
         }
 
         inline void Install() {
+            SKSE::log::info("START");
             g_dManager = DeviceReader::GetSingleton();
 
             AddObjectToContainerHook::Install();
@@ -140,6 +141,8 @@ namespace DeviousDevices {
             {
                 WARN("Failed to install papyrus hook on UnequipObject");
             }
+            SKSE::log::info("STOP");
+
         }
     }
 } 
