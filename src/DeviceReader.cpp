@@ -706,7 +706,7 @@ RE::TESForm* DeviceMod::GetForm(const uint32_t a_formID)
 template <typename T>
 T* DeviceMod::GetForm(const uint32_t a_formID) {
     const uint8_t loc_modindex = (a_formID & 0xFF000000) >> 24;
-    const std::string loc_modsource = masters[loc_modindex];
+    const std::string loc_modsource = masters[loc_modindex >= masters.size() ? masters.size() - 1 : loc_modindex];
     return RE::TESDataHandler::GetSingleton()->LookupForm<T>(0x00FFFFFF & a_formID, loc_modsource);
 }
 
