@@ -54,19 +54,19 @@ namespace {
                 switch (message->type) {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
-                        DeviousDevices::Hooks::Install();
-
                         break;
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
-                        DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
+                    case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
+                        DeviousDevices::Hooks::Install();
+                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
+                        DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
                         DeviousDevices::UpdateHook::GetSingleton()->Setup();
