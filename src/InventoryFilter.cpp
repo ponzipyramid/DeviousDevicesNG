@@ -12,27 +12,18 @@ namespace {
     }
 }
 
-RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd,
-                                                                             bool all) {
+RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd) {
 
     std::unordered_map<RE::BGSKeyword*, RE::TESObjectARMO*> loc_itemMap;
-    std::vector<RE::BGSKeyword*> kwds{ kwd };
 
     int slot = GetMaskForKeyword(a_actor, kwd);
-
-    SKSE::log::info("GetWornWithDeviousKeyword: slot = {}", slot);
 
     if (slot < 0) return nullptr;
 
     auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(slot));
 
-    SKSE::log::info("GetWornWithDeviousKeyword: armor found = {}", loc_armor != nullptr);
-
-    if (loc_armor != nullptr) {
-        if (loc_armor->HasKeywordInArray(kwds, false)) {
-            SKSE::log::info("GetWornWithDeviousKeyword: armor {} has kwd", loc_armor != nullptr);
-            return loc_armor;
-        }
+    if (loc_armor != nullptr && loc_armor->HasKeyword(kwd)) {
+        return loc_armor;
     }
 
     return nullptr;
@@ -43,31 +34,24 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
         a_actor->GetFormID() != 20 || UI::GetMenu<RE::BarterMenu>().get())
         return false;
 
-    RE::FormType type = obj->GetFormType();
     if (!obj->Is(RE::FormType::Weapon) && !obj->Is(RE::FormType::KeyMaster) && (!obj->Is(RE::FormType::Armor) || IsDevious(obj)))
         return false;
 
-    auto hasGloves = GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
-
-    if (!hasGloves) return false;
+    if (!GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd)) return false;
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distr(0.0f, 100.0f);
 
-    auto roll = distr(gen);
+    bool loc_rollFailure = distr(gen) < 80.0f;
 
-    SKSE::log::info("Real Dist: {}", roll);
-
-    bool rollFailure = roll < 80.0f;
-
-    if (rollFailure) {
+    if (loc_rollFailure) {
         RE::DebugNotification("Locked in bondage mittens, you cannot pick up the item.");
     } else {
         RE::DebugNotification("Despite wearing bondage mittens, you manage to pick up the item.");
     }
 
-    return rollFailure;
+    return loc_rollFailure;
 }
 
 bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) {
@@ -77,10 +61,7 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) {
                 return false;  // is ring gag, do not remove food
             else if (loc_armor->HasKeyword(_deviousGagPanelKwd))  // is panel gag, additional check needed
             {
-                if (a_actor->GetFactionRank(_gagpanelfaction, true) == 1)
-                    return true;
-                else
-                    return false;
+                return a_actor->GetFactionRank(_gagpanelfaction, true) == 1;
             }
             return true;
         }
@@ -93,7 +74,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 {
     if ((a_actor == nullptr) || (a_item == nullptr)) return true;
     
-    auto invMenu = UI::GetMenu<RE::InventoryMenu>();
+    auto loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
 
     // == Gag check
     bool loc_needgagcheck = false;
@@ -108,8 +89,8 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     }
     if (loc_needgagcheck && ActorHasBlockingGag(a_actor)) 
     {
-        if (invMenu.get()) {
-            RE::DebugNotification("You cannot eat or drink while wearing this gag.");
+        if (loc_invMenu.get()) {
+            RE::DebugNotification("You can't eat or drink while wearing this gag.");
         }
         return true;
     }
@@ -124,7 +105,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
             std::string msg = heavyBondage ? "You can't equip this with your hands tied!"
                                       : "You can't equip this while locked in bondage mittens!";
 
-            if (invMenu.get()) {
+            if (loc_invMenu.get()) {
                 RE::DebugNotification(msg.c_str());
             }
 
@@ -144,11 +125,11 @@ bool DeviousDevices::InventoryFilter::IsDevious(RE::TESBoundObject* obj) {
 }
 
 bool DeviousDevices::InventoryFilter::IsStrapon(RE::TESBoundObject* obj) {
-    std::vector<RE::BGSKeyword*> straponKwds;
-    straponKwds.push_back(_sexlabNoStripKwd);
-    straponKwds.push_back(_jewelryKwd);
+    std::vector<RE::BGSKeyword*> loc_straponKwds;
+    loc_straponKwds.push_back(_sexlabNoStripKwd);
+    loc_straponKwds.push_back(_jewelryKwd);
 
-    return obj->HasKeywordInArray(straponKwds, true);
+    return obj->HasKeywordInArray(loc_straponKwds, true);
 }
 
 int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd) {
@@ -207,48 +188,49 @@ void DeviousDevices::InventoryFilter::Setup() {
         _jewelryKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
 
         _deviousPlugKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlug");
-       _deviousBeltKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBelt");
-       _deviousBraKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBra");
-       _deviousCollarKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousCollar");
-       _deviousArmCuffsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousArmCuffs");
-       _deviousLegCuffsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousLegCuffs");
-       _deviousArmbinderKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousArmbinder");
-       _deviousArmbinderElbowKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousArmbinderElbow");
-       _deviousHeavyBondageKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHeavyBondage");
-       _deviousHobbleSkirtKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHobbleSkirt");
-       _deviousHobbleSkirtRelaxedKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHobbleSkirtRelaxed");
-       _deviousAnkleShacklesKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousAnkleShackles");
-       _deviousStraitJacketKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
-       _deviousCuffsFrontKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousCuffsFront");
-       _deviousPetSuitKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPetSuit");
-       _deviousYokeKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousYoke");
-       _deviousYokeBBKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousYokeBB");
-       _deviousCorsetKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousCorset");
-       _deviousClampsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousClamps");
-       _deviousGlovesKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGloves");
-       _deviousHoodKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHood");
-       _deviousSuitKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousSuit");
-       _deviousElbowTieKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousElbowTie");
-       _deviousGagKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGag");
-       _deviousGagRingKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGagRing");
-       _deviousGagLargeKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGagLarge");
-       _deviousGagPanelKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGagPanel");
-       _deviousPlugVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlugVaginal");
-       _deviousPlugAnalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlugAnal");
-       _deviousHarnessKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHarness");
-       _deviousBlindfoldKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBlindfold");
-       _deviousBootsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBoots");
-       _deviousPiercingsNippleKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPiercingsNipple");
-       _deviousPiercingsVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPiercingsVaginal");
-       _deviousBondageMittensKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBondageMittens");
-       _deviousPonyGearKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPonyGear");
+        _deviousBeltKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBelt");
+        _deviousBraKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBra");
+        _deviousCollarKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousCollar");
+        _deviousArmCuffsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousArmCuffs");
+        _deviousLegCuffsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousLegCuffs");
+        _deviousArmbinderKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousArmbinder");
+        _deviousArmbinderElbowKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousArmbinderElbow");
+        _deviousHeavyBondageKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHeavyBondage");
+        _deviousHobbleSkirtKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHobbleSkirt");
+        _deviousHobbleSkirtRelaxedKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHobbleSkirtRelaxed");
+        _deviousAnkleShacklesKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousAnkleShackles");
+        _deviousStraitJacketKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
+        _deviousCuffsFrontKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousCuffsFront");
+        _deviousPetSuitKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPetSuit");
+        _deviousYokeKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousYoke");
+        _deviousYokeBBKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousYokeBB");
+        _deviousCorsetKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousCorset");
+        _deviousClampsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousClamps");
+        _deviousGlovesKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGloves");
+        _deviousHoodKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHood");
+        _deviousSuitKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousSuit");
+        _deviousElbowTieKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousElbowTie");
+        _deviousGagKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGag");
+        _deviousGagRingKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGagRing");
+        _deviousGagLargeKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGagLarge");
+        _deviousGagPanelKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousGagPanel");
+        _deviousPlugVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlugVaginal");
+        _deviousPlugAnalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlugAnal");
+        _deviousHarnessKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousHarness");
+        _deviousBlindfoldKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBlindfold");
+        _deviousBootsKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBoots");
+        _deviousPiercingsNippleKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPiercingsNipple");
+        _deviousPiercingsVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPiercingsVaginal");
+        _deviousBondageMittensKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBondageMittens");
+        _deviousPonyGearKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPonyGear");
 
-       _permitOralKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitOral");
-       _permitAnalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitAnal");
-       _permitVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitVaginal");
+        _permitOralKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitOral");
+        _permitAnalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitAnal");
+        _permitVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitVaginal");
 
-       _lockableKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_Lockable");
-       _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
-       SKSE::log::info("STOP");
+        _lockableKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_Lockable");
+        _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
+
+        SKSE::log::info("STOP");
     }
 }
