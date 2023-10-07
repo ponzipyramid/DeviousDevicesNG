@@ -211,7 +211,7 @@ namespace DeviousDevices
             return obj->HasKeywordInArray(_invDeviceKwds, true);
         }
 
-        inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return _devices.count(obj->GetFormID()) ? _devices[obj->GetFormID()] : nullptr; }
+        inline DeviceUnit* GetDevice(RE::TESForm* obj) { return _devices.count(obj->GetFormID()) ? _devices[obj->GetFormID()] : nullptr; }
 
         bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
 
