@@ -13,37 +13,43 @@
 
 using namespace RE::BSScript;
 using namespace SKSE;
-using namespace SKSE::log;
 using namespace SKSE::stl;
  
 namespace {
 #if (DD_LOGENABLED == 1U)
     void InitializeLogging() {
-        auto path = log_directory();
-        if (!path) {
+        auto loc_path = SKSE::log::log_directory();
+        if (!loc_path) 
+        {
             report_and_fail("Unable to lookup SKSE logs directory.");
         }
-        *path += L"/DeviousDevicesNG.log";
+        *loc_path += L"/DeviousDevicesNG.log";
 
-        std::shared_ptr<spdlog::logger> log;
-        if (IsDebuggerPresent()) {
-            log = std::make_shared<spdlog::logger>("Global", std::make_shared<spdlog::sinks::msvc_sink_mt>());
-        } else {
-            log = std::make_shared<spdlog::logger>(
-                "Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
+        std::shared_ptr<spdlog::logger> loc_log;
+        if (IsDebuggerPresent()) 
+        {
+            loc_log = std::make_shared<spdlog::logger>("Global", std::make_shared<spdlog::sinks::msvc_sink_mt>());
+        } 
+        else 
+        {
+            loc_log = std::make_shared<spdlog::logger>(
+                "Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(loc_path->string(), true));
         }
-        log->set_level(spdlog::level::from_str("info"));
-        log->flush_on(spdlog::level::from_str("trace"));
+        loc_log->set_level(spdlog::level::from_str("info"));
+        loc_log->flush_on(spdlog::level::from_str("trace"));
 
-        spdlog::set_default_logger(std::move(log));
+        spdlog::set_default_logger(std::move(loc_log));
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
     }
 #endif
     void InitializePapyrus() {
         log::trace("Initializing Papyrus binding...");
-        if (GetPapyrusInterface()->Register(DeviousDevices::RegisterFunctions)) {
-            log::info("Papyrus functions bound.");
-        } else {
+        if (GetPapyrusInterface()->Register(DeviousDevices::RegisterFunctions)) 
+        {
+            LOG("Papyrus functions bound.");
+        } 
+        else 
+        {
             stl::report_and_fail("Failure to register Papyrus bindings.");
         }
     }
@@ -54,22 +60,22 @@ namespace {
                 switch (message->type) {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
+                        DeviousDevices::Hooks::Install();
                         break;
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
-                        break;
-                    case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
-                                                             // Data will be a boolean indicating whether the load was
-                                                             // successful.
-                    case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
-                        DeviousDevices::Hooks::Install();
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
                         DeviousDevices::UpdateHook::GetSingleton()->Setup();
+                        break;
+                    case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
+                                                             // Data will be a boolean indicating whether the load was
+                                                             // successful.
+                    case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
                         break;
                 }
             })) {

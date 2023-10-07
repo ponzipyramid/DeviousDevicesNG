@@ -4,9 +4,6 @@ SINGLETONBODY(DeviousDevices::DeviceHiderManager)
 
 void DeviousDevices::DeviceHiderManager::Setup()
 {
-    SKSE::log::info("START");
-    LOG("DeviceHiderManager::Setup() - called")
-
     if (!_setup)
     {
         RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
@@ -41,10 +38,8 @@ void DeviousDevices::DeviceHiderManager::Setup()
             _kwnohide = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x043F84,"Devious Devices - Integration.esm"));
             if (_kwnohide != nullptr) _nohidekeywords.push_back(_kwnohide);
         }
-        LOG("DeviceHiderManager::Setup() - hide={}, nohide={}",_hidekeywords.size(),_nohidekeywords.size())
         _setup = true;
     }
-    SKSE::log::info("STOP");
 }
 
 std::vector<int> DeviousDevices::RebuildSlotMask(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, std::vector<int> a_slotfilter)

@@ -64,10 +64,12 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
 
 std::vector<RE::TESObjectARMO*> DeviousDevices::GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn)
 {
+    LOG("GetDevices called")
     return LibFunctions::GetSingleton()->GetDevices(a_actor,a_mode,a_worn);
 }
 
 RE::TESObjectARMO* DeviousDevices::GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw)
 {
+    LOG("GetWornDevice called")
     return LibFunctions::GetSingleton()->GetWornDevice(a_actor,a_kw);
 }

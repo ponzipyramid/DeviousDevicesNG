@@ -20,17 +20,17 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 
     int slot = GetMaskForKeyword(a_actor, kwd);
 
-    SKSE::log::info("GetWornWithDeviousKeyword: slot = {}", slot);
+    //SKSE::log::info("GetWornWithDeviousKeyword: slot = {}", slot);
 
     if (slot < 0) return nullptr;
 
     auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(slot));
 
-    SKSE::log::info("GetWornWithDeviousKeyword: armor found = {}", loc_armor != nullptr);
+    //SKSE::log::info("GetWornWithDeviousKeyword: armor found = {}", loc_armor != nullptr);
 
     if (loc_armor != nullptr) {
         if (loc_armor->HasKeywordInArray(kwds, false)) {
-            SKSE::log::info("GetWornWithDeviousKeyword: armor {} has kwd", loc_armor != nullptr);
+            //SKSE::log::info("GetWornWithDeviousKeyword: armor {} has kwd", loc_armor != nullptr);
             return loc_armor;
         }
     }
@@ -57,7 +57,7 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
 
     auto roll = distr(gen);
 
-    SKSE::log::info("Real Dist: {}", roll);
+    LOG("Real Dist: {}", roll);
 
     bool rollFailure = roll < 80.0f;
 
@@ -199,7 +199,6 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
 
 void DeviousDevices::InventoryFilter::Setup() {
     if (!_init) {
-        SKSE::log::info("START");
         _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
@@ -249,6 +248,5 @@ void DeviousDevices::InventoryFilter::Setup() {
 
        _lockableKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_Lockable");
        _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
-       SKSE::log::info("STOP");
     }
 }

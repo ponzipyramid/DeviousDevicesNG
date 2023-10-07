@@ -86,31 +86,37 @@ namespace DeviousDevices
         uint8_t*    data = nullptr; //24 - size
     };
 
+    class DeviceMod;
+
     struct DeviceHandle
     {
         DeviceRecord                    record;
         std::string                     source;
         ScriptHandle                    scripts;
         KeywordsHandle                  keywords;
+        DeviceMod*                      mod;
         
         void LoadVM();
         void LoadKeywords();
 
         //only usable form form properties
         //will rework this in future so it will be possible to read all types of properties from file
-        std::pair<std::shared_ptr<uint8_t>,uint8_t> GetPropertyRaw(std::string a_name);  //get raw property <data,type>
+        std::pair<std::shared_ptr<uint8_t>,uint8_t> GetPropertyRaw(std::string a_name) const;  //get raw property <data,type>
 
-        uint32_t    GetPropertyOBJ(std::string a_name, uint32_t     a_defvalue, bool a_silence);  //get object (internal form id)
-        int32_t     GetPropertyINT(std::string a_name, int32_t      a_defvalue);  //get int
-        float       GetPropertyFLT(std::string a_name, float        a_defvalue);  //get float
-        bool        GetPropertyBOL(std::string a_name, bool         a_defvalue);  //get bool
-        std::string GetPropertySTR(std::string a_name, std::string  a_defvalue);  //get string
+        uint32_t    GetPropertyOBJ(std::string a_name, uint32_t     a_defvalue, bool a_silence) const;  //get object (internal form id)
+        int32_t     GetPropertyINT(std::string a_name, int32_t      a_defvalue) const;  //get int
+        float       GetPropertyFLT(std::string a_name, float        a_defvalue) const;  //get float
+        bool        GetPropertyBOL(std::string a_name, bool         a_defvalue) const;  //get bool
+        std::string GetPropertySTR(std::string a_name, std::string  a_defvalue) const;  //get string
 
-        std::vector<uint32_t>       GetPropertyOBJA(std::string a_name);  //get object (internal form id) array
-        std::vector<int32_t>        GetPropertyINTA(std::string a_name);  //get int array
-        std::vector<float>          GetPropertyFLTA(std::string a_name);  //get float array
-        std::vector<bool>           GetPropertyBOLA(std::string a_name);  //get bool array
-        std::vector<std::string>    GetPropertySTRA(std::string a_name);  //get string array
+        std::vector<uint32_t>       GetPropertyOBJA(std::string a_name) const;  //get object (internal form id) array
+        std::vector<int32_t>        GetPropertyINTA(std::string a_name) const;  //get int array
+        std::vector<float>          GetPropertyFLTA(std::string a_name) const;  //get float array
+        std::vector<bool>           GetPropertyBOLA(std::string a_name) const;  //get bool array
+        std::vector<std::string>    GetPropertySTRA(std::string a_name) const;  //get string array
+
+        template<typename T>
+        T* GetFormFromHandle(const RE::FormID &a_formid) const;
     };
 
     struct DeviceGroup
@@ -128,18 +134,15 @@ namespace DeviousDevices
 
     struct DeviceMod
     {
-
         DeviceMod(std::string a_name, uint8_t* a_data, size_t a_size);
         ~DeviceMod(){ delete rawdata; }
 
-        void ParseInfo();
-        size_t ParseDevices();
+        void    ParseInfo();
+        size_t  ParseDevices();
 
-        RE::TESForm* GetForm(const DeviceHandle* a_handle);
-        RE::TESForm* GetForm(const uint32_t a_formID); //have to be internal esp formID !!!
-
+        RE::TESForm* GetForm(const DeviceHandle* a_handle) const;
         template <typename T>
-        T* GetForm(const uint32_t a_formID);  // have to be internal esp formID !!!
+        T* GetForm(const uint32_t a_formID) const;  // have to be internal esp formID !!!
 
         std::string name;
         DeviceGroup group_TES4;
@@ -156,12 +159,12 @@ namespace DeviousDevices
     public:
         struct DeviceUnit
         {
-            bool CanEquip(RE::Actor* actor);
-            inline RE::TESObjectARMO* GetRenderedDevice() { return deviceRendered; }
-            inline RE::BGSMessage* GetEquipMenu() { return equipMenu; }
-            inline RE::BGSMessage* GetManipulationMenu() { return zad_DD_OnPutOnDevice; }
-            inline std::string GetName() { return deviceInventory->GetFormEditorID(); }
-            inline RE::FormID GetFormID() { return deviceInventory->GetFormID(); }
+            bool                        CanEquip(RE::Actor* actor) const;
+            inline RE::TESObjectARMO*   GetRenderedDevice() const { return deviceRendered; }
+            inline RE::BGSMessage*      GetEquipMenu() const { return equipMenu; }
+            inline RE::BGSMessage*      GetManipulationMenu() const { return zad_DD_OnPutOnDevice; }
+            inline std::string          GetName() const { return deviceInventory->GetFormEditorID(); }
+            inline RE::FormID           GetFormID() const { return deviceInventory->GetFormID(); }
 
             std::string scriptName;
 
@@ -204,7 +207,7 @@ namespace DeviousDevices
         DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_device, int a_mode = 0);
 
 
-        inline bool IsInventoryDevice(RE::TESForm* obj) {
+        inline bool IsInventoryDevice(RE::TESForm* obj) const {
             return obj->HasKeywordInArray(_invDeviceKwds, true);
         }
 
@@ -224,39 +227,37 @@ namespace DeviousDevices
         DeviceUnit GetDeviceUnit(std::string a_name);
 
         template <typename T>
-        T* GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,uint32_t a_defvalue,int a_mode);  // NOT TESTED
-        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode);
-
-        int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_defvalue, int a_mode);                       
-        float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, float a_defvalue, int a_mode);                     
-        bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, bool a_defvalue, int a_mode);                      //NOT TESTED
-        std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, std::string a_defvalue, int a_mode);                    
-        std::vector<int>            GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);      //NOT TESTED
-        std::vector<float>          GetPropertyFloatArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);    //NOT TESTED
-        std::vector<bool>           GetPropertyBoolArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);     //NOT TESTED
-        std::vector<std::string>    GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);   
+        T*              GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,uint32_t a_defvalue,int a_mode)  const;
+        RE::TESForm*    GetPropertyForm(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, RE::TESForm* a_defvalue, int a_mode) const;
+        int             GetPropertyInt(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_defvalue, int a_mode)      const;
+        float           GetPropertyFloat(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, float a_defvalue, int a_mode)  const;
+        bool            GetPropertyBool(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, bool a_defvalue, int a_mode)    const;
+        std::string     GetPropertyString(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, std::string a_defvalue, int a_mode) const;
+        std::vector<int>            GetPropertyIntArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)     const;
+        std::vector<float>          GetPropertyFloatArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)   const;
+        std::vector<bool>           GetPropertyBoolArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)    const;
+        std::vector<std::string>    GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)  const;
 
         template <typename T>
-        std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);  // NOT TESTED
-        std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname,
-                                                       int a_mode);  // NOT TESTED
+        std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
+        std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
 
-        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) {
+        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 
+        {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return;
             auto pair = std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID());
-            if (manip)
-                _manipulated.insert(pair);
-            else
-                _manipulated.erase(pair);
-        
+            if (manip)  _manipulated.insert(pair);
+            else        _manipulated.erase(pair);
         }
 
-        inline bool GetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv) {
+        inline bool GetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv) const
+        {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return false;
             return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID())); 
         }
 
-        inline bool ShouldEquipSilently(RE::Actor* a_actor) {
+        inline bool ShouldEquipSilently(RE::Actor* a_actor) const
+        {
             if (a_actor == nullptr) return false;
 
             if (_alwaysSilent->HasForm(a_actor)) {
@@ -271,7 +272,6 @@ namespace DeviousDevices
         }
 
         DeviceUnit EmptyDeviceUnit;
-
     private:
         void LoadDDMods();
         void ParseMods();
@@ -309,10 +309,14 @@ namespace DeviousDevices
 
 
     // device manipulation
-    inline void SetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) {
+    inline void SetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) 
+    {
+        LOG("SetManipulated called")
         DeviceReader::GetSingleton()->SetManipulated(actor, inv, manip);
     }
-    inline bool GetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv) {
+    inline bool GetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv) 
+    {
+        LOG("GetManipulated called")
         return DeviceReader::GetSingleton()->GetManipulated(actor, inv);
     }
 
