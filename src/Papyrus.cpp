@@ -14,11 +14,6 @@ using namespace SKSE;
 namespace DeviousDevices {
     constexpr std::string_view PapyrusClass = "zadNativeFunctions";
 
-    std::string GetName(StaticFunctionTag* base, RE::TESForm* thisForm) {
-        if (!thisForm) return "";
-        return thisForm->GetName();
-    }
-
     bool FormHasKeywordString(StaticFunctionTag* base, TESForm* obj, std::string kwd) {
         if (!obj) {
             LOG("FormHasKeywordString received none obj.");
@@ -86,7 +81,6 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     #endif
 
     //Papyrus.h
-    REGISTERPAPYRUSFUNC(GetName,true);
     REGISTERPAPYRUSFUNC(FormHasKeywordString,true);
     REGISTERPAPYRUSFUNC(FindMatchingDevice,true);
     REGISTERPAPYRUSFUNC(CTrace,true);
@@ -108,7 +102,7 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
 
     //device reader
     REGISTERPAPYRUSFUNC(GetRenderDevice,true);
-    REGISTERPAPYRUSFUNC(GeInventoryDevice,true);
+    REGISTERPAPYRUSFUNC(GetInventoryDevice,true);
     REGISTERPAPYRUSFUNC(GetPropertyForm,true);
     REGISTERPAPYRUSFUNC(GetPropertyInt,true);
     REGISTERPAPYRUSFUNC(GetPropertyFloat,true);

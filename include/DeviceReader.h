@@ -276,7 +276,6 @@ namespace DeviousDevices
         void LoadDDMods();
         void ParseMods();
         void LoadDB();
-        void ParseConfig();
 
         RE::BGSListForm*                                        _alwaysSilent;
         std::vector<RE::TESFile*>                               _ddmods;
@@ -292,7 +291,7 @@ namespace DeviousDevices
 
     //=== Papyrus native functions
     RE::TESObjectARMO* GetRenderDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice);
-    RE::TESObjectARMO* GeInventoryDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_renddevice);
+    RE::TESObjectARMO* GetInventoryDevice(PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_renddevice);
     RE::TESObjectARMO* GetDeviceByName(PAPYRUSFUNCHANDLE,std::string a_name); //just because this exist doesn't mean that it should be used ;)
 
     //read interface

@@ -22,25 +22,8 @@ void DeviceReader::Setup()
         LoadDDMods();
         ParseMods();
         LoadDB();
-        ParseConfig();
         _installed = true; // to prevent db reset on game reload
     }
-}
-
-void DeviceReader::ParseConfig() {
-        //std::string dir("Data\\SKSE\\Plugins\\Devious Devices NG");
-        //
-        //std::ifstream inputFile(dir + "\\device_conflicts.yaml");
-        //if (inputFile.good()) {
-        //    yaml_source ar(inputFile);
-        //    std::vector<ConflictMap> conflicts;
-        //    ar >> conflicts;
-        //
-        //    for (auto conflict : conflicts) {
-        //        deviceConflicts[conflict.type] = conflict.conflicts;
-        //        conflict.Init();
-        //    }
-        //}
 }
 
 RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
@@ -1216,7 +1199,7 @@ RE::TESObjectARMO* DeviousDevices::GetRenderDevice(PAPYRUSFUNCHANDLE, RE::TESObj
     return loc_res;
 }
 
-RE::TESObjectARMO* DeviousDevices::GeInventoryDevice(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_renddevice)
+RE::TESObjectARMO* DeviousDevices::GetInventoryDevice(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_renddevice)
 {
     LOG("GeInventoryDevice called")
 
