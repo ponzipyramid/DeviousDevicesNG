@@ -22,7 +22,8 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 
     auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(slot));
 
-    if (loc_armor != nullptr && loc_armor->HasKeyword(kwd)) {
+    if (loc_armor != nullptr && loc_armor->HasKeyword(kwd)) 
+    {
         return loc_armor;
     }
 
@@ -180,7 +181,6 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
 
 void DeviousDevices::InventoryFilter::Setup() {
     if (!_init) {
-        SKSE::log::info("START");
         _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
@@ -228,9 +228,8 @@ void DeviousDevices::InventoryFilter::Setup() {
         _permitAnalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitAnal");
         _permitVaginalKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitVaginal");
 
+
         _lockableKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_Lockable");
         _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
-
-        SKSE::log::info("STOP");
     }
 }

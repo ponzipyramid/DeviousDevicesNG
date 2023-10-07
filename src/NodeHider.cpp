@@ -46,7 +46,7 @@ void DeviousDevices::NodeHider::HideWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    LOG("HideWeapons called for {}",a_actor->GetName());
+    //LOG("HideWeapons called for {}",a_actor->GetName());
 
     for (auto&& it : WeaponNodes)
     {
@@ -58,11 +58,11 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    LOG("ShowWeapons called for {}",a_actor->GetName());
+    //LOG("ShowWeapons called for {}",a_actor->GetName());
 
     if (_slots.find(a_actor) == _slots.end())
     {
-        LOG("Actor {} have no hiden nodes",a_actor->GetName());
+        //LOG("Actor {} have no hiden nodes",a_actor->GetName());
         return;
     }
 
@@ -74,8 +74,6 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 
 void DeviousDevices::NodeHider::Setup()
 { 
-    SKSE::log::info("START");
-    SKSE::log::info("STOP");
 }
 
 void DeviousDevices::NodeHider::Update(const float& a_delta)
@@ -106,7 +104,7 @@ void DeviousDevices::NodeHider::Update(const float& a_delta)
                         {
                             //no nodes, unregister npc to save resources
                             _slots.erase(loc_actor);
-                            LOG("Update({},{}) - Actor have no more nodes to hide, unregistering, new size={})",loc_actor->GetName(),a_delta,_slots.size())
+                            //LOG("Update({},{}) - Actor have no more nodes to hide, unregistering, new size={})",loc_actor->GetName(),a_delta,_slots.size())
                         }
                     }
                 }
@@ -142,12 +140,12 @@ bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_no
         if (std::find(_slots[a_actor].nodes.begin(),_slots[a_actor].nodes.end(), loc_node->AsNode()) == _slots[a_actor].nodes.end())
         {
             _slots[a_actor].nodes.push_back(loc_node->AsNode());
-            LOG("AddHideNode({},{})",a_actor->GetName(),a_nodename);
+            //LOG("AddHideNode({},{})",a_actor->GetName(),a_nodename);
             return true;
         }
         else
         {
-            LOG("AddHideNode({},{}) - Node already present, skipping",a_actor->GetName(),a_nodename);
+            //LOG("AddHideNode({},{}) - Node already present, skipping",a_actor->GetName(),a_nodename);
             return false;
         }
     }
