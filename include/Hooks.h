@@ -108,11 +108,10 @@ namespace DeviousDevices {
                                   std::uint64_t a_queueEquip, std::uint64_t a_forceEquip, std::uint64_t a_playSounds,
                                   std::uint64_t a_applyNow, std::uint64_t a_slotToReplace) {
             
-            if (auto device = g_dManager->GetDevice(a_item)) {
-                if (a_actor->GetFormID() == 20 && UI::GetMenu<RE::InventoryMenu>().get()) {
-                    RE::DebugNotification("You can't unequip this device.");
-                    return false;
-                }
+            if (auto device = g_dManager->GetDevice(a_item) && a_actor->GetFormID() == 20 &&
+                              UI::GetMenu<RE::InventoryMenu>().get()) {
+                RE::DebugNotification("You can't unequip this device.");
+                return false;
             }
 
             
