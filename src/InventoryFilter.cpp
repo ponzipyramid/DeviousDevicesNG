@@ -126,11 +126,11 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
             if (loc_wornArmor->GetFormID() != loc_renDevice->GetFormID()) {
                 if (auto loc_otherInvDevice = loc_dManager->GetDeviceInventory(loc_wornArmor)) {
                     auto loc_otherDevice = loc_dManager->GetDevice(loc_otherInvDevice);
-
+                    
+                    std::string name = loc_otherDevice->deviceInventory->GetName();
+                    
                     if (loc_invMenu.get()) {
-                        RE::DebugNotification(
-                            ("You can't equip this due to " + loc_otherDevice->GetName() + "already being equipped.")
-                                .c_str());
+                        RE::DebugNotification(("You can't equip this due to " + name).c_str());
                     }
 
                     return true;
@@ -140,6 +140,19 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     }
 
     return false;
+}
+
+bool DeviousDevices::InventoryFilter::UnequipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item) {
+    auto loc_dManager = DeviousDevices::DeviceReader::GetSingleton();
+    
+    if (a_actor->GetFormID() == 20 && UI::GetMenu<RE::InventoryMenu>().get()) {
+        if (loc_dManager->GetDevice(a_item)) {
+            RE::DebugNotification("You can't unequip this device.");
+            return true;
+        }
+    }
+    
+    return false; 
 }
 
 bool DeviousDevices::InventoryFilter::IsDevious(RE::TESBoundObject* obj) {

@@ -10,8 +10,8 @@ namespace DeviousDevices {
         void Setup();
 
         bool TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj);
-        // return true if equip operation should be filter out (no item state will be changed)
         bool EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item);
+        bool UnequipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item);
 
         RE::TESObjectARMO* GetWornWithDeviousKeyword(RE::Actor* actor, RE::BGSKeyword* kwd);
 

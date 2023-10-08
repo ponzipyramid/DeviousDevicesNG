@@ -163,7 +163,7 @@ namespace DeviousDevices
             inline RE::TESObjectARMO*   GetRenderedDevice() const { return deviceRendered; }
             inline RE::BGSMessage*      GetEquipMenu() const { return equipMenu; }
             inline RE::BGSMessage*      GetManipulationMenu() const { return zad_DD_OnPutOnDevice; }
-            inline std::string          GetName() const { return deviceInventory->GetFormEditorID(); }
+            inline std::string          GetName() const { return deviceInventory->GetName(); }
             inline RE::FormID           GetFormID() const { return deviceInventory->GetFormID(); }
 
             std::string scriptName;
