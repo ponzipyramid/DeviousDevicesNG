@@ -222,8 +222,6 @@ namespace DeviousDevices
 
         void ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device);
 
-        void ShowEquipConfirmation(DeviceUnit* device);
-
         DeviceUnit GetDeviceUnit(std::string a_name);
 
         template <typename T>
@@ -244,6 +242,7 @@ namespace DeviousDevices
 
         inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 
         {
+            // TODO: Persist this data in co-save
             if ((a_actor == nullptr) || (a_inv == nullptr)) return;
             auto pair = std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID());
             if (manip)  _manipulated.insert(pair);

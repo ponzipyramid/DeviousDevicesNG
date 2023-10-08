@@ -517,10 +517,6 @@ void DeviceReader::ShowManipulateMenu(RE::Actor* actor, DeviceUnit* device) {
     }
 }
 
-void DeviceReader::ShowEquipConfirmation(DeviceUnit* device) {
-
-}
-
 bool DeviceReader::EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device) {
     if (device) {
         RE::TESObjectARMO* loc_rendered = device->GetRenderedDevice();

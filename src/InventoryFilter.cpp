@@ -32,8 +32,8 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 }
 
 bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj) {
-    if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj == nullptr ||
-        a_actor->GetFormID() != 20 || UI::GetMenu<RE::BarterMenu>().get())
+    if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj == nullptr || !a_actor->IsPlayer() ||
+        UI::GetMenu<RE::BarterMenu>().get())
         return false;
 
     if (!obj->Is(RE::FormType::Weapon) && !obj->Is(RE::FormType::KeyMaster) && (!obj->Is(RE::FormType::Armor) || IsDevious(obj)))

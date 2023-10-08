@@ -4,6 +4,7 @@
 #include "InventoryFilter.h"
 #include <detours/detours.h>
 #include "Script.hpp"
+#include "UI.h"
 
 namespace DeviousDevices {
     namespace Hooks {
@@ -83,21 +84,40 @@ namespace DeviousDevices {
             // Apply inventory filter
             if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) return;
 
+            if (auto device = g_dManager->GetDevice(a_item)) {
+                auto invMenu = UI::GetMenu<RE::InventoryMenu>();
+                if (invMenu.get() && a_actor->GetFormID() == 20) {
+                    g_dManager->ShowEquipMenu(device, [=](bool equip) {
+                        if (equip) {
+                            _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
+                                         a_playSounds, a_applyNow);
+                            g_dManager->ShowManipulateMenu(a_actor, device);
+                            invMenu->GetRuntimeData().itemList->Update();
+                        }
+                    });
+                    return;
+                }
+            }
+
             _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
                          a_applyNow);
         }
 
-        inline bool UnequipObject(RE::ActorEquipManager* a_1, RE::Actor* actor, RE::TESBoundObject* item,
+        inline bool UnequipObject(RE::ActorEquipManager* a_1, RE::Actor* a_actor, RE::TESBoundObject* a_item,
                                   std::uint64_t a_extraData, std::uint64_t a_count, std::uint64_t a_slot,
                                   std::uint64_t a_queueEquip, std::uint64_t a_forceEquip, std::uint64_t a_playSounds,
                                   std::uint64_t a_applyNow, std::uint64_t a_slotToReplace) {
-            // api calls to remove the device should use the hooked func directly - this is for external attempts
+            
+            if (auto device = g_dManager->GetDevice(a_item)) {
+                if (a_actor->GetFormID() == 20 && UI::GetMenu<RE::InventoryMenu>().get()) {
+                    RE::DebugNotification("You can't unequip this device.");
+                    return false;
+                }
+            }
 
-            // cases: remove all items, external mod calling unequip, user trying through inventory
+            
 
-            // need to check for quest item 
-
-            return _UnequipObject(a_1, actor, item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
+            return _UnequipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip,
                                   a_playSounds, a_applyNow, a_slotToReplace);
         }
 
