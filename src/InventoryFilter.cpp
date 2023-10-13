@@ -92,7 +92,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     if (loc_needgagcheck && ActorHasBlockingGag(a_actor)) 
     {
         if (loc_invMenu.get()) {
-            RE::DebugNotification("You can't eat or drink while wearing this gag.");
+            RE::DebugNotification("You can't eat or drink while wearing a gag.");
         }
         return true;
     }
@@ -117,23 +117,23 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 
     auto loc_dManager = DeviousDevices::DeviceReader::GetSingleton();
 
-    if (auto loc_device = loc_dManager->GetDevice(a_item)) {
-        auto loc_invDevice = a_item->As<RE::TESObjectARMO>();
-        auto loc_renDevice = loc_device->GetRenderedDevice();
+    if (loc_invMenu.get()) {
+        if (auto loc_device = loc_dManager->GetDevice(a_item) ) {
+            auto loc_invDevice = a_item->As<RE::TESObjectARMO>();
+            auto loc_renDevice = loc_device->GetRenderedDevice();
 
-        if (auto loc_wornArmor =
-                a_actor->GetWornArmor(loc_renDevice->GetArmorAddon(a_actor->GetRace())->GetSlotMask())) {
-            if (loc_wornArmor->GetFormID() != loc_renDevice->GetFormID()) {
-                if (auto loc_otherInvDevice = loc_dManager->GetDeviceInventory(loc_wornArmor)) {
-                    auto loc_otherDevice = loc_dManager->GetDevice(loc_otherInvDevice);
+            if (auto loc_wornArmor =
+                    a_actor->GetWornArmor(loc_renDevice->GetArmorAddon(a_actor->GetRace())->GetSlotMask())) {
+                if (loc_wornArmor->GetFormID() != loc_renDevice->GetFormID()) {
+                    if (auto loc_otherInvDevice = loc_dManager->GetDeviceInventory(loc_wornArmor)) {
+                        auto loc_otherDevice = loc_dManager->GetDevice(loc_otherInvDevice);
                     
-                    std::string name = loc_otherDevice->deviceInventory->GetName();
+                        std::string name = loc_otherDevice->deviceInventory->GetName();
                     
-                    if (loc_invMenu.get()) {
                         RE::DebugNotification(("You can't equip this due to " + name).c_str());
-                    }
 
-                    return true;
+                        return true;
+                    }
                 }
             }
         }
@@ -145,11 +145,10 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 bool DeviousDevices::InventoryFilter::UnequipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item) {
     auto loc_dManager = DeviousDevices::DeviceReader::GetSingleton();
     
-    if (a_actor->GetFormID() == 20 && UI::GetMenu<RE::InventoryMenu>().get()) {
-        if (loc_dManager->GetDevice(a_item)) {
-            RE::DebugNotification("You can't unequip this device.");
-            return true;
-        }
+    if (a_actor->GetFormID() == 20 && UI::GetMenu<RE::InventoryMenu>().get() && loc_dManager->GetDevice(a_item)) {
+        // invoke escape menu papyrus function or send event in some quest
+        RE::DebugNotification("You can't unequip this device.");
+        return true;
     }
     
     return false; 
