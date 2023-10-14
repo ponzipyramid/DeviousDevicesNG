@@ -33,7 +33,6 @@ set(headers
         include/Switches.h
         include/DeviceReader.h
         include/Settings.h
-        include/ConflictMap.h
         include/LibFunctions.h
 )
 

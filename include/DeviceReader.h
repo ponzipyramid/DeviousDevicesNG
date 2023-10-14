@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ConflictMap.h"
-
 namespace DeviousDevices
 {
     struct FormHandle
@@ -281,7 +279,6 @@ namespace DeviousDevices
         std::vector<RE::TESFile*>                               _ddmods;
         std::vector<std::shared_ptr<DeviceMod>>                 _ddmodspars;
         std::map<RE::TESObjectARMO*, DeviceUnit>                _database;
-        std::unordered_map<std::string, std::vector<Conflict>>  _deviceConflicts;
         std::unordered_map<RE::FormID, DeviceUnit*>             _devices;
         std::vector<RE::BGSKeyword*>                            _invDeviceKwds;
         std::set<std::pair<RE::FormID, RE::FormID>>             _manipulated; // serde
