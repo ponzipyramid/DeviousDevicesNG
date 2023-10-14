@@ -35,7 +35,7 @@ namespace DeviousDevices {
                 RE::BSTSmartPointer<RE::IMessageBoxCallback> messageCallback =
                     RE::make_smart<MessageBoxResultCallback>(callback);
                 messagebox->callback = messageCallback;
-                messagebox->bodyText = "Plugin modified: " + bodyText;
+                messagebox->bodyText = bodyText;
                 for (auto text : buttonTextValues) messagebox->buttonText.push_back(text.c_str());
                 messagebox->QueueMessage();
             }
