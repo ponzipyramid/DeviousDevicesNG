@@ -145,7 +145,12 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 bool DeviousDevices::InventoryFilter::UnequipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item) {
     auto loc_dManager = DeviousDevices::DeviceReader::GetSingleton();
     
+    if (a_actor->GetFormID() == 20) {
+        LOG("Player Unequipping: {}", a_item->GetFormEditorID());
+    }
+
     if (a_actor->GetFormID() == 20 && UI::GetMenu<RE::InventoryMenu>().get() && loc_dManager->GetDevice(a_item)) {
+        LOG("Item Unequip Blocked: {}", a_item->GetFormEditorID());
         // invoke escape menu papyrus function or send event in some quest
         RE::DebugNotification("You can't unequip this device.");
         return true;
