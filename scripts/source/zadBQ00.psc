@@ -125,6 +125,8 @@ String[] Property PetSuitBlowjob Auto Hidden
 String[] Property PetSuitVaginal Auto Hidden
 String[] Property PetSuitAnal Auto Hidden
 
+String[] Property BoundMasturbation  Auto Hidden
+
 import sslUtility
 
 function Shutdown(bool silent=false)
@@ -644,6 +646,10 @@ sslBaseAnimation[] function SelectValidDDAnimations(Actor[] actors, int count, b
 	int NumExtraTags = 0	
 	bool UsingArmbinder = False
 	bool UsingYoke = False
+	bool UsingElbowbinder = False
+	bool UsingBBYoke = False
+	bool UsingFrontCuffs = False
+	bool UsingElbowTie = False
 	bool HasBoundActors = False
 	if forceaggressive
 		libs.Log("Using only aggressive animations.")
@@ -656,8 +662,12 @@ sslBaseAnimation[] function SelectValidDDAnimations(Actor[] actors, int count, b
 		PermitVaginal = PermitVaginal && !IsBlockedVaginal(Actors[i])
 		PermitBoobs = PermitBoobs && !IsBlockedBreast(Actors[i])
 		PermitOral = PermitOral && !IsBlockedOral(Actors[i])
-		UsingArmbinder = UsingArmbinder || HasArmbinder(Actors[i])
+		UsingArmbinder = UsingArmbinder || HasArmbinderNonStrict(Actors[i])
 		UsingYoke = UsingYoke || HasYoke(Actors[i])
+		UsingElbowbinder = UsingElbowbinder || HasElbowbinder(Actors[i])
+		UsingBBYoke = UsingBBYoke || HasBBYoke(Actors[i])
+		UsingFrontCuffs = UsingFrontCuffs || HasFrontCuffs(Actors[i])
+		UsingElbowTie = UsingElbowTie || HasElbowShackles(Actors[i])
 		HasBoundActors = HasBoundActors || libs.NeedsBoundAnim(Actors[i])
 	EndWhile
 	If StringUtil.Find(suppresstag, "Vaginal") != -1
@@ -684,13 +694,12 @@ sslBaseAnimation[] function SelectValidDDAnimations(Actor[] actors, int count, b
 			return Sanims
 		Endif
 	Endif
-	string tagString = getTagString(aggr, includetag)
+	String tagString = getTagString(aggr, includetag)
 	; Note to self: Passing armbinders and yokes here might seem unneeded, but some players still use ZAP and register its bound animations to SexLab. This will prevent at least DD mods using this function from selecting bound animations when nobody's bound.
 	; ZAP doesn't support wrist restraints other than armbinders and yokes, so we don't have to suppress other tags.
-	string suppressString = getSuppressString(aggr, UsingArmbinder, UsingYoke, permitOral, permitVaginal, permitAnal, permitBoobs, suppresstag)	
+	String suppressString = getSuppressString(aggr, UsingArmbinder, UsingYoke, permitOral, permitVaginal, permitAnal, permitBoobs, suppresstag)	
 	; ok, we need to process private animations and masturbation as a special case as the tag system would otherwise be unable to call DDI or ZAP armbinder and yoke animations and also not exclude opposite gender masturbation
-	; As of version 4.3, we don't have masturbation anims for devices other than regular armbinders and yokes. They will need to be added here, in case we ever do.
-	if count == 1 		
+	If count == 1 		
 		libs.Log("Selecting masturbation animation.")
 		If UsingArmbinder ; she is wearing an armbinder
 			Sanims = New sslBaseAnimation[1]
@@ -702,6 +711,26 @@ sslBaseAnimation[] function SelectValidDDAnimations(Actor[] actors, int count, b
 			Sanims[0] = SexLab.GetAnimationObject("DDYokeSolo")
 			return Sanims
 		Endif
+		If UsingElbowbinder ; she is wearing an elbowbinder
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDElbowbinderSolo")
+			return Sanims
+		Endif
+		If UsingBBYoke ; she is wearing a breast yoke
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDBBYokeSolo")
+			return Sanims
+		Endif
+		If UsingFrontCuffs ; she is wearing wrist cuffs
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDFrontCuffsSolo")
+			return Sanims
+		Endif
+		If UsingElbowTie; she is wearing elbow shackles
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDElbowTieSolo")
+			return Sanims
+		Endif
 		If !permitVaginal ;she is belted
 			Sanims = New sslBaseAnimation[1]
 			Sanims[0] = SexLab.GetAnimationObject("DDBeltedSolo")
@@ -709,7 +738,7 @@ sslBaseAnimation[] function SelectValidDDAnimations(Actor[] actors, int count, b
 		Endif
 		; if she is not wearing chastity, we need to filter the wrong gender
 		tagString = "Solo," + tagString
-		If actors[0].GetLeveledActorBase().GetSex() == 1		
+		If actors[0].GetLeveledActorBase().GetSex() == 1
 			suppressString = "M," + suppressString
 		Elseif actors[0].GetLeveledActorBase().GetSex() == 0
 			suppressString = "F," + suppressString
@@ -718,20 +747,16 @@ sslBaseAnimation[] function SelectValidDDAnimations(Actor[] actors, int count, b
 	Sanims = SexLab.GetAnimationsByTags(count, tagString, suppressString, true)
 	libs.log("Selecting SexLab animations with number of actors: " + count)
 	libs.log("Selecting SexLab animations with tag string: " + tagString)
-	libs.log("Selecting SexLab animations with suppress string: " + suppressString)			
-	return Sanims
-endfunction
+	libs.log("Selecting SexLab animations with suppress string: " + suppressString)
+	Return Sanims
+EndFunction
 
 ; filter version of the animation selector
-sslBaseAnimation[] function SelectValidAnimations(sslThreadController Controller, int count, sslBaseAnimation previousAnim, bool usingArmbinder, bool usingYoke,  bool HasBoundActors,  bool forceaggressive, bool permitOral, bool permitVaginal, bool permitAnal, bool permitBoobs)
-	bool aggr = false				
+sslBaseAnimation[] function SelectValidAnimations(sslThreadController Controller, int count, sslBaseAnimation previousAnim, bool HasBoundActors, bool forceaggressive, bool permitOral, bool permitVaginal, bool permitAnal, bool permitBoobs)
+	bool aggr = false
 	string includetag = ""
 	sslBaseAnimation[] Sanims
-	If previousAnim != none && previousAnim.HasTag("foreplay") 		
-		; ok, this is causing trouble, as we don't really have a lot of bound foreplay animations. We...just don't pass on the tag for now, which will result in regular anims.
-		; includetag = "foreplay"
-		; libs.Log("Using only foreplay animations.")					
-	Elseif forceaggressive || (previousAnim != none && previousAnim.HasTag("Aggressive") && libs.config.PreserveAggro)
+	If forceaggressive || (previousAnim != none && previousAnim.HasTag("Aggressive") && libs.config.PreserveAggro)
 		libs.Log("Using only aggressive animations.")					
 		aggr = true		
 	Endif  
@@ -756,18 +781,46 @@ sslBaseAnimation[] function SelectValidAnimations(sslThreadController Controller
 		Endif
 	Endif
 	string tagString = getTagString(aggr, includetag)
-	string suppressString = getSuppressString(aggr, usingArmbinder, usingYoke, permitOral, permitVaginal, permitAnal, permitBoobs)	
-	; ok, we need to process private animations and masturbation as a special case as the tag system would otherwise be unable to call DDI or ZAP armbinder and yoke animations and also not exclude opposite gender masturbation/
+	int i = Controller.Positions.Length
+	Bool UsingArmbinder = False
+	Bool UsingYoke = False
+	While i > 0
+		i -= 1
+		UsingArmbinder = UsingArmbinder || HasArmbinderNonStrict(Controller.Positions[i])
+		UsingYoke = UsingYoke || HasYoke(Controller.Positions[i])
+	EndWhile
+	string suppressString = getSuppressString(aggr, UsingArmbinder, UsingYoke, permitOral, permitVaginal, permitAnal, permitBoobs)	
+	; ok, we need to process private animations and masturbation as a special case as the tag system would otherwise be unable to call DDI or ZAP armbinder and yoke animations and also not exclude opposite gender masturbation
 	if count == 1 		
 		libs.Log("Selecting masturbation animation.")
-		If usingArmbinder ; she is wearing an armbinder
+		If HasArmbinderNonStrict(Controller.Positions[0]) ; she is wearing an armbinder
 			Sanims = New sslBaseAnimation[1]
 			Sanims[0] = SexLab.GetAnimationObject("DDArmbinderSolo")
 			return Sanims
 		Endif
-		If usingYoke ; she is wearing a yoke
+		If HasYoke(Controller.Positions[0]); she is wearing a yoke
 			Sanims = New sslBaseAnimation[1]
 			Sanims[0] = SexLab.GetAnimationObject("DDYokeSolo")
+			return Sanims
+		Endif
+		If HasElbowbinder(Controller.Positions[0]); she is wearing an elbowbinder
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDElbowbinderSolo")
+			return Sanims
+		Endif
+		If HasBBYoke(Controller.Positions[0]); she is wearing a breast yoke
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDBBYokeSolo")
+			return Sanims
+		Endif
+		If HasFrontCuffs(Controller.Positions[0]); she is wearing wrist cuffs
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDFrontCuffsSolo")
+			return Sanims
+		Endif
+		If HasElbowShackles(Controller.Positions[0]); she is wearing elbow shackles
+			Sanims = New sslBaseAnimation[1]
+			Sanims[0] = SexLab.GetAnimationObject("DDElbowTieSolo")
 			return Sanims
 		Endif
 		If !permitVaginal ;she is belted
@@ -1197,11 +1250,8 @@ function Logic(int threadID, bool HasPlayer)
 	bool permitAnal = True
 	bool permitBoobs = True
 	int NumExtraTags = 0
-	;string[] ExtraTags = new String[12]
-	bool UsingArmbinder = False
-	bool UsingYoke = False
+	string[] ExtraTags = new String[12]
 	bool UsingHeavyBondage = False
-	bool UsingStraitJacket = False
 	bool HasBoundActors = False
 	i = originalActors.Length
 	While i > 0
@@ -1210,10 +1260,7 @@ function Logic(int threadID, bool HasPlayer)
 		PermitVaginal = PermitVaginal && !IsBlockedVaginal(originalActors[i])
 		PermitBoobs = PermitBoobs && !IsBlockedBreast(originalActors[i])
 		PermitOral = PermitOral && !IsBlockedOral(originalActors[i])
-		UsingArmbinder = UsingArmbinder || HasArmbinder(originalActors[i])
-		UsingYoke = UsingYoke || HasYoke(originalActors[i])
-		UsingStraitJacket = HasStraitJacket(originalActors[i])
-		UsingHeavyBondage = UsingHeavyBondage || (HasHeavyBondage(originalActors[i]) && !UsingStraitJacket)
+		UsingHeavyBondage = UsingHeavyBondage || ( ( HasHeavyBondage(originalActors[i]) && !HasStraitJacket(originalActors[i]) ) )
 		HasBoundActors = HasBoundActors || libs.NeedsBoundAnim(originalActors[i])
 	EndWhile
 	Bool NoBindings = !UsingHeavyBondage 
@@ -1242,8 +1289,6 @@ function Logic(int threadID, bool HasPlayer)
 	if !NoBindings && !libs.config.useBoundAnims ; Actor is bound, config specifies to not use bound anims.
 		libs.Log("One or more actors were bound, but bound animations are disabled in MCM. Removing bindings.")
 		StoreHeavyBondage(originalActors)
-		UsingArmbinder = False
-		UsingYoke = False
 		UsingHeavyBondage = False
 		NoBindings = True
 		HasBoundActors = False
@@ -1277,8 +1322,6 @@ function Logic(int threadID, bool HasPlayer)
 			if AllowRemoveBindings		
 				libs.Log("Animation involves creatures and needs replacement. Removing bindings.")
 				StoreHeavyBondage(originalActors)
-				UsingArmbinder = False
-				UsingYoke = False
 				UsingHeavyBondage = False
 				NoBindings = True
 				HasBoundActors = False				
@@ -1292,7 +1335,7 @@ function Logic(int threadID, bool HasPlayer)
 	int currentActorCount = originalActors.length
 	
 	; Let's try and see if we can get valid animations right here
-	sslBaseAnimation[] anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+	sslBaseAnimation[] anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 	
 	if anims.length <= 0	
 		; we didn't get a valid animation. Let's check if that's because of our limited selection of bound anims.
@@ -1301,24 +1344,20 @@ function Logic(int threadID, bool HasPlayer)
 			if originalActors.length == 2 && !AnimHasNoProblematicDevices(Controller)
 				libs.Log("No bound animation for this setup. Hiding problematic restraints.")
 				StoreHeavyBondage(originalActors)
-				UsingArmbinder = False
-				UsingYoke = False
 				UsingHeavyBondage = False
 				NoBindings = True
 				HasBoundActors = False
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)			
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)			
 			Endif
 		else
 			; try more comprehensive fallbacks
 			if !NoBindings
 				libs.Log("No bound animation for this setup. Hiding restraints.")
 				StoreHeavyBondage(originalActors)
-				UsingArmbinder = False
-				UsingYoke = False
 				UsingHeavyBondage = False
 				NoBindings = True
 				HasBoundActors = False
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 			EndIf
 			if anims.length <= 0 && !permitVaginal
 				; if it STILL doesn't work, we hide belts and plugs, too.
@@ -1327,14 +1366,14 @@ function Logic(int threadID, bool HasPlayer)
 				StorePlugs(originalActors)
 				permitVaginal = True
 				permitAnal = True
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 			EndIf
 			if anims.length <= 0 && !permitOral
 				; try removing the gag
 				libs.Log("No bound animation found. Hiding gags.")
 				StoreGags(originalActors)								
 				permitOral = True
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 			EndIf
 		EndIf
 	EndIf
@@ -1345,12 +1384,10 @@ function Logic(int threadID, bool HasPlayer)
 			if !NoBindings
 				libs.Log("Animation features more than 3 actors. Hiding restraints.")
 				StoreHeavyBondage(originalActors)
-				UsingArmbinder = False
-				UsingYoke = False
 				UsingHeavyBondage = False
 				NoBindings = True
 				HasBoundActors = False
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 			EndIf
 			if anims.length <= 0 && !permitVaginal
 				; if it STILL doesn't work, we hide belts, too. We also just ignore plugs.
@@ -1359,14 +1396,14 @@ function Logic(int threadID, bool HasPlayer)
 				StorePlugs(originalActors)
 				permitVaginal = True
 				permitAnal = True
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 			EndIf
 			if anims.length <= 0 && !permitOral
 				; try removing the gag
 				libs.Log("Animation features more than 3 actors. Hiding gags.")
 				StoreGags(originalActors)								
 				permitOral = True
-				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+				anims = SelectValidAnimations(Controller, originalActors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 			EndIf
 			if anims.length <= 0
 				; This is STILL not working. Let's abort before more stuff breaks.
@@ -1401,7 +1438,7 @@ function Logic(int threadID, bool HasPlayer)
 			EndIf
 		Endif
 		libs.Log("Total actors: " + originalActors.length + ". Participating Actors: " + actors.length + ". Animation: " + previousAnim.name)		
-		anims = SelectValidAnimations(Controller, actors.length, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
+		anims = SelectValidAnimations(Controller, actors.length, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)
 	EndIf
 			
 	if anims.length <= 0
@@ -1424,20 +1461,20 @@ function Logic(int threadID, bool HasPlayer)
 				;Still no animations after resizing actors. Drop bindings, and try again.
 				libs.Log("Removing heavy restraints, Trying to resize actors...")
 				StoreHeavyBondage(originalActors)			
-				UsingArmbinder = False
-				UsingYoke = False
+				;UsingArmbinder = False
+				;UsingYoke = False
 				UsingHeavyBondage = False
 				HasBoundActors = False
 				NoBindings = True
 				HasBoundActors = False			
-				anims = SelectValidAnimations(Controller, actors.length, previousAnim, false, false, false, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)			
+				anims = SelectValidAnimations(Controller, actors.length, previousAnim, false, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)			
 			 EndIf
 			if anims.length <= 0 ; No flow-control keywords like continue/break...
 				i = actors.length
 				while i >= 2 && anims.length==0				
 					i -= 1
 					libs.Log("Reduced number of actors to " + i)								
-					anims = SelectValidAnimations(Controller, i, previousAnim, UsingArmbinder, UsingYoke, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)				
+					anims = SelectValidAnimations(Controller, i, previousAnim, HasBoundActors, false, PermitOral, PermitVaginal, PermitAnal, permitBoobs)				
 				EndWhile
 				if anims.length >=1
 					libs.Log("Found valid animation. Rebuilding actor lists.")
@@ -1545,7 +1582,7 @@ Bool Function HasElbowbinder(Actor akActor)
 EndFunction
 
 Bool Function HasArmbinderNonStrict(Actor akActor)
-	Return (akActor != None) && (akActor.WornHasKeyword(libs.zad_DeviousArmbinder))
+	Return (akActor != None) && (akActor.WornHasKeyword(libs.zad_DeviousArmbinder)) && !(akActor.WornHasKeyword(libs.zad_DeviousArmbinderElbow))
 EndFunction
 
 Bool Function HasPetSuit(Actor akActor)
@@ -1567,15 +1604,19 @@ EndFunction
 sslBaseAnimation[] Function GetSoloAnimations(Actor akActor)
 	sslBaseAnimation[] soloAnims
 	Bool bHasBelt = HasBelt(akActor)
-	Bool bHasArmbinder = HasArmbinder(akActor) ; Conservative with binding support
+	Bool bHasArmbinder = HasArmbinderNonStrict(akActor) ; Conservative with binding support
 	Bool bHasYoke = HasYoke(akActor) ; Conservative with binding support
+	Bool bHasElbowbinder = HasElbowbinder(akActor)
+	Bool bHasBBYoke = HasBBYoke(akActor)
+	Bool bHasFrontCuffs = HasFrontCuffs(akActor)
+	Bool bHasElbowTie = HasElbowShackles(akActor)
 
 	String gender = "F"
 	if SexLab.GetGender(akActor) == 0
 		gender = "M"
 	Endif
 
-	if bHasBelt || bHasArmbinder || bhasYoke
+	if bHasBelt || bHasArmbinder || bhasYoke || bHasElbowbinder || bHasBBYoke || bHasFrontCuffs || bHasElbowTie
 		libs.Log("Devious Devices solo scene.")
 
 		soloAnims = New sslBaseAnimation[1]
@@ -1583,6 +1624,14 @@ sslBaseAnimation[] Function GetSoloAnimations(Actor akActor)
 			soloAnims[0] = SexLab.GetAnimationObject("DDArmbinderSolo")
 		ElseIf bHasYoke
 			soloAnims[0] = SexLab.GetAnimationObject("DDYokeSolo")
+		ElseIf bHasElbowbinder
+			soloAnims[0] = SexLab.GetAnimationObject("DDElbowbinderSolo")
+		ElseIf bHasBBYoke
+			soloAnims[0] = SexLab.GetAnimationObject("DDBBYokeSolo")
+		ElseIf bHasFrontCuffs
+			soloAnims[0] = SexLab.GetAnimationObject("DDFrontCuffsSolo")
+		ElseIf bHasElbowTie
+			soloAnims[0] = SexLab.GetAnimationObject("DDElbowTieSolo")
 		Else
 			soloAnims[0] = SexLab.GetAnimationObject("DDBeltedSolo")
 		EndIf
@@ -1690,7 +1739,7 @@ Event OnAnimationEnd(int threadID, bool HasPlayer)
 	actor[] actors = controller.Positions
 	sslBaseAnimation previousAnim = controller.Animation
 	int numBeltedActors = CountBeltedActors(controller.Positions)
-	if (previousAnim.name == "DDArmbinderSolo" || previousAnim.name == "DDYokeSolo" ) && actors.length == 1
+	if (BoundMasturbation.Find(previousAnim.name) >=0 ) && actors.length == 1
 		if actors[0]!=libs.PlayerRef
 			libs.NotifyNPC(actors[0].GetLeveledActorbase().GetName() + " ceases her efforts, looking both frustrated and aroused.")
 		else
@@ -1748,25 +1797,18 @@ Event OnSleepStop(bool abInterrupted)
 		return
 	Endif
 	int arousal = Aroused.GetActorExposure(akActor)
-	int chance = 5
 	Message tmp
 	if arousal >= libs.ArousalThreshold("Desperate")
-		chance += 45
 		tmp = zad_eventSleepStopDesperate
 	elseIf arousal >= libs.ArousalThreshold("Horny")
-		chance += 25
 		tmp = zad_eventSleepStopHorny
 	elseIf arousal >= libs.ArousalThreshold("Desire")
-		chance += 10
 		tmp = zad_eventSleepStopDesire
 	else
 		tmp = zad_eventSleepStopContent
 	Endif
-	; if Utility.RandomInt() <= libs.config.BaseMessageChance
-	; 	tmp.Show()
-	; EndIf
 	tmp.Show()
-	libs.PlayThirdPersonAnimation(akActor, libs.AnimSwitchKeyword(akActor, "Horny01"), utility.RandomInt(5,9))
+	libs.PlayThirdPersonAnimation(akActor, libs.AnimSwitchKeyword(akActor, "Horny"), utility.RandomInt(5,9))
 EndEvent
 
 ; helper function to translate strings passed to the ModEvent() item equip feature

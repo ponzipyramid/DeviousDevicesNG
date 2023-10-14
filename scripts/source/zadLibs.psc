@@ -817,11 +817,7 @@ Function Orgasm(actor akActor)
 	Aroused.UpdateActorOrgasmDate(akActor)
 	if !IsAnimating(akActor)
 		bool[] cameraState = StartThirdPersonAnimation(akActor, AnimSwitchKeyword(akActor, "Orgasm"), true)
-		int i = 0
-		while i < 20			
-			i += 1		
-			Utility.Wait(1)
-		EndWhile
+		Utility.Wait(20)
 	    EndThirdPersonAnimation(akActor, cameraState, true)
 	Else		
 	EndIf
@@ -1167,7 +1163,7 @@ EndFunction
 
 
 Function EndThirdPersonAnimation(actor akActor, bool[] cameraState, bool permitRestrictive=false)
-	Log("EndThirdPersonAnimation("+akActor.GetLeveledActorBase().GetName()+","+cameraState+")")
+	Log("EndThirdPersonAnimation( " + akActor.GetLeveledActorBase().GetName() + "," + cameraState[0] + ")" )
 	SetAnimating(akActor, false)
 	if (!akActor.Is3DLoaded() ||  akActor.IsDead() || akActor.IsDisabled())
 		Log("Actor is not loaded (Or is otherwise invalid). Aborting.")
@@ -1179,10 +1175,6 @@ Function EndThirdPersonAnimation(actor akActor, bool[] cameraState, bool permitR
 		UpdateControls()
 		if cameraState[0]
 			game.ForceFirstPerson()		
-		EndIf
-		if cameraState[1]
-			;akActor.SheatheWeapon()
-			;akActor.DrawWeapon()
 		EndIf
 	Else
 		akActor.SetDontMove(false)
@@ -1600,7 +1592,7 @@ EndFunction
 function Masturbate(actor a, bool feedback = false)	
 	sslBaseAnimation[] Manims 
 	If a == PlayerRef && feedback
-		NotifyPlayer("You can not resist your urges anymore!")
+		NotifyPlayer("You cannot resist your urges anymore!")
 	Else
 		If a.GetLeveledActorBase().GetSex() == 1 && feedback
 			NotifyPlayer(a.GetLeveledActorBase().GetName() + " can't resist her urges anymore...")
@@ -1608,18 +1600,32 @@ function Masturbate(actor a, bool feedback = false)
 			NotifyPlayer(a.GetLeveledActorBase().GetName() + " can't resist his urges anymore...")
 		Endif
 	EndIf	
-	If a.WornHasKeyword(zad_DeviousArmbinder) || a.WornHasKeyword(zad_DeviousArmbinderElbow)
+	If a.WornHasKeyword(zad_DeviousArmbinder)
 		Manims = New sslBaseAnimation[1]
-		Manims[0] = SexLab.GetAnimationObject("DDArmbinderSolo")				
-	elseIf a.WornHasKeyword(zad_DeviousYoke)
+		Manims[0] = SexLab.GetAnimationObject("DDArmbinderSolo")
+	ElseIf a.WornHasKeyword(zad_DeviousYoke)
 		Manims = New sslBaseAnimation[1]
-		Manims[0] = SexLab.GetAnimationObject("DDYokeSolo")			
-	Elseif a.WornHasKeyword(zad_DeviousBelt) || a.WornHasKeyword(zad_DeviousHarness) && !a.WornHasKeyword(zad_DeviousHeavyBondage)
+		Manims[0] = SexLab.GetAnimationObject("DDYokeSolo")
+	ElseIf a.WornHasKeyword(zad_DeviousArmbinderElbow)
 		Manims = New sslBaseAnimation[1]
-		Manims[0] = SexLab.GetAnimationObject("DDBeltedSolo")		
+		Manims[0] = SexLab.GetAnimationObject("DDElbowbinderSolo")
+	ElseIf a.WornHasKeyword(zad_DeviousYokeBB)
+		Manims = New sslBaseAnimation[1]
+		Manims[0] = SexLab.GetAnimationObject("DDBBYokeSolo")
+	ElseIf a.WornHasKeyword(zad_DeviousCuffsFront)
+		Manims = New sslBaseAnimation[1]
+		Manims[0] = SexLab.GetAnimationObject("DDFrontCuffsSolo")
+	ElseIf a.WornHasKeyword(zad_DeviousElbowTie)
+		Manims = New sslBaseAnimation[1]
+		Manims[0] = SexLab.GetAnimationObject("DDElbowTieSolo")
+	;use this animation if the character has a chastity belt on
+	;or has a harness on, her hands are not bound and the harness is crotchless - since there is also this variant since DD5.1
+	Elseif ( a.WornHasKeyword(zad_DeviousBelt) || a.WornHasKeyword(zad_DeviousHarness) ) && !a.WornHasKeyword(zad_DeviousHeavyBondage) && !a.WornHasKeyword(zad_PermitVaginal)
+		Manims = New sslBaseAnimation[1]
+		Manims[0] = SexLab.GetAnimationObject("DDBeltedSolo")
 	Elseif a.WornHasKeyword(zad_DeviousHeavyBondage)
 		; play bound animation for other restraints
-		PlayHornyAnimation(a)	
+		PlayHornyAnimation(a)
 		return
 	Else
 		If a.GetLeveledActorBase().GetSex() == 1
@@ -1629,7 +1635,7 @@ function Masturbate(actor a, bool feedback = false)
 		Endif
 	Endif
 	actor[] tmp = new actor[1]
-	tmp[0] = a    
+	tmp[0] = a
 	SexLab.StartSex(tmp, Manims)
 EndFunction
 
@@ -2020,7 +2026,7 @@ int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool te
 	sslBaseExpression expression = SexLab.RandomExpressionByTag("Pleasure")
 	ApplyExpression_v2(akActor, expression, 15, Math.Ceiling(Aroused.GetActorExposure(akActor)*0.6), openMouth=false) ;do not open mouth
 	if Utility.RandomInt() <= (10*vibStrength) 
-		PlayThirdPersonAnimation(akActor, AnimSwitchKeyword(akActor, "Horny01"), 3, permitRestrictive=true)
+		PlayThirdPersonAnimation(akActor, AnimSwitchKeyword(akActor, "Horny"), 3, permitRestrictive=true)
 	EndIf
 	
 	; Actor in combat?
@@ -2097,13 +2103,7 @@ int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool te
 			; Log("XXX Starting Horny Idle")
 			ApplyExpression(akActor, expression, (Aroused.GetActorExposure(akActor) * 0.75) as Int, openMouth=true)
 			; Select animation
-			string randomAnim
-			if (nPiercings && !(vPlug || aPlug))
-				randomAnim = "Horny03"
-			Else
-				randomAnim = "Horny01"
-			EndIf
-			cameraState=StartThirdPersonAnimation(akActor, AnimSwitchKeyword(akActor, randomAnim), permitRestrictive=true)
+			cameraState=StartThirdPersonAnimation(akActor, AnimSwitchKeyword(akActor, "Horny"), permitRestrictive=true)
 			vibAnimStarted = timeVibrated + 1
 			; Log("XXX VibrateEffect: Done starting horny idle")
 		EndIf
@@ -2379,10 +2379,10 @@ string Function MakeSingularIfPlural(string theString)
 EndFunction
 
 ;This function picks animations based on provided context and worn devices
-String Function AnimSwitchKeyword(actor akActor, string idleName )
+String Function AnimSwitchKeyword( actor akActor, string idleName )
 	
 ;THERE USED TO BE SOMETHING BIG HERE, AND NOW OAR HANDLES THIS - krzp
-	if idleName == "Horny01" || idleName == "Horny02" || idleName == "Horny03"
+	If idleName == "Horny"
 			return "DDZazHornyA"
 	ElseIf idleName == "Edged"
 			return "DDZazHornyD"
@@ -2390,12 +2390,9 @@ String Function AnimSwitchKeyword(actor akActor, string idleName )
 			return "DDZazHornyE"
 	ElseIf idleName == "OutOfBreath"
 		return "ft_out_of_breath_reg"
-	EndIf
-	
+	EndIf	
 	Error("Failed to find valid animation for presentation.")
-
 EndFunction
-
 
 Function RepopulateNpcs()
 	if repopulateMutex ; Avoid this getting hit too quickly while comparing times.
@@ -2557,11 +2554,7 @@ Function ChastityBeltStruggle(actor akActor)
 	Endif
 	; use PlayThirdPersonAnimation instead of StartThirdPersonAnimation for non-looping animation
 	; alternatively EndThirdPersonAnimation can be called manually if termination is conditional
-	If Utility.RandomInt(1,2) == 1
-		PlayThirdPersonAnimation(akActor, "DDChastityBeltStruggle01", Utility.RandomInt(5, 30), true)
-	Else
-		PlayThirdPersonAnimation(akActor, "DDChastityBeltStruggle02", Utility.RandomInt(5, 30), true)
-	EndIf	
+	PlayThirdPersonAnimation(akActor, "DDChastityBeltStruggle0" + Utility.RandomInt(1, 2), Utility.RandomInt(5, 30), true)
 	Aroused.UpdateActorExposure(akActor, 5)
 	If akActor == PlayerRef
 		notify("You tug at your chastity belt, but it won't come off!")

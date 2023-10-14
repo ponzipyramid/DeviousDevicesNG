@@ -21,6 +21,7 @@ function LoadAnimations()
 	SexLab.GetSetAnimationObject("DDC_Babo_ZazPillory01", "CreateDDC_Babo_ZazPillory01", clib)
 	SexLab.GetSetAnimationObject("DDC_NibblesPillory", "CreateDDC_NibblesPillory", clib)
 	SexLab.GetSetAnimationObject("DDC_Leito_Pillory_Doggy", "CreateDDC_Leito_Pillory_Doggy", clib)
+	SexLab.GetSetAnimationObject("DDC_PsychePillory", "CreateDDC_PsychePillory", clib)
 
 	;-----------------
 	; XCROSS ANIMATIONS
@@ -28,6 +29,7 @@ function LoadAnimations()
 	SexLab.GetSetAnimationObject("DDC_Billyy_XCrossFuck", "CreateDDC_Billyy_XCrossFuck", clib)
 	SexLab.GetSetAnimationObject("DDC_Billyy_XCrossFuck2", "CreateDDC_Billyy_XCrossFuck2", clib)
 	SexLab.GetSetAnimationObject("DDC_Billyy_XCrossReverseAnal", "CreateDDC_Billyy_XCrossReverseAnal", clib)
+	SexLab.GetSetAnimationObject("DDC_PsycheRestrictRape3", "CreateDDC_PsycheRestrictRape3", clib)
 
 	;------------------------
 	; GALLOWS POLE ANIMATIONS
@@ -56,13 +58,21 @@ function LoadAnimations()
 	; WOODEN HORSE ANIMATIONS
 	;------------------------
 	SexLab.GetSetAnimationObject("DDC_B_WHorse_ForGrind", "CreateDDC_B_WHorse_ForGrind", clib)
+	SexLab.GetSetAnimationObject("DDC_PsycheWoodenHorse", "CreateDDC_PsycheWoodenHorse", clib)
 
 	;------------------------
 	; BONDAGE POST ANIMATIONS
 	;------------------------
 	SexLab.GetSetAnimationObject("DDC_NibblesBondagePost", "CreateDDC_NibblesBondagePost", clib)
+	SexLab.GetSetAnimationObject("DDC_NibblesBondagePostTOY", "CreateDDC_NibblesBondagePostTOY", clib)
 	SexLab.GetSetAnimationObject("DDC_PsycheRestrictRape8", "CreateDDC_PsycheRestrictRape8", clib)
-	
+
+	;------------------------
+	; TORTURE POLE ANIMATIONS
+	;------------------------
+	SexLab.GetSetAnimationObject("DDC_PsycheFingerFucking", "CreateDDC_PsycheFingerFucking", clib)
+	SexLab.GetSetAnimationObject("DDC_PsycheRestrictRape", "CreateDDC_PsycheRestrictRape", clib)
+
 EndFunction
 
 
@@ -94,6 +104,10 @@ Function CreateDDC_Billyy_PilloryFuck1(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -126,6 +140,10 @@ Function CreateDDC_Billyy_XCrossFuck(int id)
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
 
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+
 		Anim.Save(-1)
 	EndIf
 EndFunction
@@ -156,6 +174,10 @@ Function CreateDDC_Billyy_XCrossFuck2(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -187,6 +209,10 @@ Function CreateDDC_Billyy_XCrossReverseAnal(int id)
 		Anim.AddTag("Anal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -219,6 +245,10 @@ Function CreateDDC_B_GallPDown_HangBJ(int id)
 		Anim.AddTag("Blowjob")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -251,6 +281,10 @@ Function CreateDDC_B_GallPDown_HangFF(int id)
 		Anim.AddTag("Blowjob")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -282,6 +316,10 @@ Function CreateDDC_B_GallPDown_HangFacial(int id)
 		Anim.AddTag("Facial")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -314,6 +352,10 @@ Function CreateDDC_B_TiltWMiss(int id)
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
 
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+
 		Anim.Save(-1)
 	EndIf
 EndFunction
@@ -344,6 +386,10 @@ Function CreateDDC_B_TiltWSide(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 
 		Anim.Save(-1)
 	EndIf
@@ -377,6 +423,10 @@ Function CreateDDC_B_TiltWFist(int id)
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
 
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+
 		Anim.Save(-1)
 	EndIf
 EndFunction
@@ -408,6 +458,10 @@ Function CreateDDC_B_TiltWFF(int id)
 		Anim.AddTag("Blowjob")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 
 		Anim.Save(-1)
 	EndIf
@@ -441,6 +495,10 @@ Function CreateDDC_B_TiltWFF2(int id)
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
 
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+
 		Anim.Save(-1)
 	EndIf
 EndFunction
@@ -472,6 +530,10 @@ Function CreateDDC_Billyy_StockadeFuckMachine(int id)
 		Anim.AddTag("Anal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -504,6 +566,10 @@ Function CreateDDC_B_GallPHorse_ForGrind(int id)
 		Anim.AddTag("Grinding")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -535,6 +601,10 @@ Function CreateDDC_B_GallPStrap_BentOver(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -569,6 +639,10 @@ Function CreateDDC_Babo_ZazPillory01(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -603,6 +677,10 @@ Function CreateDDC_NibblesPillory(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -634,6 +712,45 @@ Function CreateDDC_NibblesBondagePost(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+	
+		Anim.Save(-1)
+	EndIf
+EndFunction
+
+Function CreateDDC_NibblesBondagePostTOY(int id)
+	String asAnim1 = "DDC_NibblesBondagePostTOY"
+
+	sslBaseAnimation Anim = SexLab.GetAnimationObject("DDC_NibblesBondagePostTOY")
+	if Anim != none && Anim.Name != "DDC_NibblesBondagePostTOY"
+		Anim.Name = "DDC_NibblesBondagePostTOY"
+		Anim.SoundFX = Squishing
+
+		Int B = Anim.AddPosition(Female)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S1")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S2")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S3")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S4")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S5")
+
+		Int A = Anim.AddPosition(Male)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S1", strapon = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S2", strapon = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S3", strapon = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S4", strapon = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S5", strapon = False)
+
+		Anim.AddTag("RestraintPost02")
+		Anim.AddTag("Vaginal")
+		Anim.AddTag("Aggressive")
+		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -668,6 +785,10 @@ Function CreateDDC_Leito_Pillory_Doggy(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
@@ -675,6 +796,149 @@ EndFunction
 
 
 ;animations by Psyche
+
+Function CreateDDC_PsycheFingerFucking(int id)
+	String asAnim1 = "DDC_PsycheFingerFucking"
+
+	sslBaseAnimation Anim = SexLab.GetAnimationObject("DDC_PsycheFingerFucking")
+	if Anim != none && Anim.Name != "DDC_PsycheFingerFucking"
+		Anim.Name = "DDC_PsycheFingerFucking"
+		Anim.SoundFX = Squishing
+
+		Int B = Anim.AddPosition(Female)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S1", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S2", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S3", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S4", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S5", rotate = 180.0)
+
+		Int A = Anim.AddPosition(Male)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S1", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S2", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S3", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S4", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S5", rotate = 180.0)
+
+		Anim.AddTag("TorturePole05")
+		Anim.AddTag("Vaginal")
+		Anim.AddTag("Fingering")
+		Anim.AddTag("Aggressive")
+		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+	
+		Anim.Save(-1)
+	EndIf
+EndFunction
+
+Function CreateDDC_PsychePillory(int id)
+	String asAnim1 = "DDC_PsychePillory"
+
+	sslBaseAnimation Anim = SexLab.GetAnimationObject("DDC_PsychePillory")
+	if Anim != none && Anim.Name != "DDC_PsychePillory"
+		Anim.Name = "DDC_PsychePillory"
+		Anim.SoundFX = Squishing
+
+		Int B = Anim.AddPosition(Female, AddCum = Vaginal)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S1")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S2")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S3")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S4")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S5")
+
+		Int A = Anim.AddPosition(Male)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S1")
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S2")
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S3")
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S4")
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S5")
+
+		Anim.AddTag("Pillory")
+		Anim.AddTag("Vaginal")
+		Anim.AddTag("Fisting")
+		Anim.AddTag("Aggressive")
+		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+	
+		Anim.Save(-1)
+	EndIf
+EndFunction
+
+Function CreateDDC_PsycheRestrictRape(int id)
+	String asAnim1 = "DDC_PsycheRestrictRape"
+
+	sslBaseAnimation Anim = SexLab.GetAnimationObject("DDC_PsycheRestrictRape")
+	if Anim != none && Anim.Name != "DDC_PsycheRestrictRape"
+		Anim.Name = "DDC_PsycheRestrictRape"
+		Anim.SoundFX = Squishing
+
+		Int B = Anim.AddPosition(Female, AddCum = Vaginal)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S1", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S2", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S3", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S4", rotate = 180.0)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S5", rotate = 180.0)
+
+		Int A = Anim.AddPosition(Male)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S1", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S2", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S3", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S4", rotate = 180.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S5", rotate = 180.0)
+
+		Anim.AddTag("TorturePole05")
+		Anim.AddTag("Vaginal")
+		Anim.AddTag("Aggressive")
+		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+	
+		Anim.Save(-1)
+	EndIf
+EndFunction
+
+Function CreateDDC_PsycheRestrictRape3(int id)
+	String asAnim1 = "DDC_PsycheRestrictRape3"
+
+	sslBaseAnimation Anim = SexLab.GetAnimationObject("DDC_PsycheRestrictRape3")
+	if Anim != none && Anim.Name != "DDC_PsycheRestrictRape3"
+		Anim.Name = "DDC_PsycheRestrictRape3"
+		Anim.SoundFX = Squishing
+
+		Int B = Anim.AddPosition(Female, AddCum = Vaginal)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S1")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S2")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S3")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S4")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S5")
+
+		Int A = Anim.AddPosition(Male)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S1", forward = 7.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S2", forward = 7.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S3", forward = 7.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S4", forward = 7.0)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S5", forward = 7.0)
+
+		Anim.AddTag("Xcross")
+		Anim.AddTag("Vaginal")
+		Anim.AddTag("Fisting")
+		Anim.AddTag("Aggressive")
+		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+
+		Anim.Save(-1)
+	EndIf
+EndFunction
 
 Function CreateDDC_PsycheRestrictRape8(int id)
 	String asAnim1 = "DDC_PsycheRestrictRape8"
@@ -702,6 +966,44 @@ Function CreateDDC_PsycheRestrictRape8(int id)
 		Anim.AddTag("Vaginal")
 		Anim.AddTag("Aggressive")
 		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
+	
+		Anim.Save(-1)
+	EndIf
+EndFunction
+
+Function CreateDDC_PsycheWoodenHorse(int id)
+	String asAnim1 = "DDC_PsycheWoodenHorse"
+
+	sslBaseAnimation Anim = SexLab.GetAnimationObject("DDC_PsycheWoodenHorse")
+	if Anim != none && Anim.Name != "DDC_PsycheWoodenHorse"
+		Anim.Name = "DDC_PsycheWoodenHorse"
+		Anim.SoundFX = Squishing
+
+		Int B = Anim.AddPosition(Female)
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S1")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S2")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S3")
+		Anim.AddPositionStage(B, asAnim1 + "_A1_S4")
+
+		Int A = Anim.AddPosition(Male)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S1", strapOn = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S2", strapOn = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S3", strapOn = False)
+		Anim.AddPositionStage(A, asAnim1 + "_A2_S4", strapOn = False)
+
+		Anim.AddTag("WoodenHorse")
+		Anim.AddTag("Vaginal")
+		Anim.AddTag("Grinding")
+		Anim.AddTag("Aggressive")
+		Anim.AddTag("Sex")
+
+		Anim.AddTag("DomSub")
+		Anim.AddTag("DeviousDevice")
+		Anim.AddTag("NoSwap")
 	
 		Anim.Save(-1)
 	EndIf
