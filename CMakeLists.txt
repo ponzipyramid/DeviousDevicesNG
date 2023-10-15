@@ -29,7 +29,7 @@ set(headers
         include/Hider.h
         include/NodeHider.h
         include/InventoryFilter.h
-        include/UpdateHook.h
+        include/UpdateManager.h
         include/Switches.h
         include/DeviceReader.h
         include/Settings.h
@@ -43,7 +43,7 @@ set(sources
         src/Hider.cpp
         src/NodeHider.cpp
         src/InventoryFilter.cpp
-        src/UpdateHook.cpp
+        src/UpdateManager.cpp
         src/DeviceReader.cpp
         src/LibFunctions.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)

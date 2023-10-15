@@ -6,6 +6,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
 {
     if (!_setup)
     {
+        LOG("DeviceHiderManager::Setup()")
         RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
         if (loc_datahandler == nullptr) 
@@ -38,6 +39,30 @@ void DeviousDevices::DeviceHiderManager::Setup()
             _kwnohide = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x043F84,"Devious Devices - Integration.esm"));
             if (_kwnohide != nullptr) _nohidekeywords.push_back(_kwnohide);
         }
+
+
+        const uintptr_t loc_GetWornMask_VisitAdr = REL::RelocationID(543106, 188971).address() + (REL::Module::GetRuntime() == REL::Module::Runtime::SE ? 0x10 : 0x88);
+        REL::Relocation<std::uintptr_t> loc_vtbl{loc_GetWornMask_VisitAdr};
+        GetWornMask_Visit_old = loc_vtbl.write_vfunc(0x00, GetWornMask_Visit);
+        LOG("Installed papyrus hook on GetWornMask_Visit at {0:x} with replacement from address {0:x}", 
+            loc_GetWornMask_VisitAdr, (void*)&DeviceHiderManager::GetWornMask_Visit);
+
+        //_GetWornMask = (OriginalGetWornMask)loc_GetWornFormAdr;
+        //
+        //DetourTransactionBegin();
+        //DetourUpdateThread(GetCurrentThread());
+        //DetourAttach(&(PVOID&)_GetWornMask, (PBYTE)&DeviceHiderManager::GetWornMask);
+        //
+        //if (DetourTransactionCommit() == NO_ERROR)
+        //{
+        //    LOG("Installed papyrus hook on GetWornMask_Visit at {0:x} with replacement from address {0:x}", 
+        //        loc_GetWornMaskVTAdr, (void*)&DeviceHiderManager::GetWornMask_Visit);
+        //}
+        //else
+        //{
+        //    WARN("Failed to install hook on GetWornMask");
+        //}
+
         _setup = true;
     }
 }
@@ -118,4 +143,31 @@ bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_arm
 {
     if (a_armor == nullptr) return false;
     return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
+}
+
+std::uint32_t DeviousDevices::DeviceHiderManager::GetWornMask(RE::InventoryChanges* a_this)
+{
+    uint32_t loc_res = _GetWornMask(a_this);
+    
+    LOG("GetWornMask({}) - res = {}",a_this->owner->GetName(),loc_res)
+    return loc_res;
+}
+
+RE::BSContainer::ForEachResult DeviousDevices::DeviceHiderManager::GetWornMask_Visit(void* a_this, RE::InventoryEntryData* a_entryData)
+{
+    if (a_entryData != nullptr)
+    {
+        RE::TESBoundObject* loc_obj = a_entryData->object;
+        RE::TESForm* loc_owner = a_entryData->GetOwner();
+        if (loc_obj != nullptr && loc_owner != nullptr)
+        {
+            LOG("GetWornMask_Visit called for {} on {}",loc_obj->GetName(),loc_owner->GetName())
+        }
+    }
+
+    //LOG("GetWornMask_Visit called for {}",a_entryData)
+
+    
+
+    return GetWornMask_Visit_old(a_this,a_entryData);
 }

@@ -94,7 +94,7 @@ void DeviceReader::ParseMods()
     for (auto && it : _ddmods)
     {
         const std::string loc_path = std::filesystem::current_path().string() + "\\Data\\" + std::string(it->GetFilename());
-        LOG("Parsing mod {}, path = {}",it->GetFilename(),loc_path)
+        LOG("Parsing mod {}",it->GetFilename())
         std::fstream loc_file(loc_path,std::ios::binary | std::ios::beg | std::ios::in);
         if (loc_file.is_open())
         {
