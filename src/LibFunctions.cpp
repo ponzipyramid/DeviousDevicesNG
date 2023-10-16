@@ -55,7 +55,7 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
             DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
             if (loc_device.kwd == a_kw)
             {
-                return loc_device.deviceRendered;
+                return loc_device.deviceInventory;
             }
         }
     }
