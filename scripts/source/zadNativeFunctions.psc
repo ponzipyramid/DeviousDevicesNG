@@ -80,4 +80,4 @@ bool    Function GetManipulated (Actor akActor, Armor akInvDevice)              
 Armor[]  Function GetDevices(Actor akActor, int aiMode = 0, bool abWorn = False)    global native
 
 ; Return worn device based on passed main keyword (set on equip script)
-Armor    Function GetWornDevice(Actor akActor, Keyword akKeyword)                   global native
+Armor    Function GetWornDevice(Actor akActor, Keyword akKeyword, bool fuzzy = false)                   global native
