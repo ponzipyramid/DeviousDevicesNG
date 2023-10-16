@@ -112,6 +112,7 @@ DeviceReader::DeviceUnit DeviceReader::GetDeviceUnit(RE::TESObjectARMO* a_device
 {
     if (a_device == nullptr) 
     {
+        LOG("GetDeviceUnit: Could not identify device");
         return DeviceUnit();
     }
 

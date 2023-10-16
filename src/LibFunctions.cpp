@@ -44,8 +44,7 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
     return loc_res;
 }
 
-RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw)
-{
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy) {
     if ((a_actor == nullptr) || (a_kw == nullptr)) return nullptr;
     for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
     {
@@ -53,7 +52,7 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
         if (loc_deviceRD != nullptr)
         {
             DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
-            if (loc_device.kwd == a_kw)
+            if ((!a_fuzzy && loc_device.kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw)))
             {
                 return loc_device.deviceInventory;
             }
@@ -68,8 +67,8 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::GetDevices(PAPYRUSFUNCHANDLE, RE
     return LibFunctions::GetSingleton()->GetDevices(a_actor,a_mode,a_worn);
 }
 
-RE::TESObjectARMO* DeviousDevices::GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw)
-{
+RE::TESObjectARMO* DeviousDevices::GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw,
+                                                 bool a_fuzzy) {
     LOG("GetWornDevice called")
-    return LibFunctions::GetSingleton()->GetWornDevice(a_actor,a_kw);
+    return LibFunctions::GetSingleton()->GetWornDevice(a_actor, a_kw, a_fuzzy);
 }
