@@ -1,8 +1,12 @@
 #pragma once
 #include <RE/Skyrim.h>
+#include <detours/detours.h>
 
 namespace DeviousDevices
 {
+
+    typedef std::uint32_t(WINAPI* OriginalGetWornMask)(RE::InventoryChanges*);
+
     class DeviceHiderManager
     {
     SINGLETONHEADER(DeviceHiderManager)
@@ -19,7 +23,14 @@ namespace DeviousDevices
         RE::BGSKeyword* _kwsos      = nullptr;
         std::vector<RE::BGSKeyword*> _hidekeywords;
         std::vector<RE::BGSKeyword*> _nohidekeywords;
+        static inline OriginalGetWornMask  _GetWornMask;
+        static std::uint32_t GetWornMask(RE::InventoryChanges* a_this);
+
+        static RE::BSContainer::ForEachResult GetWornMask_Visit(void* a_this, RE::InventoryEntryData* a_entryData);
+        inline static REL::Relocation<decltype(GetWornMask_Visit)> GetWornMask_Visit_old;
     };
+
+
 
     std::vector<int> RebuildSlotMask(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, std::vector<int> a_slotfilter);
     int FilterMask(PAPYRUSFUNCHANDLE,RE::Actor* a_actor, int a_slotmask);
