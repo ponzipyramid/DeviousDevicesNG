@@ -391,7 +391,8 @@ void DeviceReader::LoadDB() {
                         GetPropertyForm<RE::BGSMessage>(loc_ID, "zad_EquipConflictFailMsg",NULL, 0);
                    
 
-                    _devices[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
+                    _devicesByInventory[_database[loc_ID].deviceInventory->GetFormID()] = &_database[loc_ID];
+                    _devicesByRendered[_database[loc_ID].deviceRendered->GetFormID()] = &_database[loc_ID];
 
                     std::vector<RE::BGSKeyword*> loc_keywords(_database[loc_ID].deviceHandle->keywords.ksiz.keywordcount);
  

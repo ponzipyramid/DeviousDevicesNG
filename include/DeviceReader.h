@@ -204,13 +204,6 @@ namespace DeviousDevices
         RE::TESObjectARMO* GetDeviceInventory(RE::TESObjectARMO* a_renddevice); 
         DeviceUnit GetDeviceUnit(RE::TESObjectARMO* a_device, int a_mode = 0);
 
-
-        inline bool IsInventoryDevice(RE::TESForm* obj) const {
-            return obj->HasKeywordInArray(_invDeviceKwds, true);
-        }
-
-        inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return _devices.count(obj->GetFormID()) ? _devices[obj->GetFormID()] : nullptr; }
-
         bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
 
         bool EquipRenderedDevice(RE::Actor* actor, DeviceUnit* device);
@@ -240,6 +233,16 @@ namespace DeviousDevices
         std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
 
+        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) {
+            auto formId = item->GetFormID();
+            return _devicesByInventory.count(formId) ? _devicesByInventory[formId] : nullptr;
+        }
+
+        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) {
+            auto formId = item->GetFormID();
+            return _devicesByInventory.count(formId) ? _devicesByRendered[formId] : nullptr;
+        }
+
         inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 
         {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return;
@@ -254,21 +257,6 @@ namespace DeviousDevices
             return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID())); 
         }
 
-        inline bool ShouldEquipSilently(RE::Actor* a_actor) const
-        {
-            if (a_actor == nullptr) return false;
-
-            if (_alwaysSilent->HasForm(a_actor)) {
-                return true;
-            }
-
-            auto ui = RE::UI::GetSingleton();
-            auto invMenu = ui->GetMenu(RE::InventoryMenu::MENU_NAME);
-            auto containerMenu = ui->GetMenu(RE::ContainerMenu::MENU_NAME);
-
-            return !containerMenu.get() && !(a_actor->GetFormID() == 20 && invMenu.get());
-        }
-
         DeviceUnit EmptyDeviceUnit;
     private:
         void LoadDDMods();
@@ -279,7 +267,8 @@ namespace DeviousDevices
         std::vector<RE::TESFile*>                               _ddmods;
         std::vector<std::shared_ptr<DeviceMod>>                 _ddmodspars;
         std::map<RE::TESObjectARMO*, DeviceUnit>                _database;
-        std::unordered_map<RE::FormID, DeviceUnit*>             _devices;
+        std::unordered_map<RE::FormID, DeviceUnit*> _devicesByInventory;
+        std::unordered_map<RE::FormID, DeviceUnit*> _devicesByRendered;
         std::vector<RE::BGSKeyword*>                            _invDeviceKwds;
         std::set<std::pair<RE::FormID, RE::FormID>>             _manipulated; // serde
         bool                                                    _installed = false;

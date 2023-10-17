@@ -14,11 +14,11 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
             RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
             if (loc_deviceRD != nullptr)
             {
-                DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
-                if (loc_device.deviceInventory != nullptr && loc_device.deviceRendered != nullptr)
+                
+                if (auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD))
                 {
-                    if (a_mode == 0) loc_res.push_back(loc_device.deviceInventory);
-                    else loc_res.push_back(loc_device.deviceRendered);
+                    if (a_mode == 0) loc_res.push_back(loc_device->deviceInventory);
+                    else loc_res.push_back(loc_device->deviceRendered);
                 }
             }
         }
@@ -51,10 +51,10 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
         RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
         if (loc_deviceRD != nullptr)
         {
-            DeviceReader::DeviceUnit loc_device = DeviceReader::GetSingleton()->GetDeviceUnit(loc_deviceRD,1);
-            if ((!a_fuzzy && loc_device.kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw)))
+            auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD);
+            if (loc_device && (!a_fuzzy && loc_device->kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw)))
             {
-                return loc_device.deviceInventory;
+                return loc_device->deviceInventory;
             }
         }
     }
