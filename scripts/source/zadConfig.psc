@@ -679,10 +679,7 @@ Event OnOptionMenuAccept(int option, int index)
 			libs.Log("Index:" + index + " = " + value + "/" + SlotMaskValues.find(value))
 			libs.DevicesUnderneath.SlotMaskFilters[i] = value
 			SetMenuOptionValue(option, SlotMasks[index])
-			libs.DevicesUnderneath.RebuildSlotmask(libs.PlayerRef)
-			; if libs.DevicesUnderneath.IsStopped()
-			; 	libs.DevicesUnderneath.Start()
-			; EndIf
+            ZadNativeFunctions.SyncSetting(libs.DevicesUnderneath.SlotMaskFilters)
 		EndIf
 		i += 1
 	EndWhile

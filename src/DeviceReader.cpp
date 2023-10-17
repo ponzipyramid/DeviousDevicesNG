@@ -477,6 +477,12 @@ bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor) const
     return true;
 }
 
+bool DeviousDevices::DeviceReader::IsRenderDevice(RE::TESObjectARMO* a_device)
+{
+    if (a_device == nullptr) return false;
+    return (GetDeviceUnit(a_device,1).deviceRendered == a_device);
+}
+
 bool DeviceReader::CanEquipDevice(RE::Actor* a_actor, DeviceUnit* a_device) {
     if ((a_device != nullptr) && (a_actor != nullptr)) 
     {

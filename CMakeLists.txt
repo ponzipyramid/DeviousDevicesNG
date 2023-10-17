@@ -104,6 +104,8 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include"
 install(TARGETS ${PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
+
+set(SKSE_USE_XBYAK ON)
 ########################################################################################################################
 ## Configure unit tests
 ########################################################################################################################

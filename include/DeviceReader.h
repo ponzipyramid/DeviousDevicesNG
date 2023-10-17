@@ -209,6 +209,8 @@ namespace DeviousDevices
             return obj->HasKeywordInArray(_invDeviceKwds, true);
         }
 
+        bool IsRenderDevice(RE::TESObjectARMO* a_device);
+
         inline DeviceUnit* GetInventoryDevice(RE::TESForm* obj) { return _devices.count(obj->GetFormID()) ? _devices[obj->GetFormID()] : nullptr; }
 
         bool CanEquipDevice(RE::Actor* actor, DeviceUnit* obj);
@@ -303,6 +305,7 @@ namespace DeviousDevices
     std::vector<bool>           GetPropertyBoolArray(   PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
     std::vector<std::string>    GetPropertyStringArray( PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
 
+    
 
     // device manipulation
     inline void SetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) 

@@ -29,8 +29,7 @@ float[] Function ApplyPhonemsFaction(Actor akActor, float[] aaExpression, Factio
 
 
 ;Rebuild hider slots
-Int[]   Function RebuildSlotMask(Actor akActor, Int[] aaSlotFilter)                 global native
-Int     Function FilterMask     (Actor akActor, int aiSlotMask)                     global native
+        Function SyncSetting    (Int[] aaSetting)                                   global native
 
 ;Node hider
         Function HideWeapons    (Actor akActor)                                     global native
