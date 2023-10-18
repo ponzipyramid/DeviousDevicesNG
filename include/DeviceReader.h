@@ -234,11 +234,13 @@ namespace DeviousDevices
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
 
         inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) {
+            if (!item) return nullptr;
             auto formId = item->GetFormID();
             return _devicesByInventory.count(formId) ? _devicesByInventory[formId] : nullptr;
         }
 
         inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) {
+            if (!item) return nullptr;
             auto formId = item->GetFormID();
             return _devicesByInventory.count(formId) ? _devicesByRendered[formId] : nullptr;
         }
