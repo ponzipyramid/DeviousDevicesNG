@@ -29,7 +29,7 @@ set(headers
         include/Hider.h
         include/NodeHider.h
         include/InventoryFilter.h
-        include/UpdateHook.h
+        include/UpdateManager.h
         include/Switches.h
         include/DeviceReader.h
         include/Settings.h
@@ -43,7 +43,7 @@ set(sources
         src/Hider.cpp
         src/NodeHider.cpp
         src/InventoryFilter.cpp
-        src/UpdateHook.cpp
+        src/UpdateManager.cpp
         src/DeviceReader.cpp
         src/LibFunctions.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
@@ -104,6 +104,8 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include"
 install(TARGETS ${PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
+
+set(SKSE_USE_XBYAK ON)
 ########################################################################################################################
 ## Configure unit tests
 ########################################################################################################################

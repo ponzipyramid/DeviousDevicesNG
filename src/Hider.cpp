@@ -1,11 +1,14 @@
 #include "Hider.h"
 
+#include <xbyak/xbyak.h>
+
 SINGLETONBODY(DeviousDevices::DeviceHiderManager)
 
 void DeviousDevices::DeviceHiderManager::Setup()
 {
     if (!_setup)
     {
+        LOG("DeviceHiderManager::Setup()")
         RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
         if (loc_datahandler == nullptr) 
@@ -13,6 +16,8 @@ void DeviousDevices::DeviceHiderManager::Setup()
             LOG("DeviceHiderManager::Setup() - loc_datahandler = NULL -> cant setup!")
             return;
         }
+
+        _setting.assign(128,0);
 
         //check lockable keyword
         if (_kwlockable == nullptr)
@@ -38,84 +43,128 @@ void DeviousDevices::DeviceHiderManager::Setup()
             _kwnohide = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x043F84,"Devious Devices - Integration.esm"));
             if (_kwnohide != nullptr) _nohidekeywords.push_back(_kwnohide);
         }
+
+	    auto hook = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
+
+	    // Expected size: 0x12
+	    struct Patch : public Xbyak::CodeGenerator
+	    {
+		    Patch(std::uintptr_t a_funcAddr)
+		    {
+			    mov(rdx, r13);
+			    mov(rcx, rbp);
+			    mov(rax, a_funcAddr);
+			    call(rax);
+		    }
+	    };
+
+	    Patch patch{ reinterpret_cast<std::uintptr_t>(InitWornArmor) };
+	    patch.ready();
+
+	    if (patch.getSize() > 0x17) {
+		    util::report_and_fail("Patch was too large, failed to install"sv);
+	    }
+
+	    REL::safe_fill(hook.address(), REL::NOP, 0x17);
+	    REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
+
         _setup = true;
     }
 }
 
-std::vector<int> DeviousDevices::RebuildSlotMask(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, std::vector<int> a_slotfilter)
+bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_armor) const
 {
-    DeviceHiderManager* loc_hider = DeviceHiderManager::GetSingleton();
-    return loc_hider->RebuildSlotMask(a_actor,a_slotfilter);
+    if (a_armor == nullptr) return false;
+    return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
 }
 
-int DeviousDevices::FilterMask(PAPYRUSFUNCHANDLE,RE::Actor* a_actor, int a_slotmask)
+void DeviousDevices::DeviceHiderManager::SyncSetting(std::vector<int> a_masks)
 {
-    DeviceHiderManager* loc_hider = DeviceHiderManager::GetSingleton();
-    return loc_hider->FilterMask(a_actor,a_slotmask);
+    for (size_t i = 0; i < a_masks.size() && i < _setting.size(); i++) _setting[i] = a_masks[i];
 }
 
-std::vector<int> DeviousDevices::DeviceHiderManager::RebuildSlotMask(RE::Actor* a_actor, std::vector<int> a_slotfilter)
+const std::vector<int>& DeviousDevices::DeviceHiderManager::GetSetting() const
 {
-    if (a_actor == nullptr) return std::vector<int>(); 
+    return _setting;
+}
 
-    //result array
-    //0-127 = SlotMaskUsage
-    //128   = SlotMask
-    std::vector<int> loc_res = std::vector<int>(129);
+bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor)
+{
+    _CheckResult = true;
+    //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
+    CheckHiderSlots(a_armor,a_actor,0x00000001,0x40000000);
+    //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called - result = {}",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
+    return _CheckResult;
+}
 
-    for(uint32_t i1 = 0x00000001; i1 < 0x40000000; i1 <<= 1U)
+void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max)
+{
+    // TODO
+    const int loc_mask = static_cast<int>(a_armor->GetSlotMask());
+
+    for(uint32_t i1 = a_min; i1 < a_max; i1 <<= 1U)
     {
+        if (!_CheckResult) return;
+
         //get armor from slot
         const RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(i1));
 
-        //check if armor is not null (otherwise crash ;))
-        //also check if armor have no no_hide keyword
-        if ((loc_armor != nullptr) && !loc_armor->HasKeywordInArray(_nohidekeywords,true))
+        if (loc_armor)
         {
-            //get slot mask
-            const uint32_t loc_mask = static_cast<uint32_t>(loc_armor->GetSlotMask());
-
+            const uint32_t loc_mask2 = static_cast<uint32_t>(loc_armor->GetSlotMask());
+            const std::vector<int>& loc_setting = DeviceHiderManager::GetSingleton()->GetSetting();
             for(uint8_t i2 = 0; i2 < 31; i2++)
             {
-                if (loc_mask & (0x1U << i2))
+                //armor have slot - use setting
+                if (loc_mask2 & (0x1U << i2))
                 {
                     const uint8_t loc_filterindx = i2*4;
                     for(uint8_t i3 = loc_filterindx; i3 < (loc_filterindx+4); i3++)
                     {
-                        if (a_slotfilter[i3] != 0)
+                        if (loc_mask & loc_setting[i3])
                         {
-                            loc_res[i3]  += 1;
-                            loc_res[128] |= a_slotfilter[i3];
+                            _CheckResult = false;
+                            return;
                         }
                     }
                 }
             }
         }
     }
-    return loc_res;
 }
 
-int DeviousDevices::DeviceHiderManager::FilterMask(RE::Actor* a_actor, int a_slotmask)
+bool DeviousDevices::DeviceHiderManager::HasRace(RE::TESObjectARMA* a_armorAddon, RE::TESRace* a_race)
 {
-    if (a_actor == nullptr) return 0x00000000;
-    int loc_res = a_slotmask;
-    for(int i = 0x00000001; i != 0x40000000; i <<= 1)
+    using func_t = decltype(HasRace);
+    static REL::Relocation<func_t> func{ REL::RelocationID(17359,17757), REL::VariantOffset(0,0, 0x2380A0) };
+    return func(a_armorAddon, a_race);
+}
+
+void DeviousDevices::DeviceHiderManager::InitWornArmorAddon(RE::TESObjectARMA* a_armorAddon, RE::TESObjectARMO* a_armor, RE::BSTSmartPointer<RE::BipedAnim>* a_biped, RE::SEX a_sex)
+{
+    using func_t = decltype(InitWornArmorAddon);
+    static REL::Relocation<func_t> func{ REL::RelocationID(17361, 17759), REL::VariantOffset(0x0,0x0,0x2383A0) };
+    return func(a_armorAddon, a_armor, a_biped, a_sex);
+}
+
+void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, RE::BSTSmartPointer<RE::BipedAnim>* a_biped)
+{
+    RE::TESRace*    loc_race    = a_actor->GetRace();
+    RE::SEX         loc_sex     = a_actor->GetActorBase()->GetSex();
+    //LOG("InitWornArmor called")
+    //LOG("InitWornArmor called for {} on {}",a_armor->GetName(),a_actor->GetName())
+
+    //check if armor is device and can be hidden. If not, just render it
+    if (DeviceHiderManager::GetSingleton()->IsValidForHide(a_armor))
     {
-        if (a_slotmask & i)
+        if (!DeviceHiderManager::GetSingleton()->ProcessHider(a_armor,a_actor)) return;
+    }
+
+    for (auto&& itArmorAddon : a_armor->armorAddons) 
+    {
+        if (HasRace(itArmorAddon,loc_race)) 
         {
-            //get armor from slot
-            RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(i));
-            if ((loc_armor != nullptr) && (!IsValidForHide(loc_armor)))
-            {
-                loc_res &= ~i;
-            }
+            InitWornArmorAddon(itArmorAddon,a_armor,a_biped,loc_sex);
         }
     }
-    return loc_res;
-}
-
-bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_armor)
-{
-    if (a_armor == nullptr) return false;
-    return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
 }

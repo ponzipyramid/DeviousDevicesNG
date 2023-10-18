@@ -19,7 +19,7 @@ namespace DeviousDevices {
         bool IsDevious(RE::TESBoundObject* obj);
         bool IsStrapon(RE::TESBoundObject* obj);
         bool ActorHasBlockingGag(RE::Actor* a_actor);
-        int GetMaskForKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd);
+        int  GetMaskForKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd);
 
         bool _init = false;
 

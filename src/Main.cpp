@@ -2,7 +2,7 @@
 #include "Hooks.h"
 #include "Hider.h"
 #include "NodeHider.h"
-#include "UpdateHook.h"
+#include "UpdateManager.h"
 #include "DeviceReader.h"
 #include "Settings.h"
 #include <stddef.h>
@@ -70,7 +70,7 @@ namespace {
                         DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        DeviousDevices::UpdateHook::GetSingleton()->Setup();
+                        DeviousDevices::UpdateManager::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was

@@ -93,8 +93,7 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(ApplyPhonemsFaction,true);
 
     //hider
-    REGISTERPAPYRUSFUNC(RebuildSlotMask,true);
-    REGISTERPAPYRUSFUNC(FilterMask,true);
+    REGISTERPAPYRUSFUNC(SyncSetting,true);
 
     //node hider
     REGISTERPAPYRUSFUNC(HideWeapons,true);
