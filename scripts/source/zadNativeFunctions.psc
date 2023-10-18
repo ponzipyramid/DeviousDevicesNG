@@ -29,7 +29,7 @@ float[] Function ApplyPhonemsFaction(Actor akActor, float[] aaExpression, Factio
 
 
 ;Rebuild hider slots
-        Function SyncSetting    (Int[] aaSetting)                                   global native
+        Function SyncSetting    (Int[] aaFilter, Int aiSetting = 1)                 global native
 
 ;Node hider
         Function HideWeapons    (Actor akActor)                                     global native

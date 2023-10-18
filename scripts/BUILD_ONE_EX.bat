@@ -2,7 +2,7 @@
 cd /D "%~dp0"
 echo **Steping to mode root directory
 cd ..
-echo **Checking PAPYRUS sources and tools from GitHub
-if not exist "PAPYRUS" (echo **Sources not present, clonning from GitHub & git clone https://github.com/IHateMyKite/PAPYRUS) else (echo **PAPYRUS Folder already present, skipping...)
-cd PAPYRUS
+echo **Checking PapyrusSourcesDD sources and tools from GitHub
+if not exist "PapyrusSourcesDD" (echo **Sources not present, clonning from GitHub & git clone https://github.com/IHateMyKite/PapyrusSourcesDD) else (echo **PapyrusSourcesDD Folder already present, skipping...)
+cd PapyrusSourcesDD
 BUILD_SINGLE %1

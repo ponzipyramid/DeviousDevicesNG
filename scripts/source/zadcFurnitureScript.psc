@@ -289,9 +289,6 @@ Function LockActor(actor act)
 	PosZ = user.GetPositionZ()	
 	clib.StoreBondage(user, InvalidDevices, HideAllDevices)
 	user.SetVehicle(self)		
-	If ForceStripActor
-		clib.StripOutfit(user)	
-	EndIf	
 	clib.SetNiOverrideOverride(user)
 	ActorUtil.RemovePackageOverride(user, clib.zadc_pk_donothing)	
 	Package Pose = clib.GetOverridePose(self)

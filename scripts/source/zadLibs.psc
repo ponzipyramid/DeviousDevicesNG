@@ -445,13 +445,6 @@ Bool Function UnlockDevice(actor akActor, armor deviceInventory, armor deviceRen
 				akActor.RemoveFromFaction(zadGagPanelFaction)
 			EndIf
 		EndIf
-		if akActor != playerref && akActor.GetActorBase().IsUnique() && (rDevice.HasKeyword(zad_DeviousSuit) && !akActor.WornHasKeyword(zad_DeviousHeavyBondage)) || (rDevice.HasKeyword(zad_DeviousHeavyBondage) && !akActor.WornHasKeyword(zad_DeviousSuit))
-			Outfit OriginalOutfit = StorageUtil.GetFormValue(akActor.GetActorBase(), "zad_OriginalOutfit") As Outfit
-			If OriginalOutfit
-				akActor.SetOutfit(OriginalOutfit, false)
-			EndIf
-			StorageUtil.UnSetFormValue(akActor.GetActorBase(), "zad_OriginalOutfit")
-		endIf		
 		UnsetStoredDevice(akActor, kw)		
 		SendDeviceRemovalEvent(LookupDeviceType(zad_DeviousDevice), akActor)
 		SendDeviceRemovedEventVerbose(deviceInventory, kw, akActor)		

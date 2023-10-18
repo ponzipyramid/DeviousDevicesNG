@@ -11,6 +11,7 @@ int[] Property ShiftCache Auto
 
 int Property SlotMask Auto ; Avoid repeated lookups
 
+int Property Setting Auto Hidden
 
 ;; [30]: 0x00000001
 ;; [31]: 0x00000002
@@ -62,7 +63,7 @@ Function SetDefaultSlotMasks()
     HideEquipment(32, 58) ; When slot 32 is equipped, hide slot 58 (Corsets).
     HideEquipment(32, 49) ; When slot 32 is equipped, hide slot 49 (Belts).
     
-    ZadNativeFunctions.SyncSetting(SlotMaskFilters)
+    SyncSetting()
 EndFunction
 
 
@@ -85,8 +86,12 @@ Function HideEquipment(int slot1, int slot2)
 EndFunction
 
 
+Function SyncSetting()
+    ZadNativeFunctions.SyncSetting(SlotMaskFilters,Setting)
+EndFunction
+
 Function Maintenance()
-    ZadNativeFunctions.SyncSetting(SlotMaskFilters)
+    SyncSetting()
     ;libs.Log("DevicesUnderneath::Maintenance()")
     ;zad_DeviceHiderAA = zad_DeviceHider.GetNthArmorAddon(0)
     ;if SlotMaskFilters.length <= 0 || ShiftCache.Length <= 0

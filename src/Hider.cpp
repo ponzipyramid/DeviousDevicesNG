@@ -17,7 +17,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
             return;
         }
 
-        _setting.assign(128,0);
+        _filter.assign(128,0);
 
         //check lockable keyword
         if (_kwlockable == nullptr)
@@ -43,30 +43,37 @@ void DeviousDevices::DeviceHiderManager::Setup()
             _kwnohide = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x043F84,"Devious Devices - Integration.esm"));
             if (_kwnohide != nullptr) _nohidekeywords.push_back(_kwnohide);
         }
+        //check contraption keyword
+        if (_contraption == nullptr)
+        {
+            _contraption = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x0022FF,"Devious Devices - Contraptions.esm"));
+            if (_contraption != nullptr) _nohidekeywords.push_back(_contraption);
+        }
 
-	    auto hook = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
 
-	    // Expected size: 0x12
-	    struct Patch : public Xbyak::CodeGenerator
-	    {
-		    Patch(std::uintptr_t a_funcAddr)
-		    {
-			    mov(rdx, r13);
-			    mov(rcx, rbp);
-			    mov(rax, a_funcAddr);
-			    call(rax);
-		    }
-	    };
+        auto hook = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
 
-	    Patch patch{ reinterpret_cast<std::uintptr_t>(InitWornArmor) };
-	    patch.ready();
+        // Expected size: 0x12
+        struct Patch : public Xbyak::CodeGenerator
+        {
+            Patch(std::uintptr_t a_funcAddr)
+            {
+                mov(rdx, r13);
+                mov(rcx, rbp);
+                mov(rax, a_funcAddr);
+                call(rax);
+            }
+        };
 
-	    if (patch.getSize() > 0x17) {
-		    util::report_and_fail("Patch was too large, failed to install"sv);
-	    }
+        Patch patch{ reinterpret_cast<std::uintptr_t>(InitWornArmor) };
+        patch.ready();
 
-	    REL::safe_fill(hook.address(), REL::NOP, 0x17);
-	    REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
+        if (patch.getSize() > 0x17) {
+            util::report_and_fail("Patch was too large, failed to install"sv);
+        }
+
+        REL::safe_fill(hook.address(), REL::NOP, 0x17);
+        REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
 
         _setup = true;
     }
@@ -78,12 +85,19 @@ bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_arm
     return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
 }
 
-void DeviousDevices::DeviceHiderManager::SyncSetting(std::vector<int> a_masks)
+void DeviousDevices::DeviceHiderManager::SyncSetting(std::vector<int> a_masks,HiderSetting a_setting)
 {
-    for (size_t i = 0; i < a_masks.size() && i < _setting.size(); i++) _setting[i] = a_masks[i];
+    for (size_t i = 0; i < a_masks.size() && i < _filter.size(); i++) _filter[i] = a_masks[i];
+    _setting = a_setting;
+    UpdateActors3D();
 }
 
-const std::vector<int>& DeviousDevices::DeviceHiderManager::GetSetting() const
+const std::vector<int>& DeviousDevices::DeviceHiderManager::GetFilter() const
+{
+    return _filter;
+}
+
+const DeviousDevices::HiderSetting& DeviousDevices::DeviceHiderManager::GetSetting() const
 {
     return _setting;
 }
@@ -95,6 +109,54 @@ bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor
     CheckHiderSlots(a_armor,a_actor,0x00000001,0x40000000);
     //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called - result = {}",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
     return _CheckResult;
+}
+
+inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
+{
+    RE::Actor* loc_player = RE::PlayerCharacter::GetSingleton();
+
+    Update3DSafe(loc_player);
+
+    uint16_t loc_updated = 0;
+
+    RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, 10000, [&](RE::TESObjectREFR& a_ref) {
+        auto loc_refBase    = a_ref.GetBaseObject();
+        auto loc_actor      = a_ref.As<RE::Actor>();
+        if (loc_actor && !loc_actor->IsDisabled() && loc_actor->Is3DLoaded() && (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
+        {
+            loc_updated += 1;
+            Update3DSafe(loc_actor);
+        }
+        return RE::BSContainer::ForEachResult::kContinue;
+    });
+
+    return loc_updated;
+}
+
+bool DeviousDevices::DeviceHiderManager::CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor)
+{
+    switch (_setting)
+    {
+    case sAlwaysNakedNPCs:
+        return false;
+    case sBoundNakedNPCs:
+        //check if actor is bound. If not, then continue
+        const RE::TESObjectARMO* loc_device = a_actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kModChestPrimary);
+        if ((loc_device != nullptr) && loc_device->HasKeywordString("zad_DeviousHeavyBondage"))
+        {
+            return false;
+        }
+
+        // TODO
+        //const RE::ObjectRefHandle loc_furniture = a_actor->GetOccupiedFurniture();
+        //if (loc_furniture.get() != nullptr) LOG("Actor {} is in furniture!",a_actor->GetName())
+        //if ((loc_furniture.get() != nullptr) && loc_furniture.get()->GetBaseObject()->HasKeywordInArray({_contraption},true))
+        //{
+        //    return false;
+        //}
+        break;
+    }
+    return true;
 }
 
 void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max)
@@ -112,7 +174,7 @@ void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_ar
         if (loc_armor)
         {
             const uint32_t loc_mask2 = static_cast<uint32_t>(loc_armor->GetSlotMask());
-            const std::vector<int>& loc_setting = DeviceHiderManager::GetSingleton()->GetSetting();
+            const std::vector<int>& loc_filter = DeviceHiderManager::GetSingleton()->GetFilter();
             for(uint8_t i2 = 0; i2 < 31; i2++)
             {
                 //armor have slot - use setting
@@ -121,7 +183,7 @@ void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_ar
                     const uint8_t loc_filterindx = i2*4;
                     for(uint8_t i3 = loc_filterindx; i3 < (loc_filterindx+4); i3++)
                     {
-                        if (loc_mask & loc_setting[i3])
+                        if (loc_mask & loc_filter[i3])
                         {
                             _CheckResult = false;
                             return;
@@ -158,6 +220,13 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
     if (DeviceHiderManager::GetSingleton()->IsValidForHide(a_armor))
     {
         if (!DeviceHiderManager::GetSingleton()->ProcessHider(a_armor,a_actor)) return;
+    } 
+    else
+    {
+        if (!a_actor->IsPlayerRef() && !DeviceHiderManager::GetSingleton()->CheckNPCArmor(a_armor,a_actor))
+        {
+            return;
+        }
     }
 
     for (auto&& itArmorAddon : a_armor->armorAddons) 
@@ -167,4 +236,23 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
             InitWornArmorAddon(itArmorAddon,a_armor,a_biped,loc_sex);
         }
     }
+}
+
+bool DeviousDevices::DeviceHiderManager::Update3D(RE::Actor* a_actor)
+{
+    using func_t = decltype(Update3D);
+    static REL::Relocation<func_t> func{ REL::RelocationID(19316, 19743), REL::VariantOffset(0x0,0x0,0x2A5AC0) };
+    return func(a_actor);
+}
+
+void DeviousDevices::DeviceHiderManager::Update3DSafe(RE::Actor* a_actor)
+{
+    if (a_actor == nullptr) return;
+    auto loc_handle = a_actor->GetHandle();
+    SKSE::GetTaskInterface()->AddTask([loc_handle]
+    {
+        if (auto actor = loc_handle.get(); actor && actor->Is3DLoaded()) {
+            Update3D(actor.get());
+        }
+    });
 }
