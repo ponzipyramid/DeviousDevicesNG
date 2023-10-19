@@ -540,3 +540,5 @@ contrib/Distribution/**/*.pex
 
 
 PapyrusSourcesDD/
+
+*.pex
