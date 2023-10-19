@@ -9,9 +9,9 @@ namespace DeviousDevices
     SINGLETONHEADER(LibFunctions)
     public:
         std::vector<RE::TESObjectARMO*> GetDevices(RE::Actor* a_actor, int a_mode, bool a_worn);
-        RE::TESObjectARMO*              GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw);
+        RE::TESObjectARMO* GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy);
     };
 
     std::vector<RE::TESObjectARMO*> GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn);
-    RE::TESObjectARMO*              GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw);
+    RE::TESObjectARMO* GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy);
 }
