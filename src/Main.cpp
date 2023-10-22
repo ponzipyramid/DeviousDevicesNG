@@ -5,6 +5,7 @@
 #include "UpdateHook.h"
 #include "DeviceReader.h"
 #include "Settings.h"
+#include "Animation/Registry.h"
 #include <stddef.h>
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
@@ -61,6 +62,7 @@ namespace {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
                         DeviousDevices::Hooks::Install();
+                        DeviousDevices::Registry::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;
