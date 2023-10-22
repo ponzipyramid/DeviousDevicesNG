@@ -94,6 +94,8 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
 
     //hider
     REGISTERPAPYRUSFUNC(SyncSetting,true);
+    REGISTERPAPYRUSFUNC(SetActorStripped,true);
+    REGISTERPAPYRUSFUNC(IsActorStripped,true);
 
     //node hider
     REGISTERPAPYRUSFUNC(HideWeapons,true);

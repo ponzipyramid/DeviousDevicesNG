@@ -17,6 +17,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
             return;
         }
 
+        _forcestrip.clear();
         _filter.assign(128,0);
 
         //check lockable keyword
@@ -85,6 +86,13 @@ bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_arm
     return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
 }
 
+bool DeviousDevices::DeviceHiderManager::IsDevice(RE::TESObjectARMO* a_armor) const
+{
+    if (a_armor == nullptr) return false;
+    static const std::vector<RE::BGSKeyword*> loc_devicekw = {_kwlockable, _kwplug};
+    return a_armor->HasKeywordInArray(loc_devicekw,false);
+}
+
 void DeviousDevices::DeviceHiderManager::SyncSetting(std::vector<int> a_masks,HiderSetting a_setting)
 {
     for (size_t i = 0; i < a_masks.size() && i < _filter.size(); i++) _filter[i] = a_masks[i];
@@ -105,8 +113,23 @@ const DeviousDevices::HiderSetting& DeviousDevices::DeviceHiderManager::GetSetti
 bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor)
 {
     _CheckResult = true;
+
     //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
-    CheckHiderSlots(a_armor,a_actor,0x00000001,0x40000000);
+    std::array<std::thread,8> loc_threads = 
+    {
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00000001,0x00000008),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00000010,0x00000080),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00000100,0x00000800),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00001000,0x00008000),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00010000,0x00080000),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00100000,0x00800000),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x01000000,0x08000000),
+        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x10000000,0x40000000)
+    };
+
+    for (auto&& it : loc_threads) it.join();
+
+    //CheckHiderSlots(a_armor,a_actor,0x00000001,0x40000000);
     //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called - result = {}",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
     return _CheckResult;
 }
@@ -133,7 +156,73 @@ inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
     return loc_updated;
 }
 
-bool DeviousDevices::DeviceHiderManager::CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor)
+void DeviousDevices::DeviceHiderManager::SetActorStripped(RE::Actor* a_actor, bool a_stripped, int a_armorfilter, int a_devicefilter)
+{
+    if (a_actor == nullptr) return;
+
+    if (a_stripped)
+    {
+        if (IsActorStripped(a_actor)) return;
+        _forcestrip.push_back({a_actor,a_armorfilter,a_devicefilter});
+        Update3DSafe(a_actor);
+    }
+    else
+    {
+        if (IsActorStripped(a_actor)) return;
+        const auto loc_it = std::find_if(_forcestrip.begin(),_forcestrip.end(),[a_actor] (const ForceStripSetting& a_strip)
+            {
+                return (a_strip.actor == a_actor);
+            }
+        );
+        if (loc_it != _forcestrip.end()) 
+        {
+            _forcestrip.erase(loc_it);
+            Update3DSafe(a_actor);
+        }
+    }
+}
+
+bool DeviousDevices::DeviceHiderManager::IsActorStripped(RE::Actor* a_actor)
+{
+    const auto loc_it = std::find_if(_forcestrip.begin(),_forcestrip.end(),[a_actor] (const ForceStripSetting& a_strip)
+        {
+            return (a_strip.actor == a_actor);
+        }
+    );
+    return (loc_it != _forcestrip.end());
+}
+
+bool DeviousDevices::DeviceHiderManager::CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
+{
+    if (_forcestrip.size() == 0) return true;
+    const auto loc_it = std::find_if(_forcestrip.begin(),_forcestrip.end(),[a_actor] (const ForceStripSetting& a_strip)
+        {
+            return (a_strip.actor == a_actor);
+        }
+    );
+
+    const bool loc_forcestriped = (loc_it != _forcestrip.end());
+
+    if (loc_forcestriped)
+    {
+        const int loc_armorfilter = loc_it->armorfilter;
+        const int loc_devicefilter = loc_it->devicefilter;
+
+        const int loc_mask = (int)a_armor->GetSlotMask();
+
+        const bool loc_isdevice = IsDevice(a_armor);
+        if (((loc_mask & loc_devicefilter) && loc_isdevice) || ((loc_mask & loc_armorfilter) && !loc_isdevice))
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    return true;
+}
+
+bool DeviousDevices::DeviceHiderManager::CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
 {
     switch (_setting)
     {
@@ -216,14 +305,19 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
     //LOG("InitWornArmor called")
     //LOG("InitWornArmor called for {} on {}",a_armor->GetName(),a_actor->GetName())
 
+    DeviceHiderManager* loc_manager = DeviceHiderManager::GetSingleton();
+
+    //check if actor is force striped
+    if (!loc_manager->CheckForceStrip(a_armor,a_actor)) return;
+
     //check if armor is device and can be hidden. If not, just render it
-    if (DeviceHiderManager::GetSingleton()->IsValidForHide(a_armor))
+    if (loc_manager->IsValidForHide(a_armor))
     {
-        if (!DeviceHiderManager::GetSingleton()->ProcessHider(a_armor,a_actor)) return;
+        if (!loc_manager->ProcessHider(a_armor,a_actor)) return;
     } 
     else
     {
-        if (!a_actor->IsPlayerRef() && !DeviceHiderManager::GetSingleton()->CheckNPCArmor(a_armor,a_actor))
+        if (!a_actor->IsPlayerRef() && !loc_manager->CheckNPCArmor(a_armor,a_actor))
         {
             return;
         }

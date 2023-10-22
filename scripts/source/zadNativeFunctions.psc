@@ -28,10 +28,12 @@ float[] Function FactionsToPreset(Actor akActor, Faction[] aaFactions, Int[] aaD
 float[] Function ApplyPhonemsFaction(Actor akActor, float[] aaExpression, Faction[] aaFactions, Int[] aaDefaults) global native
 
 
-;Rebuild hider slots
+; === Device Hider
         Function SyncSetting    (Int[] aaFilter, Int aiSetting = 1)                 global native
+        Function SetActorStripped(Actor akActor, Bool abStripped, Int aiArmorFilter = 0xFFFFFFFF, Int aiDeviceFilter = 0x00000000) global native
+Bool    Function IsActorStripped(Actor akActor)                                     global native
 
-;Node hider
+; === Node hider
         Function HideWeapons    (Actor akActor)                                     global native
         Function ShowWeapons    (Actor akActor)                                     global native
 
