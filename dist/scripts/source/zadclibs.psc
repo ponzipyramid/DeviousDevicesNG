@@ -91,11 +91,14 @@ EndFunction
 ; Checks if an actor can be used for furniture placement
 ; Caution: Sometimes even otherwise valid actors cannot be used at a given moment, e.g. when they are animating or running a scene (which frequently happens during sandboxing)! 
 ; Your code wants to be able to handle that and provide fallbacks etc.
-Bool Function IsValidActor(Actor akActor)
+Bool Function IsValidActor(Actor akActor, bool OverrideSceneCheck = false)
 	If !akActor || akActor.IsChild() || akActor.IsDisabled() || akActor.IsDead() || akActor.IsGhost()
 		return False
 	EndIf
-	If !libs.SexLab.ActorLib.CanAnimate(akActor) || IsAnimating(akActor) || GetDevice(akActor) || akActor.GetCurrentScene() != none 	
+	If !libs.SexLab.ActorLib.CanAnimate(akActor) || GetDevice(akActor) || IsAnimating(akActor) 	
+		return False
+	EndIf
+	if akActor.GetCurrentScene() != none && OverrideSceneCheck == false
 		return False
 	EndIf
 	return True
@@ -199,10 +202,10 @@ EndFunction
 ; Locks an actor into a given device, using a specific pose, if given one, or a random one, if not.
 ; This function will fail if called for an invalid or busy actor. If you aren't sure, use IsValidActor() BEFORE calling this function!
 ; Return True if the actor got placed in the device, false otherwise.
-Bool Function LockActor(Actor akActor, ObjectReference FurnitureDevice, Package OverridePose = None)
-	If !IsValidActor(akActor) || !GetIsFurnitureDevice(FurnitureDevice)
+Bool Function LockActor(Actor akActor, ObjectReference FurnitureDevice, Package OverridePose = None, Bool AllowActorInScene = false)
+	If !IsValidActor(akActor, AllowActorInScene) || !GetIsFurnitureDevice(FurnitureDevice)
 		return False
-	EndIf
+	Endif
 	zadcFurnitureScript fs = FurnitureDevice as zadcFurnitureScript
 	if !fs || fs.User		
 		return False
@@ -347,7 +350,7 @@ Function Reinitialize()
 EndFunction
 
 Event OnKeyDown(Int KeyCode)		
-	If UI.IsMenuOpen("Console")
+	If UI.IsMenuOpen("Console") || UI.IsMenuOpen("Console Native UI Menu")
 		Return
 	EndIf
 	If (KeyCode == libs.Config.FurnitureNPCActionKey)
@@ -394,7 +397,7 @@ bool Function IsAnimating(actor akActor)
 EndFunction
 
 ; Player interactions - locking and releasing NPCs
-Function FurnitureAction()
+Function FurnitureAction(Bool AllowActorInScene = false)
 	ObjectReference objr = Game.GetCurrentCrosshairRef()
 	Actor act = objr As Actor	
 	If act && act == Game.GetPlayer()		
@@ -426,7 +429,7 @@ Function FurnitureAction()
 		EndIf
 		If !SelectedUser				
 			; Make him or her the new target
-			if !IsValidActor(act)
+			if !IsValidActor(act,AllowActorInScene)
 				debug.notification(act.GetLeveledActorBase().GetName() + " is invalid or busy.")				
 				return
 			EndIf
@@ -454,7 +457,7 @@ Function FurnitureAction()
 				return
 			Else
 				; clicked on a different actor: Check if they are valid, remove package from previous target when they are, and make them the new target.
-				if !IsValidActor(act)
+				if !IsValidActor(act, AllowActorInScene)
 					debug.notification(act.GetLeveledActorBase().GetName() + " is invalid or busy.")				
 					return
 				EndIf
@@ -506,16 +509,55 @@ EndFunction
 
 ; Strips an actor naked and stores their stuff for later retrieval.
 Function StripOutfit(Actor akActor)		
+	if akActor != libs.PlayerRef
+		ActorBase actB = akActor.GetLeveledActorBase()	
+		StorageUtil.SetFormValue(akActor, "DDC_Outfit1", actB.GetOutfit(0))
+		StorageUtil.SetFormValue(akActor, "DDC_Outfit2", actB.GetOutfit(1))
+		actB.SetOutfit(zadc_outfit_naked, 0)
+		actB.SetOutfit(zadc_outfit_naked, 1)	
+	EndIf
+	If(StorageUtil.FormListCount(akActor, "DCC_Gear") > 0)		
+		Return
+	EndIf	
+	Form[] Gear = libs.SexLab.StripActor(akActor, doanimate = False, leadin = False)
+	Int i = 0
+	While (i < Gear.Length)
+		StorageUtil.FormListAdd(akActor, "DCC_Gear", Gear[i], True)
+		i += 1
+	EndWhile	
 EndFunction
 
 ; Redresses an actor
 Function RestoreOutfit(Actor akActor)		
+	if akActor != libs.PlayerRef
+		ActorBase actB = akActor.GetLeveledActorBase()	
+		Outfit Outfit1 = StorageUtil.GetFormValue(akActor, "DDC_Outfit1") as Outfit
+		Outfit Outfit2 = StorageUtil.GetFormValue(akActor, "DDC_Outfit2") as Outfit
+		If Outfit1	
+			actB.SetOutfit(Outfit1, 0)		
+		EndIf
+		If Outfit2
+			actB.SetOutfit(Outfit2, 1)
+		EndIf
+		Int Count = Outfit1.GetNumParts()
+		While Count > 0
+			akActor.EquipItem(Outfit1.GetNthPart(Count - 1))
+			Count -= 1
+		EndWhile
+	EndIf	
+	If(StorageUtil.FormListCount(akActor, "DCC_Gear") == 0)	
+		Return
+	EndIf
+	libs.SexLab.UnstripActor(akActor, StorageUtil.FormListToArray(akActor, "DCC_Gear"), False)
+	StorageUtil.FormListClear(akActor, "DCC_Gear")	
 EndFunction
 
 Function ClearDevice(Actor act)
+	StorageUtil.UnSetFormValue(act, "DDC_DeviceUsed")
 EndFunction
 
 Function StoreDevice(Actor act, ObjectReference obj)
+	StorageUtil.SetFormValue(act, "DDC_DeviceUsed", obj)
 EndFunction
 
 ; This function handles restraints compatibility with all DD devices. It's quest safe, because we're hiding only the visible DD item, which won't trigger the events. Which means we can happily use it even for quest devices.

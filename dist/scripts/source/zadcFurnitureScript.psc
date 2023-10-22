@@ -403,7 +403,10 @@ Function UnlockActor()
 	EndIf	
 EndFunction
 
-Event OnKeyDown(Int KeyCode)		
+Event OnKeyDown(Int KeyCode)	
+	If UI.IsMenuOpen("Console") || UI.IsMenuOpen("Console Native UI Menu")
+		Return
+	EndIf	
 	If (KeyCode == Input.GetMappedKey("Activate", 0)) 				
 		self.Activate(libs.PlayerRef)
 	Endif	
