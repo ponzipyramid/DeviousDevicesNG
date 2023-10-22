@@ -38,12 +38,13 @@ namespace DeviousDevices {
             std::vector<std::pair<std::string, int>> posKeys;
             posKeys.reserve(positions.size());
             
-
             for (int i = 0; i < positions.size(); i++) {
                 auto& pos = positions[i];
                 posKeys.push_back(std::pair(pos.GetKey(info_map), i));
             }
             
+            std::sort(posKeys.begin(), posKeys.end(), [](auto& left, auto& right) { return left.first < right.first; });
+
             std::unordered_set<std::string> seen;
 
             do {
@@ -65,7 +66,10 @@ namespace DeviousDevices {
                     seen.insert(key);
                 }
 
-            } while (std::next_permutation(posKeys.begin(), posKeys.end()));
+            } while (std::next_permutation(
+                posKeys.begin(), posKeys.end(),
+                                           [](const std::pair<std::string, int>& a,
+                                              const std::pair<std::string, int>& b) { return a.first < b.first; }));
 
             return orderings;
         }

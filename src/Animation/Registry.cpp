@@ -80,23 +80,36 @@ void Registry::Setup() {
                         }
                     }
 
+
                     anim.positions.push_back(new_pos);
                 }
-
 
                 _animations[anim.name] = anim;
             }
         }
-
-        for (auto& [name, anim] : _animations) {
-            auto orderings = anim.GetOrderings(tag_map);
-            for (auto& [key, ordering] : orderings) {
-                LOG("Registry::Setup(): Storing animation {} under key {}", anim.name, key)
-
-                _anim_table[key].push_back(std::pair(name, ordering));
-            }
-        }
-
     }
+
+    for (auto& [key, index] : tag_map) {
+        LOG("Registry::Setup(): Tag Map - {} = {}", key, index);
+    }
+
+    for (auto& [name, anim] : _animations) {
+        auto orderings = anim.GetOrderings(tag_map);
+        for (auto& [key, ordering] : orderings) {
+            LOG("Registry::Setup(): Storing animation {} under key {}", anim.name, key)
+            _anim_table[key].push_back(std::pair(name, ordering));
+        }
+    }
+
+
+    LOG("Registry::Setup(): Found {} animations", _animations.size());
     LOG("Registry::Setup(): END")
+}
+
+std::string Filter(std::vector<RE::Actor*> actor) { 
+    std::string animName;
+
+
+
+    return animName;
 }
