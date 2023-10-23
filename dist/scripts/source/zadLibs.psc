@@ -1047,7 +1047,7 @@ bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool 
 		Log("Actor already in animating faction.")
 		return ret
 	EndIf	
-	if !IsValidActor(akActor) || (akActor.WornHasKeyword(zad_DeviousArmBinder) && !permitRestrictive)
+	if !IsValidActor(akActor, AllowActorInScene) || (akActor.WornHasKeyword(zad_DeviousArmBinder) && !permitRestrictive)
 		Log("Actor is not loaded (Or is otherwise invalid). Aborting.")
 		return ret
 	EndIf	
@@ -1786,7 +1786,7 @@ endFunction
 ;====================================================================
 ; Vib Expressions
 Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false)
-	if !IsValidActor(akActor)
+	if !IsValidActor(akActor, AllowActorInScene)
 		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
 		return
 	EndIf
@@ -1805,7 +1805,7 @@ EndFunction
 
 ;reworked function ApplyExpression to use expression priority
 Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false)
-	if !IsValidActor(akActor)
+	if !IsValidActor(akActor, AllowActorInScene)
 		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
 		return
 	EndIf
@@ -1989,7 +1989,7 @@ int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool te
 	EndIf
 
 	; Main Loop
-	While IsValidActor(akActor) && timeVibrated < GetVibrating(akActor) && (akActor.WornHasKeyword(zad_DeviousPlug) || akActor.WornHasKeyword(zad_DeviousPiercingsNipple) || akActor.WornHasKeyword(zad_DeviousPiercingsVaginal))
+	While IsValidActor(akActor, AllowActorInScene) && timeVibrated < GetVibrating(akActor) && (akActor.WornHasKeyword(zad_DeviousPlug) || akActor.WornHasKeyword(zad_DeviousPiercingsNipple) || akActor.WornHasKeyword(zad_DeviousPiercingsVaginal))
 		; Log("XXX VibrateEffect: Begin Tick "+timeVibrated)
 		if (timeVibrated % 2) == 0 ; Make noise
 			; Log("XXX VibrateEffect: Making Noise")
@@ -2085,7 +2085,7 @@ int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool te
 
 	Sound.StopInstance(vsID)
 	Sound.StopInstance(msID)
-	if IsValidActor(akActor)
+	if IsValidActor(akActor, AllowActorInScene)
 		; Reset expression
 		ResetExpressionRaw(akActor, 15)
 	EndIf
@@ -2208,8 +2208,14 @@ Function SpellCastVibrate(Actor akActor, Form tmp)
 	EndIf
 EndFunction
 
-bool Function IsValidActor(actor akActor)
-	return (akActor.Is3DLoaded() && !akActor.IsDead() && !akActor.IsDisabled() && akActor.GetCurrentScene() == none)
+Bool Function IsValidActor(Actor akActor, bool OverrideSceneCheck = false)
+	If !akActor.Is3DLoaded() || akActor.IsChild() || akActor.IsDisabled() || akActor.IsDead()
+		return False
+	EndIf 	
+	if akActor.GetCurrentScene() != none && OverrideSceneCheck == false
+		return False
+	EndIf
+	return True
 EndFunction
 
 Function DisableControls()	
