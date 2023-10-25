@@ -86,7 +86,7 @@ bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_arm
     return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
 }
 
-bool DeviousDevices::DeviceHiderManager::IsDevice(RE::TESObjectARMO* a_armor) const
+bool DeviousDevices::DeviceHiderManager::IsDevice(const RE::TESObjectARMO* a_armor) const
 {
     if (a_armor == nullptr) return false;
     static const std::vector<RE::BGSKeyword*> loc_devicekw = {_kwlockable, _kwplug};
@@ -110,7 +110,7 @@ const DeviousDevices::HiderSetting& DeviousDevices::DeviceHiderManager::GetSetti
     return _setting;
 }
 
-bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor)
+bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
 {
     _CheckResult = true;
 
@@ -128,6 +128,8 @@ bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor
     };
 
     for (auto&& it : loc_threads) it.join();
+
+    //LOG("DeviceHiderManager::ProcessHider res = {}",_CheckResult)
 
     //CheckHiderSlots(a_armor,a_actor,0x00000001,0x40000000);
     //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called - result = {}",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
@@ -248,19 +250,21 @@ bool DeviousDevices::DeviceHiderManager::CheckNPCArmor(RE::TESObjectARMO* a_armo
     return true;
 }
 
-void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max)
+void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max) const
 {
-    // TODO
     const int loc_mask = static_cast<int>(a_armor->GetSlotMask());
 
-    for(uint32_t i1 = a_min; i1 < a_max; i1 <<= 1U)
+    for(uint32_t i1 = a_min; i1 <= a_max; i1 <<= 1U)
     {
         if (!_CheckResult) return;
 
         //get armor from slot
+        
         const RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(i1));
 
-        if (loc_armor)
+        //LOG("DeviceHiderManager::CheckHiderSlots({:08X}.{:08X}) -Checking slot 0x{:08X} = 0x{:08X}",a_min,a_max,i1,loc_armor ? loc_armor->GetFormID() : NULL)
+
+        if (loc_armor && IsDevice(loc_armor))
         {
             const uint32_t loc_mask2 = static_cast<uint32_t>(loc_armor->GetSlotMask());
             const std::vector<int>& loc_filter = DeviceHiderManager::GetSingleton()->GetFilter();
@@ -275,6 +279,7 @@ void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_ar
                         if (loc_mask & loc_filter[i3])
                         {
                             _CheckResult = false;
+                            //LOG("DeviceHiderManager::CheckHiderSlots({:08X}.{:08X}) - done. Res={}",a_min,a_max,_CheckResult)
                             return;
                         }
                     }
@@ -282,6 +287,8 @@ void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_ar
             }
         }
     }
+
+    //LOG("DeviceHiderManager::CheckHiderSlots({:08X}.{:08X}) - done. Res={}",a_min,a_max,_CheckResult)
 }
 
 bool DeviousDevices::DeviceHiderManager::HasRace(RE::TESObjectARMA* a_armorAddon, RE::TESRace* a_race)
@@ -313,6 +320,7 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
     //check if armor is device and can be hidden. If not, just render it
     if (loc_manager->IsValidForHide(a_armor))
     {
+        //LOG("Device {:08X} on {} is valid for hider!",a_armor->GetFormID(),a_actor->GetName())
         if (!loc_manager->ProcessHider(a_armor,a_actor)) return;
     } 
     else

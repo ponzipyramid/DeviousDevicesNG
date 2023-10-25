@@ -27,11 +27,11 @@ namespace DeviousDevices
         std::vector<int>        RebuildSlotMask(RE::Actor* a_actor, std::vector<int> a_slotfilter);
         int                     FilterMask(RE::Actor* a_actor, int a_slotmask);
         bool                    IsValidForHide(RE::TESObjectARMO* a_armor) const;
-        bool                    IsDevice(RE::TESObjectARMO* a_armor) const;
+        bool                    IsDevice(const RE::TESObjectARMO* a_armor) const;
         void                    SyncSetting(std::vector<int> a_masks,HiderSetting a_setting);
         const std::vector<int>& GetFilter() const;
         const HiderSetting&     GetSetting() const;
-        inline bool             ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor);
+        inline bool             ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
         inline uint16_t         UpdateActors3D();
         void                    SetActorStripped(RE::Actor* a_actor, bool a_stripped, int a_armorfilter, int a_devicefilter);
         bool                    IsActorStripped(RE::Actor* a_actor);
@@ -49,9 +49,9 @@ namespace DeviousDevices
         std::vector<RE::BGSKeyword*> _hidekeywords;
         std::vector<RE::BGSKeyword*> _nohidekeywords;
 
-        std::atomic_bool _CheckResult = false;
+        mutable std::atomic_bool _CheckResult = false;
 
-        void CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max);
+        void CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max) const;
 
         std::vector<int>    _filter;
         HiderSetting        _setting;
