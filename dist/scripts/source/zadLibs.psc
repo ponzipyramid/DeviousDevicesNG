@@ -1040,7 +1040,7 @@ EndFunction
 ;====================
 ; Camera Manipulation
 ;====================
-bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool permitRestrictive=false)
+bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool permitRestrictive=false, Bool AllowActorInScene = false)
 	Log("StartThirdPersonAnimation("+akActor.GetLeveledActorBase().GetName()+","+animation+")")
 	bool[] ret = new bool[2]
 	if IsAnimating(akActor)
@@ -1785,7 +1785,7 @@ endFunction
 ;=====================REWORKED EXPRESSION SYSTEM=====================
 ;====================================================================
 ; Vib Expressions
-Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false)
+Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false, Bool AllowActorInScene = false)
 	if !IsValidActor(akActor, AllowActorInScene)
 		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
 		return
@@ -1804,7 +1804,7 @@ Function ResetExpression(actor akActor, sslBaseExpression expression)
 EndFunction
 
 ;reworked function ApplyExpression to use expression priority
-Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false)
+Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false, Bool AllowActorInScene = false)
 	if !IsValidActor(akActor, AllowActorInScene)
 		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
 		return
@@ -1889,7 +1889,7 @@ EndFunction
 ;;; Returns number of times actor came from this effect, -1 if it edged them, or -2 if an event was already ongoing.
 ; This function has suffered from feature creep pretty hard since it's inception, and is in need of refactoring. Still works, but very messy.
 ; Will split this up to a small library in the future. Will document this properly at that point.
-int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false)
+int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false, Bool AllowActorInScene = false)
 	; don't execute this function if the character is in combat. Nobody in their right mind starts playing with herself if there are people trying to kill her.
 	; Events that otherwise would call this function are responsible for providing alternatives as desired.
 	if playerref.IsInCombat() 
