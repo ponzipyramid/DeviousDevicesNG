@@ -334,15 +334,7 @@ EndFunction
 ;==============================================================================================================================
 
 Event OnInit()
-    Utility.waitMenuMode(2.5)
-    RegisterForSingleupdate(10.0)
-    libs.ExpLibs = self ;set lib when installing mod. Made for compatiblity between indev version and beta version
     Ready = true
-EndEvent
-
-Event OnUpdate()
-    Maintenance()
-    RegisterForSingleupdate(25.0)
 EndEvent
 
 Function Maintenance()
