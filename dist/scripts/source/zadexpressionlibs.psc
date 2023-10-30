@@ -119,8 +119,6 @@ Keyword         Property GagKeyword_Bit                                     auto
 ;             SetExpressionModifiers(float[] apExpression,float[] apModifiers)                                    global
 ;             SetExpressionExpression(float[] apExpression,int aiExpression_type,int aiExpression_strength)       global
 ;    Float[]  CreateRandomExpression()                                                                            global
-;    float[]  ApplyStrentghToExpression(float[] apExpression,int aiStrength)                                      global
-;    bool     CompareExpressions(Float[] apExpression1, Float[] apExpression2)                                    global
 ;             ApplyGagEffect(actor akActor)
 ;             RemoveGagEffect(actor akActor)
 
@@ -164,16 +162,11 @@ bool Function ApplyExpression(Actor akActor, sslBaseExpression akExpression, int
         return false
     EndIf
 
-    StartExpressionMutex(akActor)
-
     if !CheckExpressionBlock(akActor,aiPriority,1)
-        EndExpressionMutex(akActor)
         return false
     endif
 
     SetExpression(akActor,akExpression,aiStrength,abOpenMouth)
-
-    EndExpressionMutex(akActor)
 
     return true
 EndFunction
@@ -201,16 +194,11 @@ bool Function ApplyExpressionRaw(Actor akActor, float[] apExpression, int aiStre
         return false
     EndIf
 
-    StartExpressionMutex(akActor)
-
     if !CheckExpressionBlock(akActor,aiPriority,1)
-        EndExpressionMutex(akActor)
         return false
     endif
 
     SetExpressionRaw(akActor,apExpression,aiStrength,abOpenMouth)
-
-    EndExpressionMutex(akActor)
 
     return true
 EndFunction
@@ -233,22 +221,17 @@ EndFunction
 ;        =Return value=
 ;Return true in case that expression was successfully removed
 bool Function ResetExpressionRaw(actor akActor, int aiPriority = 0)
-    StartExpressionMutex(akActor)
-
     if !CheckExpressionBlock(akActor,aiPriority,1)
-        EndExpressionMutex(akActor)
         return false
     endif
 
     if !akActor.WornHasKeyword(libs.zad_DeviousGag)
-        MfgConsoleFunc.SetPhonemeModifier(akActor, -1, 0, 0)
-        akActor.ClearExpressionOverride()
+        zadNativeFunctions.ResetExpression(akActor,true,true)
     else
-        ResetPresetFloats_NOMC(akActor,false,true)
+        zadNativeFunctions.ResetExpression(akActor,false,true)
     endif
+    
     akActor.SetFactionRank(BlockExpressionFaction,0)
-
-    EndExpressionMutex(akActor)
     return true
 EndFunction
 
@@ -323,65 +306,6 @@ Float[] Function CreateRandomExpression() global
     return loc_expression
 EndFunction
 
-;apply strentgh on to expression. Returns new expression
-;in case of failure, returns empty expression
-float[] Function ApplyStrentghToExpression(float[] apExpression,int aiStrength) global
-    if apExpression.length != 32
-        return CreateEmptyExpression() ;expression can only have length 32!
-    endif
-
-    float[] loc_expression          = CreateEmptyExpression()
-    float   loc_strength            = ClampFloat(aiStrength/100.0,0.0,1.0)
-    int     loc_i                   = 0
-
-    while loc_i < 30
-        loc_expression[loc_i] = apExpression[loc_i]*loc_strength
-        loc_i += 1
-    endWhile
-
-    loc_expression[30] = apExpression[30]
-    loc_expression[31] = apExpression[31]*loc_strength
-
-    return loc_expression
-EndFunction
-
-;compare passed expressions. Returns True if they are same, otherwise returns false
-bool Function CompareExpressions(Float[] apExpression1, Float[] apExpression2, bool abPhoneme = true, bool abExpressionMod = true) global
-    if apExpression1 != apExpression2
-        ;they can still be same, but only with difference caused by float inaccuracy
-        int i       = 0
-        int i_max   = 30
-
-        ;skip phonemes
-        if !abPhoneme
-            i = 16
-        endif
-
-        ;skip expression
-        if !abExpressionMod
-            i_max = 16
-        else
-            if Round(apExpression1[30]) != Round(apExpression2[30])
-                return false
-            endif
-            if Round(apExpression1[31]*100) != Round(apExpression2[31]*100)
-                return false
-            endif
-        endif
-
-        ;process
-        while i < i_max
-            if Round(apExpression1[i] * 100.0) != Round(apExpression2[i] * 100.0)
-                return false
-            endif
-            i += 1
-        endWhile
-        return true ;expressions are same
-    else
-        return true ;expressions are same
-    endif
-EndFunction
-
 ;check current gag state and update phonems 
 Function ApplyGagEffect(actor akActor)
     if akActor.Is3DLoaded() || akActor == Game.getPlayer()
@@ -390,34 +314,7 @@ Function ApplyGagEffect(actor akActor)
             libs.SendGagEffectEvent(akActor, false)
             return
         endif
-
-        StartExpressionMutex(akActor)
-        float[] loc_appliedExpression      = GetCurrentMFG(akActor)
-        float[] loc_expression             = ApplyGagEffectToPreset(akActor,loc_appliedExpression)
-
-        if loc_expression != loc_appliedExpression
-            UpdatePresetFloats_NOMC(akActor, loc_expression,loc_appliedExpression)
-        endif
-        EndExpressionMutex(akActor)
-    endif
-EndFunction
-
-;check current gag state and update phonemes 
-Function ApplyGagEffect_v2(actor akActor,Int[] apGagPreset,Faction[] apGagModFactions)
-    if !akActor
-        return
-    endif
-    if !apGagPreset
-        return
-    endif
-    if akActor.Is3DLoaded() || akActor == Game.getPlayer()
-        StartExpressionMutex(akActor)
-        float[] loc_appliedExpression      = GetCurrentMFG(akActor)
-        float[] loc_expression             = ProcessGagEffectToPreset(akActor, apGagPreset,apGagModFactions)
-        if !CompareExpressions(loc_expression,loc_appliedExpression,true,false)
-            UpdatePresetFloats_NOMC(akActor, loc_expression,loc_appliedExpression,true,false)
-        endif
-        EndExpressionMutex(akActor)
+        zadNativeFunctions.UpdateGagExpression(akActor)
     endif
 EndFunction
 
@@ -427,9 +324,7 @@ Function RemoveGagEffect(actor akActor)
         libs.SendGagEffectEvent(akActor, false)
         Return
     EndIf
-    StartExpressionMutex(akActor)
-    ResetPresetFloats_NOMC(akActor,true,false)
-    EndExpressionMutex(akActor)
+    zadNativeFunctions.ResetExpression(akActor,true,false)
 EndFunction
 
 ;==============================================================================================================================
@@ -451,7 +346,12 @@ Event OnUpdate()
 EndEvent
 
 Function Maintenance()
-    ;currently unused
+    zadNativeFunctions.RegisterGagType(libs.zad_GagNoOpenMouth,new Faction[1],new Int[16])
+    zadNativeFunctions.RegisterGagType(libs.zad_DeviousGagLarge,PhonemeModifierFactions_Large,DefaultGagExpression_Large)
+    zadNativeFunctions.RegisterGagType(libs.zad_DeviousGagPanel,PhonemeModifierFactions_Panel,DefaultGagExpression_Panel)
+    zadNativeFunctions.RegisterGagType(GagKeyword_Ring,PhonemeModifierFactions_Ring,DefaultGagExpression_Ring)
+    zadNativeFunctions.RegisterGagType(GagKeyword_Bit,PhonemeModifierFactions_Bit,DefaultGagExpression_Bit)
+    zadNativeFunctions.RegisterDefaultGagType(PhonemeModifierFactions,DefaultGagExpression_Simple)
 EndFunction
 
 ;check expression blocking with priority
@@ -483,163 +383,29 @@ bool Function CheckExpressionBlock(Actor akActor,int aiPriority, int aiMode = 0)
     endif
 EndFunction
 
-bool _ExpressionManip_Mutex = false ;expression mutex variable
-;start expression mutex. Will block thread in case that expression manipulation is already being proccessed
-Function StartExpressionMutex(Actor akActor)
-    while StorageUtil.GetIntValue(akActor,"zadExpMutex",0)
-        Utility.waitMenuMode(0.5)
-    endwhile
-    StorageUtil.SetIntValue(akActor,"zadExpMutex",1)
-EndFunction
-
-;reset expression mutex
-Function EndExpressionMutex(Actor akActor)
-    _ExpressionManip_Mutex = false ;turn off old mutex, so it is compatible with previous version
-    StorageUtil.UnsetIntValue(akActor,"zadExpMutex")
-EndFunction
-
 ;internal function for setting expression. Do not call
 Function SetExpression(Actor akActor, sslBaseExpression akExpression, int aiStrength, bool aiOpenMouth=false)
     int     loc_gender                     = (akActor.GetBaseObject() as ActorBase).GetSex()
-    bool    loc_hasGag                     = akActor.WornHasKeyword(libs.zad_DeviousGag)
-    bool    loc_applyPhonems               = true
     ;yes, the strength is actually not applied, even when its passed in CalcPhase :)
-    float[] loc_expression                 = ApplyStrentghToExpression(akExpression.GenderPhase(akExpression.CalcPhase(aiStrength, loc_gender), loc_gender),aiStrength)
-    float[] loc_appliedExpression          = GetCurrentMFG(akActor) 
+    float[] loc_expression                 = zadNativeFunctions.ApplyStrengthToExpression(akExpression.GenderPhase(akExpression.CalcPhase(aiStrength, loc_gender), loc_gender),aiStrength)
 
-    if loc_hasGag
-        loc_applyPhonems = false
-    elseif aiOpenMouth
+    if aiOpenMouth
         loc_expression[akExpression.Phoneme + 0] = 0.75
     endif
 
-    if !CompareExpressions(loc_expression,loc_appliedExpression,loc_applyPhonems)
-        UpdatePresetFloats_NOMC(akActor, loc_expression,loc_appliedExpression,loc_applyPhonems)
-    endif
+    zadNativeFunctions.ApplyExpression(akActor,loc_expression)
 EndFunction
 
 ;internal function for setting expression. Do not call
 Function SetExpressionRaw(Actor akActor, float[]  apExpression, int aiStrength, bool aiOpenMouth=false)
-    bool     loc_hasGag                 = akActor.WornHasKeyword(libs.zad_DeviousGag)
-    float[] loc_expression              = ApplyStrentghToExpression(apExpression,aiStrength)
-    float[] loc_appliedExpression       = GetCurrentMFG(akActor)
+    float[] loc_expression              = zadNativeFunctions.ApplyStrengthToExpression(apExpression,aiStrength)
 
-    bool loc_applyPhonems = true
-    if loc_hasGag
-        loc_applyPhonems = false
-    elseif aiOpenMouth
+    if aiOpenMouth
         loc_expression[0] = 0.75
     endif
 
-    if !CompareExpressions(loc_expression,loc_appliedExpression,loc_applyPhonems)
-        UpdatePresetFloats_NOMC(akActor, loc_expression,loc_appliedExpression,loc_applyPhonems)
-    endif
+    zadNativeFunctions.ApplyExpression(akActor,apExpression)
 EndFunction
-
-;internal function for applying phonems to expression
-float[] Function ApplyGagEffectToPreset(Actor akActor,Float[] apPreset)
-    float[] loc_preset = CreateEmptyExpression()
-
-    int i = apPreset.length
-    while i > 15 ;do not copy phonems
-        i -= 1
-        loc_preset[i] = apPreset[i]
-    endwhile
-
-    ; apply this affect to actual gags only, not hoods that also share this keyword.
-    if akActor.WornHasKeyword(libs.zad_GagNoOpenMouth)
-        ;close mouth, reset phonems
-        return loc_preset
-    elseIf akActor.WornHasKeyword(libs.zad_DeviousGagLarge)
-        loc_preset = ApplyGagModifiers(akActor,loc_preset,PhonemeModifierFactions_Large,DefaultGagExpression_Large)
-    elseif akActor.wornhaskeyword(libs.zad_DeviousGagPanel)
-        loc_preset = ApplyGagModifiers(akActor,loc_preset,PhonemeModifierFactions_Panel,DefaultGagExpression_Panel)
-    elseif GagKeyword_Ring && akActor.wornhaskeyword(GagKeyword_Ring)   ;Ring gag
-        loc_preset = ApplyGagModifiers(akActor,loc_preset,PhonemeModifierFactions_Ring,DefaultGagExpression_Ring)
-    elseif GagKeyword_Bit && akActor.wornhaskeyword(GagKeyword_Bit)     ;Bit gag
-        loc_preset = ApplyGagModifiers(akActor,loc_preset,PhonemeModifierFactions_Bit,DefaultGagExpression_Bit)
-    else
-        loc_preset = ApplyGagModifiers(akActor,loc_preset,PhonemeModifierFactions,DefaultGagExpression_Simple)
-    EndIf
-
-    ;prevent Combat shout expression as it makes gag looking worse
-    if loc_preset[30] == 16
-        loc_preset[31] = 0
-    endif
-
-    return loc_preset
-EndFunction
-
-;internal function for applying phonems to expression
-float[] Function ProcessGagEffectToPreset(Actor akActor, Int[] apGagPreset,Faction[] apGagModFactions)
-    float[] loc_preset = zadNativeFunctions.FactionsToPreset(akActor,apGagModFactions,apGagPreset)
-    
-    ;prevent Combat shout expression as it makes gag looking worse
-    if loc_preset[30] == 16
-        loc_preset[31] = 0
-    endif
-    
-    return loc_preset
-EndFunction
-
-;applies gag modifiers to passed expression
-;apGagFactions and apDefaultValues should have same length
-Float[] Function ApplyGagModifiers(Actor akActor, Float[] apExpression, Faction[] apGagFactions, Int[] apDefaultValues)
-    return zadNativeFunctions.ApplyPhonemsFaction(akActor,apExpression,apGagFactions,apDefaultValues)
-EndFunction
-
-;Internal function for actually changing expression. Requires Mfg console!
-;COPIED FROM sslBaseExpression because it will otherwise not work for SE because of MouthOpen check 
-function ApplyPresetFloats_NOMC(Actor ActorRef, float[] apPreset, bool abPhoneme = true,bool abExpressionMod = true) global 
-    int loc_type = 0
-    if abPhoneme
-        loc_type += 1
-    endif
-    if abExpressionMod
-        loc_type += 2
-    endif
-
-    zadNativeFunctions.ApplyExpression(ActorRef,apPreset,loc_type)
-
-    ;for some reason doesn't work natively, have to use papyrus
-    if abExpressionMod
-        ActorRef.SetExpressionOverride(Round(apPreset[30]), Round(apPreset[31] * 100.0))
-    endif
-endFunction
-
-;Internal function for actually changing expression. Requires Mfg console!
-;update expression. Only changes nodes that are different
-function UpdatePresetFloats_NOMC(Actor ActorRef, float[] apPreset,float[] apPreset_p, bool abPhoneme = true,bool abExpressionMod = true) global 
-    int loc_type = 0
-    if abPhoneme
-        loc_type += 1
-    endif
-    if abExpressionMod
-        loc_type += 2
-    endif
-
-    zadNativeFunctions.ApplyExpression(ActorRef,apPreset,loc_type)
-    
-    ;for some reason doesn't work natively, have to use papyrus
-    if abExpressionMod
-        ; Set expression
-        if (Round(apPreset[30]) != Round(apPreset_p[30])) || (Round(apPreset[31]) != Round(apPreset_p[31])) ;round the value, as float is inaccurate
-            ActorRef.SetExpressionOverride(Round(apPreset[30]), Round(apPreset[31] * 100.0))
-        endif
-    endif
-endFunction
-
-;Internal function for reseting expression. Requires Mfg console!
-function ResetPresetFloats_NOMC(Actor akActor, bool abPhoneme = true,bool abExpressionMod = true) global 
-    zadNativeFunctions.ResetExpression(akActor,abPhoneme,abExpressionMod)
-    if abPhoneme
-        ;akActor.QueueNiNodeUpdate()
-    endif
-    if abExpressionMod
-        ;Reset expression
-        akActor.ClearExpressionOverride()
-    endif
-endFunction
 
 Int[] Function LoadGagExpFromJSON(String asFilePath,string asFlag = "DefaultGagExpression")
     if JsonUtil.IntListCount(asFilePath, asFlag) == 16

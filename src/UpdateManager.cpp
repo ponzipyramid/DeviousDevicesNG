@@ -12,36 +12,32 @@ void DeviousDevices::UpdateManager::Setup()
     }
 }
 
-bool DeviousDevices::UpdateManager::AddSerTask(std::function<void(void*)> a_task, void* a_arg, bool a_freearg)
-{
-    std::unique_lock lock(_taskmutex);
-    _taskstack.push_back({a_arg,a_task,a_freearg});
-    return true;
-}
-
 //this function is only called if no menu is open. It also looks like that it is not called when player is in free cam mode
 void DeviousDevices::UpdateManager::Update(RE::Actor* a_actor, float a_delta)
 {
     static RE::Actor* loc_player = RE::PlayerCharacter::GetSingleton();
+    UpdateManager* loc_manager = UpdateManager::GetSingleton();
     if (a_actor == loc_player)
     {
-        // ==== Update Node Hider ====
+        if (!loc_manager->UpdateThread500) std::thread([loc_manager]
         {
-            static NodeHider* loc_nodehider = NodeHider::GetSingleton();
-            loc_nodehider->Update(a_delta);
-        }
+            loc_manager->UpdateThread500 = true;
+
+            //serialize task so it doesnt create race condition
+            SKSE::GetTaskInterface()->AddTask([]
+            {
+                //update node hider
+                NodeHider::GetSingleton()->Update();
+
+                //update gag expressions
+                ExpressionManager::GetSingleton()->UpdateGagExpForNPCs();
+            });
+
+            //wait
+            std::this_thread::sleep_for(std::chrono::milliseconds(500)); //wait 500ms before updating again
+            loc_manager->UpdateThread500 = false;
+        }).detach();
+
     }
     Update_old(a_actor,a_delta);
-}
-
-void DeviousDevices::UpdateManager::CallSerTasks()
-{
-    std::unique_lock lock(_taskmutex);
-
-    for (auto&& it : _taskstack)
-    {
-        it.task(it.arg);
-        if (it.freearg) delete it.arg;
-    }
-    _taskstack.clear();
 }

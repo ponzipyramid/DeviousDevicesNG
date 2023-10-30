@@ -58,7 +58,7 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
 bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) {
     if (auto loc_armor = GetWornWithDeviousKeyword(a_actor, _deviousGagKwd)) {
         if (loc_armor->HasKeyword(_deviousGagKwd)) {
-            if (loc_armor->HasKeyword(_deviousGagRingKwd))
+            if (loc_armor->HasKeyword(_deviousGagRingKwd) || loc_armor->HasKeyword(_PermitOralKwd))
                 return false;  // is ring gag, do not remove food
             else if (loc_armor->HasKeyword(_deviousGagPanelKwd))  // is panel gag, additional check needed
             {
@@ -231,5 +231,7 @@ void DeviousDevices::InventoryFilter::Setup() {
 
         _lockableKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_Lockable");
         _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
+
+        _PermitOralKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitOral");
     }
 }

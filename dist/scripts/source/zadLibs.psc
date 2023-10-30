@@ -2299,10 +2299,6 @@ Function ApplyGagEffect(actor akActor)
     ExpLibs.ApplyGagEffect(akActor)
 EndFunction
 
-Function ApplyGagEffect_v2(actor akActor,Int[] apGagExp,Faction[] apGagModFactions)
-    ExpLibs.ApplyGagEffect_v2(akActor,apGagExp,apGagModFactions)
-EndFunction
-
 Function RemoveGagEffect(actor akActor)
     ExpLibs.RemoveGagEffect(akActor)
 EndFunction

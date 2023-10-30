@@ -233,16 +233,18 @@ namespace DeviousDevices
         std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
 
-        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) {
+        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) 
+        {
             if (!item) return nullptr;
-            auto formId = item->GetFormID();
-            return _devicesByInventory.count(formId) ? _devicesByInventory[formId] : nullptr;
+            const auto loc_formId = item->GetFormID();
+            return _devicesByInventory.count(loc_formId) ? _devicesByInventory[loc_formId] : nullptr;
         }
 
-        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) {
+        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) 
+        {
             if (!item) return nullptr;
-            auto formId = item->GetFormID();
-            return _devicesByInventory.count(formId) ? _devicesByRendered[formId] : nullptr;
+            const auto loc_formId = item->GetFormID();
+            return _devicesByRendered.count(loc_formId) ? _devicesByRendered[loc_formId] : nullptr;
         }
 
         inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 

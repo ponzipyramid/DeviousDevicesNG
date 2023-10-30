@@ -76,5 +76,7 @@ namespace DeviousDevices {
 
         RE::BGSKeyword* _lockableKwd;
         RE::BGSKeyword* _inventoryDeviceKwd;
+
+        RE::BGSKeyword* _PermitOralKwd; 
     };
 }  // namespace DeviousDevices

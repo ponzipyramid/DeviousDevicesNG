@@ -76,7 +76,7 @@ void DeviousDevices::NodeHider::Setup()
 { 
 }
 
-void DeviousDevices::NodeHider::Update(const float& a_delta)
+void DeviousDevices::NodeHider::Update()
 {
     for (auto&& it : _slots)
     {
@@ -88,26 +88,20 @@ void DeviousDevices::NodeHider::Update(const float& a_delta)
                 NodeHiderSlot* loc_slot = &it.second;
                 if (loc_slot->enabled)
                 {
-                    loc_slot->timer += a_delta;
-    
-                    if (loc_slot->timer >= NH_UPDTIME)
+                    if (loc_slot->nodes.size() > 0)
                     {
-                        loc_slot->timer = 0.0f;
-                        if (loc_slot->nodes.size() > 0)
+                        for (auto&& it : loc_slot->nodes)
                         {
-                            for (auto&& it : loc_slot->nodes)
-                            {
-                                it->local.scale = 0.002f;
-                            }
-                        }
-                        else
-                        {
-                            //no nodes, unregister npc to save resources
-                            _slots.erase(loc_actor);
-                            //LOG("Update({},{}) - Actor have no more nodes to hide, unregistering, new size={})",loc_actor->GetName(),a_delta,_slots.size())
+                            it->local.scale = 0.002f;
                         }
                     }
-                }
+                    else
+                    {
+                        //no nodes, unregister npc to save resources
+                        _slots.erase(loc_actor);
+                        //LOG("Update({},{}) - Actor have no more nodes to hide, unregistering, new size={})",loc_actor->GetName(),a_delta,_slots.size())
+                    }
+                }    
             }
         }
     }

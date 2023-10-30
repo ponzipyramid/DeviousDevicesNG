@@ -44,7 +44,7 @@ namespace DeviousDevices
 
         void Setup();
 
-        void Update(const float &a_delta);
+        void Update();
         bool ValidateActor(RE::Actor* a_actor);
 
     protected:
