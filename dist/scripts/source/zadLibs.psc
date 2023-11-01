@@ -2644,6 +2644,14 @@ Function HideBreasts(actor akActor)
 		bool gender = akActor.GetLeveledActorBase().GetSex() == 1
 		SetNodeHidden(akActor, gender, "NPC L Breast", true)
 		SetNodeHidden(akActor, gender, "NPC R Breast", true)
+		If (NetImmerse.HasNode(akActor, "3BA", false) || NetImmerse.HasNode(akActor, "3BBB", false))
+			SetNodeHidden(akActor, gender, "L Breast01", true)
+			SetNodeHidden(akActor, gender, "L Breast02", true)
+			SetNodeHidden(akActor, gender, "L Breast03", true)
+			SetNodeHidden(akActor, gender, "R Breast01", true)
+			SetNodeHidden(akActor, gender, "R Breast02", true)
+			SetNodeHidden(akActor, gender, "R Breast03", true)
+		endif
 	EndIf
 EndFunction
 
@@ -2656,6 +2664,14 @@ Function ShowBreasts(actor akActor)
 	bool gender = akActor.GetLeveledActorBase().GetSex() == 1
 	SetNodeHidden(akActor, gender, "NPC L Breast", false)
 	SetNodeHidden(akActor, gender, "NPC R Breast", false)
+	If (NetImmerse.HasNode(akActor, "3BA", false) || NetImmerse.HasNode(akActor, "3BBB", false))
+		SetNodeHidden(akActor, gender, "L Breast01", false)
+		SetNodeHidden(akActor, gender, "L Breast02", false)
+		SetNodeHidden(akActor, gender, "L Breast03", false)
+		SetNodeHidden(akActor, gender, "R Breast01", false)
+		SetNodeHidden(akActor, gender, "R Breast02", false)
+		SetNodeHidden(akActor, gender, "R Breast03", false)
+	endif
 EndFunction
 
 
