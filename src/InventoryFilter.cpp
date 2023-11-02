@@ -57,13 +57,23 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
 
 bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) {
     if (auto loc_armor = GetWornWithDeviousKeyword(a_actor, _deviousGagKwd)) {
+        LOG("ActorHasBlockingGag: Actor has item in gag slot")
         if (loc_armor->HasKeyword(_deviousGagKwd)) {
-            if (loc_armor->HasKeyword(_deviousGagRingKwd))
+            LOG("ActorHasBlockingGag: Actor has gag")
+            if (loc_armor->HasKeyword(_deviousGagRingKwd)) {
+                LOG("ActorHasBlockingGag: Actor has ring gag")
                 return false;  // is ring gag, do not remove food
+            }
+                
             else if (loc_armor->HasKeyword(_deviousGagPanelKwd))  // is panel gag, additional check needed
             {
+                LOG("ActorHasBlockingGag: Actor has panel gag faction {} {} {}",
+                    a_actor->GetFactionRank(_gagpanelfaction, true), _gagpanelfaction->GetFormEditorID(),
+                    a_actor->GetFactionRank(_gagpanelfaction, false))
                 return a_actor->GetFactionRank(_gagpanelfaction, true) == 1;
             }
+
+            LOG("ActorHasBlockingGag: Actor has regular gag")
             return true;
         }
     }
@@ -186,6 +196,8 @@ void DeviousDevices::InventoryFilter::Setup() {
 
         _sexlabNoStripKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
         _jewelryKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
+        
+        _gagpanelfaction = RE::TESForm::LookupByEditorID<RE::TESFaction>("zadGagPanelFaction");
 
         _deviousPlugKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlug");
         _deviousBeltKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBelt");
