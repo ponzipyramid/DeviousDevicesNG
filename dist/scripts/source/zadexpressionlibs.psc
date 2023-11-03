@@ -153,22 +153,13 @@ EndFunction
 ;        =Return value=
 ;Return true in case that expression was successfully applied
 bool Function ApplyExpression(Actor akActor, sslBaseExpression akExpression, int aiStrength, bool abOpenMouth=false,int aiPriority = 0)
-    if !libs.IsValidActor(akActor)
-        libs.Log("ApplyExpressionPatched(): Actor is not loaded (Or is otherwise invalid). Aborting.")
-        return false
-    EndIf
     if !akExpression
         libs.Log("ApplyExpressionPatched(): Expression is none.")
         return false
     EndIf
-
-    if !CheckExpressionBlock(akActor,aiPriority,1)
-        return false
-    endif
-
-    SetExpression(akActor,akExpression,aiStrength,abOpenMouth)
-
-    return true
+    int loc_gender = (akActor.GetBaseObject() as ActorBase).GetSex()
+    float[] loc_exp = akExpression.GenderPhase(akExpression.CalcPhase(aiStrength, loc_gender), loc_gender)
+    return zadNativeFunctions.ApplyExpression(akActor,loc_exp,aiStrength,abOpenMouth,aiPriority)
 EndFunction
 
 ;API function for applying expression on actor
@@ -181,26 +172,7 @@ EndFunction
 ;        =Return value=
 ;Return true in case that expression was successfully applied
 bool Function ApplyExpressionRaw(Actor akActor, float[] apExpression, int aiStrength, bool abOpenMouth=false,int aiPriority = 0)
-    if !libs.IsValidActor(akActor)
-        libs.Log("ApplyExpressionRaw(): Actor is not loaded (Or is otherwise invalid). Aborting.")
-        return false
-    EndIf
-    if !apExpression
-        libs.Log("ApplyExpressionRaw(): Expression is none.")
-        return false
-    EndIf
-    if apExpression.length != 32
-        libs.Log("ApplyExpressionRaw(): Expression is not size 32!")
-        return false
-    EndIf
-
-    if !CheckExpressionBlock(akActor,aiPriority,1)
-        return false
-    endif
-
-    SetExpressionRaw(akActor,apExpression,aiStrength,abOpenMouth)
-
-    return true
+    return zadNativeFunctions.ApplyExpression(akActor,apExpression,aiStrength,abOpenMouth,aiPriority)
 EndFunction
 
 ;API function for reseting expression on actor
@@ -211,7 +183,7 @@ EndFunction
 ;        =Return value=
 ;Return true in case that expression was successfully removed
 bool Function ResetExpression(actor akActor, sslBaseExpression akExpression,int aiPriority = 0)
-    return ResetExpressionRaw(akActor, aiPriority)
+    return zadNativeFunctions.ResetExpression(akActor,aiPriority)
 EndFunction
 
 ;API function for reseting expression on actor
@@ -221,18 +193,7 @@ EndFunction
 ;        =Return value=
 ;Return true in case that expression was successfully removed
 bool Function ResetExpressionRaw(actor akActor, int aiPriority = 0)
-    if !CheckExpressionBlock(akActor,aiPriority,1)
-        return false
-    endif
-
-    if !akActor.WornHasKeyword(libs.zad_DeviousGag)
-        zadNativeFunctions.ResetExpression(akActor,true,true)
-    else
-        zadNativeFunctions.ResetExpression(akActor,false,true)
-    endif
-    
-    akActor.SetFactionRank(BlockExpressionFaction,0)
-    return true
+    return zadNativeFunctions.ResetExpression(akActor,aiPriority)
 EndFunction
 
 ;edits passed apExpression phonems with apPhonems
@@ -324,7 +285,7 @@ Function RemoveGagEffect(actor akActor)
         libs.SendGagEffectEvent(akActor, false)
         Return
     EndIf
-    zadNativeFunctions.ResetExpression(akActor,true,false)
+    zadNativeFunctions.ResetGagExpression(akActor)
 EndFunction
 
 ;==============================================================================================================================
@@ -344,59 +305,6 @@ Function Maintenance()
     zadNativeFunctions.RegisterGagType(GagKeyword_Ring,PhonemeModifierFactions_Ring,DefaultGagExpression_Ring)
     zadNativeFunctions.RegisterGagType(GagKeyword_Bit,PhonemeModifierFactions_Bit,DefaultGagExpression_Bit)
     zadNativeFunctions.RegisterDefaultGagType(PhonemeModifierFactions,DefaultGagExpression_Simple)
-EndFunction
-
-;check expression blocking with priority
-;mode 1 = sets blocking if priority is met
-;mode 2 = resets blocking if priority is met
-bool Function CheckExpressionBlock(Actor akActor,int aiPriority, int aiMode = 0)
-    if !akActor.isInFaction(BlockExpressionFaction)
-        if aiMode == 1
-            akActor.AddToFaction(BlockExpressionFaction)
-            akActor.SetFactionRank(BlockExpressionFaction,aiPriority)
-        endif
-        return true
-    endif
-
-    if aiPriority >= akActor.GetFactionRank(BlockExpressionFaction)
-        if aiMode == 1 ;set blocking priority
-            if aiPriority >= akActor.GetFactionRank(BlockExpressionFaction)
-                akActor.SetFactionRank(BlockExpressionFaction,aiPriority)
-                return true
-            else
-                return false
-            endif
-        elseif aiMode == 2 ;reset blocking priority
-            akActor.SetFactionRank(BlockExpressionFaction,0)
-        endif
-        return true
-    else
-        return false
-    endif
-EndFunction
-
-;internal function for setting expression. Do not call
-Function SetExpression(Actor akActor, sslBaseExpression akExpression, int aiStrength, bool aiOpenMouth=false)
-    int     loc_gender                     = (akActor.GetBaseObject() as ActorBase).GetSex()
-    ;yes, the strength is actually not applied, even when its passed in CalcPhase :)
-    float[] loc_expression                 = zadNativeFunctions.ApplyStrengthToExpression(akExpression.GenderPhase(akExpression.CalcPhase(aiStrength, loc_gender), loc_gender),aiStrength)
-
-    if aiOpenMouth
-        loc_expression[akExpression.Phoneme + 0] = 0.75
-    endif
-
-    zadNativeFunctions.ApplyExpression(akActor,loc_expression)
-EndFunction
-
-;internal function for setting expression. Do not call
-Function SetExpressionRaw(Actor akActor, float[]  apExpression, int aiStrength, bool aiOpenMouth=false)
-    float[] loc_expression              = zadNativeFunctions.ApplyStrengthToExpression(apExpression,aiStrength)
-
-    if aiOpenMouth
-        loc_expression[0] = 0.75
-    endif
-
-    zadNativeFunctions.ApplyExpression(akActor,apExpression)
 EndFunction
 
 Int[] Function LoadGagExpFromJSON(String asFilePath,string asFlag = "DefaultGagExpression")
