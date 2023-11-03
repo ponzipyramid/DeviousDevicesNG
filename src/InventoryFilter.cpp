@@ -182,10 +182,10 @@ void DeviousDevices::InventoryFilter::Setup() {
         _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
-        _gagpanelfaction = reinterpret_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x030C3C, "Devious Devices - Integration.esm"));
-
         _sexlabNoStripKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
         _jewelryKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
+        
+        _gagpanelfaction = RE::TESForm::LookupByEditorID<RE::TESFaction>("zadGagPanelFaction");
 
         _deviousPlugKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlug");
         _deviousBeltKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBelt");
