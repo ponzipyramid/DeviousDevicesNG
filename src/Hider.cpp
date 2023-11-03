@@ -50,8 +50,6 @@ void DeviousDevices::DeviceHiderManager::Setup()
             _contraption = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x0022FF,"Devious Devices - Contraptions.esm"));
             if (_contraption != nullptr) _nohidekeywords.push_back(_contraption);
         }
-
-
         auto hook = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
 
         // Expected size: 0x12
@@ -65,12 +63,26 @@ void DeviousDevices::DeviceHiderManager::Setup()
                 call(rax);
             }
         };
-
+        
         Patch patch{ reinterpret_cast<std::uintptr_t>(InitWornArmor) };
         patch.ready();
 
-        if (patch.getSize() > 0x17) {
+        if (patch.getSize() > 0x17) 
+        {
             util::report_and_fail("Patch was too large, failed to install"sv);
+        }
+
+        HINSTANCE dllHandle = LoadLibrary(TEXT("DynamicArmorVariants.dll"));
+        if (dllHandle != NULL)
+        {
+            InitWornArmorDAV = ((fInitWornArmorDAV)(*((uint64_t*)hook.address() + 1)));
+            LOG("DeviceHiderManager::Setup() - DAV found - Copying original function -> {}",(uintptr_t)InitWornArmorDAV)
+            _DAVInstalled = true;
+        }
+        else
+        {
+            LOG("DeviceHiderManager::Setup() - No DAV found")
+            _DAVInstalled = false;
         }
 
         REL::safe_fill(hook.address(), REL::NOP, 0x17);
@@ -112,28 +124,43 @@ const DeviousDevices::HiderSetting& DeviousDevices::DeviceHiderManager::GetSetti
 
 bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
 {
-    _CheckResult = true;
+    //_CheckResult = true;
 
-    //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
-    std::array<std::thread,8> loc_threads = 
+    std::unordered_map<RE::TESObjectARMO*,uint32_t> loc_devices;
+
+    const auto inv = a_actor->GetInventory([](RE::TESBoundObject& a_object) 
     {
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00000001,0x00000008),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00000010,0x00000080),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00000100,0x00000800),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00001000,0x00008000),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00010000,0x00080000),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x00100000,0x00800000),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x01000000,0x08000000),
-        std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,a_actor,0x10000000,0x40000000)
-    };
+        return a_object.IsArmor();
+    },false);
 
-    for (auto&& it : loc_threads) it.join();
+    for (const auto& [item, invData] : inv) 
+    {
+        const auto& [count, entry] = invData;
+        if (count > 0 && entry->IsWorn()) 
+        {
+            const auto armor = item->As<RE::TESObjectARMO>();
+            if (armor && IsDevice(armor)) 
+            {
+                loc_devices[armor] = (uint32_t)armor->GetSlotMask();
+                //loc_devices.push_back({armor,(uint32_t)armor->GetSlotMask()});
+            }
+        }
+    }
+
+
+    ////LOG("DeviceHiderManager::ProcessHider({:08X},{}) called",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
+    //std::array<std::thread,2> loc_threads = 
+    //{
+    //    std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,0,15,loc_devices),
+    //    std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,16,31,loc_devices)
+    //};
+    //
+    //for (auto&& it : loc_threads) it.join();
 
     //LOG("DeviceHiderManager::ProcessHider res = {}",_CheckResult)
 
-    //CheckHiderSlots(a_armor,a_actor,0x00000001,0x40000000);
     //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called - result = {}",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
-    return _CheckResult;
+    return CheckHiderSlots(a_armor,0,31,loc_devices);
 }
 
 inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
@@ -250,45 +277,31 @@ bool DeviousDevices::DeviceHiderManager::CheckNPCArmor(RE::TESObjectARMO* a_armo
     return true;
 }
 
-void DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max) const
+bool DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_armor, uint8_t a_min, uint8_t a_max, const std::unordered_map<RE::TESObjectARMO*,uint32_t>& a_slots) const
 {
     const int loc_mask = static_cast<int>(a_armor->GetSlotMask());
+    const std::vector<int>& loc_filter = DeviceHiderManager::GetSingleton()->GetFilter();
 
-    for(uint32_t i1 = a_min; i1 <= a_max; i1 <<= 1U)
+    for (auto&& [device,mask] : a_slots)
     {
-        if (!_CheckResult) return;
-
-        //get armor from slot
-        
-        const RE::TESObjectARMO* loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(i1));
-
-        //LOG("DeviceHiderManager::CheckHiderSlots({:08X}.{:08X}) -Checking slot 0x{:08X} = 0x{:08X}",a_min,a_max,i1,loc_armor ? loc_armor->GetFormID() : NULL)
-
-        if (loc_armor && IsDevice(loc_armor))
+        for(uint8_t i2 = a_min; i2 < a_max; i2++)
         {
-            const uint32_t loc_mask2 = static_cast<uint32_t>(loc_armor->GetSlotMask());
-            const std::vector<int>& loc_filter = DeviceHiderManager::GetSingleton()->GetFilter();
-            for(uint8_t i2 = 0; i2 < 31; i2++)
+            //armor have slot - use setting
+            if (mask & (0x1U << i2))
             {
-                //armor have slot - use setting
-                if (loc_mask2 & (0x1U << i2))
+                const uint8_t loc_filterindx = i2*4;
+                for(uint8_t i3 = loc_filterindx; i3 < (loc_filterindx+4); i3++)
                 {
-                    const uint8_t loc_filterindx = i2*4;
-                    for(uint8_t i3 = loc_filterindx; i3 < (loc_filterindx+4); i3++)
+                    if (loc_mask & loc_filter[i3])
                     {
-                        if (loc_mask & loc_filter[i3])
-                        {
-                            _CheckResult = false;
-                            //LOG("DeviceHiderManager::CheckHiderSlots({:08X}.{:08X}) - done. Res={}",a_min,a_max,_CheckResult)
-                            return;
-                        }
+                        _CheckResult = false;
+                        return false;
                     }
                 }
             }
         }
     }
-
-    //LOG("DeviceHiderManager::CheckHiderSlots({:08X}.{:08X}) - done. Res={}",a_min,a_max,_CheckResult)
+    return true;
 }
 
 bool DeviousDevices::DeviceHiderManager::HasRace(RE::TESObjectARMA* a_armorAddon, RE::TESRace* a_race)
@@ -313,8 +326,8 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
     //LOG("InitWornArmor called for {} on {}",a_armor->GetName(),a_actor->GetName())
 
     DeviceHiderManager* loc_manager = DeviceHiderManager::GetSingleton();
-
-    //check if actor is force striped
+    
+    ////check if actor is force striped
     if (!loc_manager->CheckForceStrip(a_armor,a_actor)) return;
 
     //check if armor is device and can be hidden. If not, just render it
@@ -331,11 +344,18 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
         }
     }
 
-    for (auto&& itArmorAddon : a_armor->armorAddons) 
+    if (loc_manager->IsDAVInstalled())
     {
-        if (HasRace(itArmorAddon,loc_race)) 
+        InitWornArmorDAV(a_armor,a_actor,a_biped);
+    }
+    else
+    {
+        for (auto&& itArmorAddon : a_armor->armorAddons) 
         {
-            InitWornArmorAddon(itArmorAddon,a_armor,a_biped,loc_sex);
+            if (HasRace(itArmorAddon,loc_race)) 
+            {
+                InitWornArmorAddon(itArmorAddon,a_armor,a_biped,loc_sex);
+            }
         }
     }
 }

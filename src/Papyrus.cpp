@@ -90,9 +90,9 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(GetExpression,true);
     REGISTERPAPYRUSFUNC(ResetExpression,true);
     REGISTERPAPYRUSFUNC(UpdateGagExpression,true);
-    REGISTERPAPYRUSFUNC(ApplyStrengthToExpression,true);
     REGISTERPAPYRUSFUNC(RegisterGagType,true);
     REGISTERPAPYRUSFUNC(RegisterDefaultGagType,true);
+    REGISTERPAPYRUSFUNC(ResetGagExpression,true);
 
     //hider
     REGISTERPAPYRUSFUNC(SyncSetting,true);

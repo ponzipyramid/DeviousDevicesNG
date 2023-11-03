@@ -30,7 +30,8 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
     return nullptr;
 }
 
-bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj) {
+bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj)
+{
     if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj == nullptr ||
         a_actor->GetFormID() != 20 || UI::GetMenu<RE::BarterMenu>().get())
         return false;
@@ -46,9 +47,11 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
 
     bool loc_rollFailure = distr(gen) < 80.0f;
 
-    if (loc_rollFailure) {
+    if (loc_rollFailure) 
+    {
         RE::DebugNotification("Locked in bondage mittens, you cannot pick up the item.");
-    } else {
+    } else 
+    {
         RE::DebugNotification("Despite wearing bondage mittens, you manage to pick up the item.");
     }
 
@@ -59,7 +62,9 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) {
     if (auto loc_armor = GetWornWithDeviousKeyword(a_actor, _deviousGagKwd)) {
         if (loc_armor->HasKeyword(_deviousGagKwd)) {
             if (loc_armor->HasKeyword(_deviousGagRingKwd) || loc_armor->HasKeyword(_PermitOralKwd))
+            {
                 return false;  // is ring gag, do not remove food
+            }
             else if (loc_armor->HasKeyword(_deviousGagPanelKwd))  // is panel gag, additional check needed
             {
                 return a_actor->GetFactionRank(_gagpanelfaction, true) == 1;
@@ -69,7 +74,6 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) {
     }
     return false;
 }
-
 
 bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item)
 {
@@ -118,18 +122,12 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 }
 
 bool DeviousDevices::InventoryFilter::IsDevious(RE::TESBoundObject* obj) {
-    std::vector<RE::BGSKeyword*> loc_deviousKwds;
-    loc_deviousKwds.push_back(_lockableKwd);
-    loc_deviousKwds.push_back(_inventoryDeviceKwd);
-
+    static std::vector<RE::BGSKeyword*> loc_deviousKwds = {_lockableKwd,_inventoryDeviceKwd};
     return obj->HasKeywordInArray(loc_deviousKwds, false) || obj->GetFormID() == _deviceHiderId;
 }
 
 bool DeviousDevices::InventoryFilter::IsStrapon(RE::TESBoundObject* obj) {
-    std::vector<RE::BGSKeyword*> loc_straponKwds;
-    loc_straponKwds.push_back(_sexlabNoStripKwd);
-    loc_straponKwds.push_back(_jewelryKwd);
-
+    static std::vector<RE::BGSKeyword*> loc_straponKwds = {_sexlabNoStripKwd,_jewelryKwd};
     return obj->HasKeywordInArray(loc_straponKwds, true);
 }
 
@@ -183,6 +181,8 @@ void DeviousDevices::InventoryFilter::Setup() {
     if (!_init) {
         _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
+
+        _gagpanelfaction = reinterpret_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x030C3C, "Devious Devices - Integration.esm"));
 
         _sexlabNoStripKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
         _jewelryKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");

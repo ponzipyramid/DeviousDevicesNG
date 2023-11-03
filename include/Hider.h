@@ -19,6 +19,12 @@ namespace DeviousDevices
         int devicefilter    = 0x00000000;
     };
 
+    struct ArmorSlot
+    {
+        const RE::TESObjectARMO*  armor;
+        const uint32_t            slot;
+    };
+
     class DeviceHiderManager
     {
     SINGLETONHEADER(DeviceHiderManager)
@@ -36,9 +42,10 @@ namespace DeviousDevices
         void                    SetActorStripped(RE::Actor* a_actor, bool a_stripped, int a_armorfilter, int a_devicefilter);
         bool                    IsActorStripped(RE::Actor* a_actor);
 
-
         bool                    CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
         bool                    CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
+
+        bool                    IsDAVInstalled() {return _DAVInstalled;}
     protected:
         bool _setup                 = false;
         RE::BGSKeyword* _kwnohide   = nullptr;
@@ -48,10 +55,11 @@ namespace DeviousDevices
         RE::BGSKeyword* _contraption = nullptr;
         std::vector<RE::BGSKeyword*> _hidekeywords;
         std::vector<RE::BGSKeyword*> _nohidekeywords;
+        bool           _DAVInstalled = false;
 
         mutable std::atomic_bool _CheckResult = false;
 
-        void CheckHiderSlots(RE::TESObjectARMO* a_armor, RE::Actor* a_actor, uint32_t a_min, uint32_t a_max) const;
+        bool CheckHiderSlots(RE::TESObjectARMO* a_armor, uint8_t a_min, uint8_t a_max, const std::unordered_map<RE::TESObjectARMO*,uint32_t>& a_slots) const;
 
         std::vector<int>    _filter;
         HiderSetting        _setting;
@@ -73,7 +81,13 @@ namespace DeviousDevices
 
         //update actor serialy
         static void Update3DSafe(RE::Actor* a_actor);
+
+        typedef void(*fInitWornArmorDAV)(RE::TESObjectARMO* a_armor,RE::Actor* a_actor,RE::BSTSmartPointer<RE::BipedAnim>* a_biped);
+        static inline fInitWornArmorDAV InitWornArmorDAV;
     };
+
+
+
 
     inline void SyncSetting(PAPYRUSFUNCHANDLE,std::vector<int> a_slotfilter, int a_setting)
     {

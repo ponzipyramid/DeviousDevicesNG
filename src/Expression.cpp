@@ -9,10 +9,52 @@ namespace DeviousDevices
         if (!_installed)
         {
             _installed = true;
+            RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
+            if (loc_datahandler)
+            {
+                _BlockFaction = reinterpret_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x000811, "Devious Devices - Integration.esm"));
+            }
+            else
+            {
+                WARN("ExpressionManager::Setup() - Could not load block faction!")
+            }
         }
     }
 
-    std::vector<float> ExpressionManager::ApplyExpression(RE::Actor* a_actor, const std::vector<float> &a_expression)
+    bool ExpressionManager::ApplyExpression(RE::Actor* a_actor, const std::vector<float> &a_expression, float a_strength, bool a_openMouth,int a_priority)
+    {
+        if (a_actor == nullptr || !a_actor->Is3DLoaded())
+        {
+            WARN("ExpressionManager::ApplyExpression - Actor is none, or not loaded")
+            return false;
+        }
+
+        if (a_expression.size() != 32)
+        {
+            WARN("ExpressionManager::ApplyExpression - Expression size have to be 32!")
+            return false;
+        }
+
+        //validate values
+        a_strength = std::clamp(a_strength,0.0f,100.0f);
+        a_priority = std::clamp(a_priority,0,100);
+
+        if (CheckExpressionBlock(a_actor,a_priority,mSet))
+        {
+            std::vector<float> loc_exp = a_expression;
+            if (a_openMouth) loc_exp[0] = 0.75f;
+
+            loc_exp = ApplyStrengthToExpression(loc_exp,a_strength);
+            ApplyExpressionRaw(a_actor, loc_exp);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    std::vector<float> ExpressionManager::ApplyExpressionRaw(RE::Actor* a_actor, const std::vector<float> &a_expression)
     {
         if (a_actor == nullptr) return std::vector<float>();
 
@@ -136,25 +178,24 @@ namespace DeviousDevices
         return loc_res;
     }
 
-    void ExpressionManager::ResetExpression(RE::Actor* a_actor, bool a_phonem, bool a_mods)
+    bool ExpressionManager::ResetExpression(RE::Actor* a_actor, int a_priority)
     {
-        if (a_actor == nullptr) return;
+        if (a_actor == nullptr) return false;
         
+        if (!CheckExpressionBlock(a_actor,a_priority,mReset)) return false;
+
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
 
-        if (loc_expdata == nullptr) return;
+        if (loc_expdata == nullptr) return false;
 
         RE::BSSpinLockGuard locker(loc_expdata->lock);
 
-        if (a_phonem) 
-        {
-            for (int i = 0; i < 16; i++) loc_expdata->phenomeKeyFrame.SetValue(i,0.0f);
-        }
-        if (a_mods)
-        {
-            for (int i = 0; i < 14; i++)   loc_expdata->modifierKeyFrame.SetValue(i,0.0f);
-            a_actor->ClearExpressionOverride();
-        }
+        if (!IsGagged(a_actor)) for (int i = 0; i < 16; i++) loc_expdata->phenomeKeyFrame.SetValue(i,0.0f);
+
+        for (int i = 0; i < 14; i++) loc_expdata->modifierKeyFrame.SetValue(i,0.0f);
+        a_actor->ClearExpressionOverride();
+
+        return true;
     }
 
     std::vector<float> ExpressionManager::FactionsToPreset(RE::Actor* a_actor, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults)
@@ -239,6 +280,34 @@ namespace DeviousDevices
 
     }
 
+    bool ExpressionManager::CheckExpressionBlock(RE::Actor* a_actor, int a_priority, BlockCheckMode a_mode)
+    {
+        if (!a_actor->IsInFaction(_BlockFaction))
+        {
+            if (a_mode == mSet)
+            {
+                a_actor->AddToFaction(_BlockFaction,a_priority);
+            }
+            return true;
+        }
+
+        if (a_priority >= a_actor->GetFactionRank(_BlockFaction,a_actor->IsPlayer()))
+        {
+            if (a_mode == mSet)
+            {
+                a_actor->AddToFaction(_BlockFaction,a_priority);
+                return true;
+            }
+            else if (a_mode == mReset)
+            {
+                a_actor->AddToFaction(_BlockFaction,0);
+                return true;
+            }
+        
+        }
+        return false;
+    }
+
     void ExpressionManager::ApplyPhonemsFaction(RE::Actor* a_actor, std::vector<float>& a_exp, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults)
     {
         if (a_actor == nullptr) return;
@@ -265,9 +334,22 @@ namespace DeviousDevices
     {
         if (a_actor == nullptr) return;
 
-        const std::vector<float> loc_new        = GetGagEffectPreset(a_actor);
+        const std::vector<float> loc_new = GetGagEffectPreset(a_actor);
 
         ApplyGagExpression(a_actor,loc_new);
+    }
+
+    void ExpressionManager::ResetGagExpression(RE::Actor* a_actor)
+    {
+        if (a_actor == nullptr) return;
+        
+        if (IsGagged(a_actor)) return;
+
+        RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
+
+        RE::BSSpinLockGuard locker(loc_expdata->lock);
+
+        for (int i = 0; i < 16; i++) loc_expdata->phenomeKeyFrame.SetValue(i,0.0f);
     }
 
     bool ExpressionManager::RegisterGagType(RE::BGSKeyword* a_keyword, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults)
@@ -305,13 +387,13 @@ namespace DeviousDevices
         return true;
     }
 
-    std::vector<float> ExpressionManager::ApplyStrengthToExpression(const std::vector<float>& a_expression, int a_strength)
+    std::vector<float> ExpressionManager::ApplyStrengthToExpression(const std::vector<float>& a_expression, float a_strength)
     {
         if (a_expression.size() != 32) return a_expression;
 
         std::vector<float> loc_res = a_expression;
 
-        const float loc_mult  = std::clamp(a_strength/100.0,0.0,1.0);
+        const float loc_mult  = std::clamp(a_strength,0.0f,1.0f);
 
         for (int i = 0; i < 30; i++)
         {
