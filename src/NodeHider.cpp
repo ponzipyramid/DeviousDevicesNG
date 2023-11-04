@@ -115,7 +115,10 @@ void DeviousDevices::NodeHider::Update(const float& a_delta)
 
 bool DeviousDevices::NodeHider::ValidateActor(RE::Actor* a_actor)
 {
+    if (a_actor == nullptr) return false;
+    
     bool loc_unregister = false;
+
     if (!loc_unregister && (a_actor == nullptr)) loc_unregister = true;
     if (!loc_unregister && a_actor->IsDead())    loc_unregister = true;
 
