@@ -23,7 +23,7 @@ void DeviousDevices::UpdateHook::Update(RE::Actor* a_actor, float a_delta)
         // ==== Update Node Hider ====
         {
             static NodeHider* loc_nodehider = NodeHider::GetSingleton();
-            loc_nodehider->Update(a_delta);
+            // loc_nodehider->Update(a_delta);
         }
     }
     Update_old(a_actor,a_delta);

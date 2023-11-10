@@ -235,14 +235,12 @@ namespace DeviousDevices
 
         inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) {
             if (!item) return nullptr;
-            auto formId = item->GetFormID();
-            return _devicesByInventory.count(formId) ? _devicesByInventory[formId] : nullptr;
+            return _devicesByInventory[item->GetFormID()];
         }
 
         inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) {
             if (!item) return nullptr;
-            auto formId = item->GetFormID();
-            return _devicesByInventory.count(formId) ? _devicesByRendered[formId] : nullptr;
+            return _devicesByRendered[item->GetFormID()];
         }
 
         inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 

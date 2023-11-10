@@ -120,7 +120,8 @@ bool DeviousDevices::NodeHider::ValidateActor(RE::Actor* a_actor)
     bool loc_unregister = false;
 
     if (!loc_unregister && (a_actor == nullptr)) loc_unregister = true;
-    if (!loc_unregister && a_actor->IsDead())    loc_unregister = true;
+    if (!loc_unregister && a_actor->IsDead(true)) loc_unregister = true;
+    if (!loc_unregister && a_actor->GetFormID() == 0) loc_unregister = true;
 
     if (loc_unregister)
     {

@@ -53,8 +53,7 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
         {
             auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD);
             LOG("GetWornDevice: before")
-            if (loc_device != nullptr && (!a_fuzzy && loc_device->kwd == a_kw) ||
-                (a_fuzzy && loc_deviceRD->HasKeyword(a_kw)))
+            if (loc_device != nullptr && ((!a_fuzzy && loc_device->kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw))))
             {
                 LOG("GetWornDevice: inside")
                 return loc_device->deviceInventory;
