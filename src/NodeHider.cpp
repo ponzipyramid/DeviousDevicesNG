@@ -178,7 +178,7 @@ bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const
 {
     if (a_actor == nullptr) return false;
     
-    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled())
+    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled() || (a_actor->GetFormID() == 0))
     {
         return false;
     }
