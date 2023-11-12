@@ -411,8 +411,6 @@ namespace DeviousDevices
 
         uint16_t loc_updated = 0;
 
-        if (IsGagged(loc_player)) UpdateGagExpression(loc_player);
-
         RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, 6000, [&](RE::TESObjectREFR& a_ref) {
             auto loc_refBase    = a_ref.GetBaseObject();
             auto loc_actor      = a_ref.As<RE::Actor>();

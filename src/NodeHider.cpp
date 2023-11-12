@@ -1,4 +1,6 @@
 #include "NodeHider.h"
+#include "LibFunctions.h"
+#include "Hider.h"
 
 SINGLETONBODY(DeviousDevices::NodeHider)
 
@@ -62,12 +64,6 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 
     //LOG("ShowWeapons called for {}",a_actor->GetName());
 
-    if (_slots.find(a_actor->GetHandle().native_handle()) == _slots.end())
-    {
-        //LOG("Actor {} have no hiden nodes",a_actor->GetName());
-        return;
-    }
-
     for (auto&& it : WeaponNodes)
     {
         RemoveHideNode(a_actor,it);
@@ -76,58 +72,123 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 
 void DeviousDevices::NodeHider::Setup()
 { 
+    if (!_installed)
+    {
+        LOG("NodeHider::Setup() - Installed")
+        _installed = true;
+    }
 }
 
 void DeviousDevices::NodeHider::Update()
 {
-    for (auto&& it : _slots)
-    {
+    LOG("NodeHider::Update() - Updating...")
 
-        RE::Actor* loc_actor = RE::Actor::LookupByHandle(it.first).get();
-        if (ValidateActor(loc_actor))
-        {
-            if (loc_actor->Is3DLoaded())
-            {
-                NodeHiderSlot* loc_slot = &it.second;
-                if (loc_slot->enabled)
-                {
-                    if (loc_slot->nodes.size() > 0)
-                    {
-                        RE::NiNode* loc_thirdpersonNode = loc_actor->Get3D(false)->AsNode();
-                        if (loc_thirdpersonNode == nullptr) 
-                        {
-                            WARN("Cant hide nodes on actor {} because its 3D is none",loc_actor->GetName())
-                            continue;
-                        }
-                        for (auto&& it2 : loc_slot->nodes)
-                        {
-                            RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(it2);
-                            if (loc_node != nullptr) loc_node->local.scale = 0.002f;
-                            else WARN("Cant hide node {} on actor {} because its none",it2,loc_actor->GetName())
-                        }
-                    }
-                    else
-                    {
-                        //no nodes, unregister npc to save resources
-                        _slots.erase(it.first);
-                        //LOG("Update({},{}) - Actor have no more nodes to hide, unregistering, new size={})",loc_actor->GetName(),a_delta,_slots.size())
-                    }
-                }
-            }
-        }
+    static RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
+
+    std::vector<RE::Actor*> loc_lastactors;
+    std::vector<RE::Actor*> loc_currentactors;
+
+    for (auto&& it : _lastupdatestack)
+    {
+        loc_lastactors.push_back(RE::Actor::LookupByHandle(it).get());
     }
+
+    uint16_t loc_updated = 0;
+    RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, 3000, [&](RE::TESObjectREFR& a_ref) {
+        auto loc_refBase    = a_ref.GetBaseObject();
+        auto loc_actor      = a_ref.As<RE::Actor>();
+        if (ShouldHideWeapons(loc_actor) && (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
+        {
+            loc_updated += 1;
+            loc_currentactors.push_back(loc_actor);
+            //UpdateGagExpression(loc_actor);
+
+        }
+        return RE::BSContainer::ForEachResult::kContinue;
+    });
+
+
+    std::sort(loc_lastactors.begin(),loc_lastactors.end());
+    std::sort(loc_currentactors.begin(),loc_currentactors.end());
+
+    std::vector<RE::Actor*> loc_samectors(loc_lastactors.size() + loc_currentactors.size());
+    std::vector<RE::Actor*> loc_removedactors(loc_lastactors.size() + loc_currentactors.size());
+    std::vector<RE::Actor*> loc_addedactors(loc_lastactors.size() + loc_currentactors.size());
+
+    //get same actors -> should be already processed by node hider, so do nothing
+    auto loc_it1 = std::set_intersection(loc_lastactors.begin(), 
+                              loc_lastactors.end(), 
+                              loc_currentactors.begin(), 
+                              loc_currentactors.end(), 
+                              loc_samectors.begin());
+    loc_samectors.resize(loc_it1-loc_samectors.begin());
+
+    //get removed actors
+    auto loc_it2 = std::set_difference(loc_lastactors.begin(), 
+                              loc_lastactors.end(), 
+                              loc_samectors.begin(), 
+                              loc_samectors.end(), 
+                              loc_removedactors.begin());
+    loc_removedactors.resize(loc_it2-loc_removedactors.begin());
+
+    //get added actors
+    auto loc_it3 = std::set_difference(loc_currentactors.begin(), 
+                              loc_currentactors.end(), 
+                              loc_samectors.begin(), 
+                              loc_samectors.end(), 
+                              loc_addedactors.begin());
+    loc_addedactors.resize(loc_it3-loc_addedactors.begin());
+
+    LOG("NodeHider::Update() - loc_currentactors = {}",loc_currentactors.size())
+    LOG("NodeHider::Update() - loc_lastactors = {}",loc_lastactors.size())
+    LOG("NodeHider::Update() - loc_samectors = {}",loc_samectors.size())
+    LOG("NodeHider::Update() - loc_addedactors = {}",loc_addedactors.size())
+    LOG("NodeHider::Update() - loc_removedactors = {}",loc_removedactors.size())
+
+    //remove weapon node hider from removed actors
+    for (auto&& it : loc_removedactors)
+    {
+        ShowWeapons(it);
+    }
+
+    //hide weapons for same actors, so it stay hidden
+    for (auto&& it : loc_samectors)
+    {
+        HideWeapons(it);
+    }
+
+    //hide weapons for added actors
+    for (auto&& it : loc_addedactors)
+    {
+        HideWeapons(it);
+        //DeviceHiderManager::GetSingleton()->Update3DSafe(it);
+    }
+
+    //update last actors
+    _lastupdatestack.clear();
+    for(auto&& it : loc_currentactors)
+    {
+        _lastupdatestack.push_back(it->GetHandle().native_handle());
+    }
+
+    LOG("NodeHider::Update() - Node hider updated {} actors",loc_updated)
 }
 
-bool DeviousDevices::NodeHider::ValidateActor(RE::Actor* a_actor)
+bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const
 {
     if (a_actor == nullptr) return false;
     
-    if (a_actor->IsDead())
+    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled())
     {
-        _slots.erase(a_actor->GetHandle().native_handle());
         return false;
     }
     return true;
+}
+
+bool DeviousDevices::NodeHider::ShouldHideWeapons(RE::Actor* a_actor) const
+{
+    if (!ActorIsValid(a_actor)) return false;
+    return LibFunctions::GetSingleton()->IsAnimating(a_actor) || (LibFunctions::GetSingleton()->GetHandRestrain(a_actor) != nullptr);
 }
 
 bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_nodename)
@@ -141,19 +202,8 @@ bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_no
     RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(a_nodename);
     if (loc_node != nullptr)
     {
-        auto loc_handle = a_actor->GetHandle().native_handle();
-        auto loc_nodes = _slots[loc_handle].nodes;
-        if (std::find(loc_nodes.begin(),loc_nodes.end(), a_nodename) == loc_nodes.end())
-        {
-            loc_nodes.push_back(a_nodename);
-            //LOG("AddHideNode({},{})",a_actor->GetName(),a_nodename);
-            return true;
-        }
-        else
-        {
-            //LOG("AddHideNode({},{}) - Node already present, skipping",a_actor->GetName(),a_nodename);
-            return false;
-        }
+        loc_node->AsNode()->local.scale = 0.00f;
+        return true;
     }
     return false;
 }
@@ -161,14 +211,7 @@ bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_no
 bool DeviousDevices::NodeHider::RemoveHideNode(RE::Actor* a_actor, std::string a_nodename)
 {
     if (a_actor == nullptr) return false;
-    
-    auto loc_handle = a_actor->GetHandle().native_handle();
-    if (_slots.find(loc_handle) == _slots.end())
-    {
-        LOG("Actor {} have no hiden nodes",a_actor->GetName());
-        return false;
-    }
-    
+        
     RE::NiNode* loc_thirdpersonNode = a_actor->Get3D(false)->AsNode();
     
     if (loc_thirdpersonNode == nullptr) return false;
@@ -176,22 +219,8 @@ bool DeviousDevices::NodeHider::RemoveHideNode(RE::Actor* a_actor, std::string a
     RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(a_nodename);
     if (loc_node != nullptr)
     {
-        if (std::find(_slots[loc_handle].nodes.begin(),_slots[loc_handle].nodes.end(), a_nodename) != _slots[loc_handle].nodes.end())
-        {
-            _slots[loc_handle].nodes.erase(std::find(_slots[loc_handle].nodes.begin(),_slots[loc_handle].nodes.end(), a_nodename));
             loc_node->AsNode()->local.scale = 1.00f;
             return true;
-        }
     }
     return false;
-}
-
-void DeviousDevices::HideWeapons(PAPYRUSFUNCHANDLE, RE::Actor* a_actor)
-{
-    NodeHider::GetSingleton()->HideWeapons(a_actor);
-}
-
-void DeviousDevices::ShowWeapons(PAPYRUSFUNCHANDLE, RE::Actor* a_actor)
-{
-    NodeHider::GetSingleton()->ShowWeapons(a_actor);
 }

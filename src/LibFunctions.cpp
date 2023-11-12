@@ -20,8 +20,17 @@ void DeviousDevices::LibFunctions::Setup()
 
         auto loc_kwlockable = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x003894,"Devious Devices - Assets.esm"));
         auto loc_kwplug     = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x003331,"Devious Devices - Assets.esm"));
-        if (loc_kwlockable != nullptr)  _rdkw.push_back(loc_kwlockable);
-        if (loc_kwplug != nullptr)      _rdkw.push_back(loc_kwplug);
+
+        if (loc_kwlockable  != nullptr) _rdkw.push_back(loc_kwlockable);
+        if (loc_kwplug      != nullptr) _rdkw.push_back(loc_kwplug);
+
+        _hbkw = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x05226C,"Devious Devices - Integration.esm"));  //zad_DeviousHeavyBondage
+
+        auto loc_ddanimationfaction = static_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x029567,"Devious Devices - Integration.esm"));  //dd animation faction
+        auto loc_slanimationfaction = static_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x00E50F,"SexLab.esm"));  //sexlab animation faction
+
+        if (loc_ddanimationfaction != nullptr) _animationfactions.push_back(loc_ddanimationfaction);
+        if (loc_slanimationfaction != nullptr) _animationfactions.push_back(loc_slanimationfaction);
 
         LOG("LibFunctions::Setup() - Installed")
         _installed = true;
@@ -82,12 +91,32 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
                 {
                     return loc_device->deviceInventory;
                 }
-                else if (!loc_device)
+                else if (loc_device == nullptr)
                 {
-                    WARN("Could not find device unit for device {:08X}",loc_deviceRD->GetFormID())
+                    WARN("Could not find device unit for device {:08X} because of db error, or because device is of legacy type",loc_deviceRD->GetFormID())
                 }
             }
         }
     }
     return nullptr;
+}
+
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetHandRestrain(RE::Actor* a_actor)
+{
+    RE::TESObjectARMO* loc_res = GetWornDevice(a_actor,_hbkw,true);
+    if (a_actor != nullptr)
+    {
+        LOG("GetHandRestrain({}) - res = {}",a_actor->GetName(),loc_res ? loc_res->GetName() : "NONE")
+    }
+    return loc_res;
+}
+
+bool DeviousDevices::LibFunctions::IsAnimating(RE::Actor* a_actor)
+{
+    if (a_actor == nullptr) return false;
+    for (auto&& it : _animationfactions)
+    {
+        if ((it != nullptr) && a_actor->IsInFaction(it)) return true;
+    }
+    return false;
 }

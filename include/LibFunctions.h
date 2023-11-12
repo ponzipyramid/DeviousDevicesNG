@@ -11,11 +11,14 @@ namespace DeviousDevices
         void Setup();
         std::vector<RE::TESObjectARMO*> GetDevices(RE::Actor* a_actor, int a_mode, bool a_worn);
         RE::TESObjectARMO* GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy);
-
+        RE::TESObjectARMO* GetHandRestrain(RE::Actor* a_actor);
+        bool IsAnimating(RE::Actor* a_actor);
     private:
         bool _installed = false;
-        std::vector<RE::BGSKeyword*> _idkw;
-        std::vector<RE::BGSKeyword*> _rdkw;
+        std::vector<RE::BGSKeyword*>    _idkw;
+        std::vector<RE::BGSKeyword*>    _rdkw;
+        RE::BGSKeyword*                 _hbkw;
+        std::vector<RE::TESFaction*>    _animationfactions;
     };
 
     inline std::vector<RE::TESObjectARMO*> GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn)
