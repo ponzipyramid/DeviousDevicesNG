@@ -466,12 +466,12 @@ EndFunction
 
 ; Removes a device in a given slot by providing a keyword.
 Bool Function UnlockDeviceByKeyword(actor akActor, keyword zad_DeviousDevice, bool destroyDevice = false)
-	Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)					
-	Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
-	if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
-		return true
-	EndIf
-	return false
+    Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)
+    Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
+    if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
+        return true
+    EndIf
+    return false
 EndFunction
 
 ; Remove quest device from actor. To make sure the removal is legit this will work only if the keyword passed to the function in the RemovalToken parameter is present on the item. Standard DD and ZAP keywords will not be accepted. 

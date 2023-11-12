@@ -233,32 +233,31 @@ namespace DeviousDevices
         std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
 
-        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) 
+        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* a_id)
         {
-            if (!item) return nullptr;
-            const auto loc_formId = item->GetFormID();
-            return _devicesByInventory.count(loc_formId) ? _devicesByInventory[loc_formId] : nullptr;
+            if (!a_id) return nullptr;
+            const RE::FormID loc_formId = a_id->GetFormID();
+            return _devicesByInventory[loc_formId];
         }
 
-        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) 
+        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* a_rd)
         {
-            if (!item) return nullptr;
-            const auto loc_formId = item->GetFormID();
-            return _devicesByRendered.count(loc_formId) ? _devicesByRendered[loc_formId] : nullptr;
+            if (!a_rd) return nullptr;
+            const RE::FormID loc_formId = a_rd->GetFormID();
+            return _devicesByRendered[loc_formId];
         }
 
-        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 
+        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool a_manip) 
         {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return;
-            auto pair = std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID());
-            if (manip)  _manipulated.insert(pair);
-            else        _manipulated.erase(pair);
+            if (a_manip)  _manipulated.insert({a_actor->GetFormID(), a_inv->GetFormID()});
+            else          _manipulated.erase({a_actor->GetFormID(), a_inv->GetFormID()});
         }
 
         inline bool GetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv) const
         {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return false;
-            return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID())); 
+            return _manipulated.contains({a_actor->GetFormID(), a_inv->GetFormID()}); 
         }
 
         DeviceUnit EmptyDeviceUnit;

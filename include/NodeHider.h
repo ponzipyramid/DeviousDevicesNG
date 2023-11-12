@@ -15,9 +15,8 @@ namespace DeviousDevices
         {
         public:
             bool                        enabled     = true;
-            std::vector<RE::NiNode*>    nodes;
+            std::vector<std::string>    nodes;
             float                       timer       = 0.0f;
-            bool operator==(const NodeHiderSlot& a_other);
         };
 
         #ifdef NH_IMPARMHIDER
@@ -53,7 +52,7 @@ namespace DeviousDevices
         bool RemoveHideNode(RE::Actor* a_actor, std::string a_nodename);
 
     private:
-        std::map<RE::Actor*,NodeHiderSlot> _slots;
+        std::map<uint32_t,NodeHiderSlot> _slots;
     };
 
     //papyrus interface
