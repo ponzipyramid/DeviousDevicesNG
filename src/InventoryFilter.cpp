@@ -88,22 +88,22 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     auto loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
 
     // == Gag check
-    bool loc_needgagcheck = false;
-    if (a_item->Is(RE::FormType::Ingredient)) //remove all ingredients
-    {
-        loc_needgagcheck = true;
-    }
-    else if (a_item->Is(RE::FormType::AlchemyItem)) //remove all food and potions (which are not poisons)
-    {
-        RE::AlchemyItem* loc_alchitem = a_item->As<RE::AlchemyItem>();
-        if (!loc_alchitem->IsPoison()) loc_needgagcheck = true;
-    }
-    if (loc_needgagcheck && ActorHasBlockingGag(a_actor)) 
-    {
-        if (loc_invMenu.get()) {
-            RE::DebugNotification("You can't eat or drink while wearing this gag.");
+    if (loc_invMenu.get()) {
+        bool loc_needgagcheck = false;
+        if (a_item->Is(RE::FormType::Ingredient)) //remove all ingredients
+        {
+            loc_needgagcheck = true;
         }
-        return true;
+        else if (a_item->Is(RE::FormType::AlchemyItem)) //remove all food and potions (which are not poisons)
+        {
+            RE::AlchemyItem* loc_alchitem = a_item->As<RE::AlchemyItem>();
+            if (!loc_alchitem->IsPoison()) loc_needgagcheck = true;
+        }
+        if (loc_needgagcheck && ActorHasBlockingGag(a_actor))
+        {
+            RE::DebugNotification("You can't eat or drink while wearing this gag.");
+            return true;
+        }
     }
     
     if ((a_item->Is(RE::FormType::Spell) || a_item->Is(RE::FormType::Weapon) || a_item->Is(RE::FormType::Light) ||
