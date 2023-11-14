@@ -89,12 +89,15 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(ApplyExpression,true);
     REGISTERPAPYRUSFUNC(GetExpression,true);
     REGISTERPAPYRUSFUNC(ResetExpression,true);
-    REGISTERPAPYRUSFUNC(FactionsToPreset,true);
-    REGISTERPAPYRUSFUNC(ApplyPhonemsFaction,true);
+    REGISTERPAPYRUSFUNC(UpdateGagExpression,true);
+    REGISTERPAPYRUSFUNC(RegisterGagType,true);
+    REGISTERPAPYRUSFUNC(RegisterDefaultGagType,true);
+    REGISTERPAPYRUSFUNC(ResetGagExpression,true);
 
     //hider
-    REGISTERPAPYRUSFUNC(RebuildSlotMask,true);
-    REGISTERPAPYRUSFUNC(FilterMask,true);
+    REGISTERPAPYRUSFUNC(SyncSetting,true);
+    REGISTERPAPYRUSFUNC(SetActorStripped,true);
+    REGISTERPAPYRUSFUNC(IsActorStripped,true);
 
     //node hider
     REGISTERPAPYRUSFUNC(HideWeapons,true);

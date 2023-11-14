@@ -445,13 +445,6 @@ Bool Function UnlockDevice(actor akActor, armor deviceInventory, armor deviceRen
 				akActor.RemoveFromFaction(zadGagPanelFaction)
 			EndIf
 		EndIf
-		if akActor != playerref && akActor.GetActorBase().IsUnique() && (rDevice.HasKeyword(zad_DeviousSuit) && !akActor.WornHasKeyword(zad_DeviousHeavyBondage)) || (rDevice.HasKeyword(zad_DeviousHeavyBondage) && !akActor.WornHasKeyword(zad_DeviousSuit))
-			Outfit OriginalOutfit = StorageUtil.GetFormValue(akActor.GetActorBase(), "zad_OriginalOutfit") As Outfit
-			If OriginalOutfit
-				akActor.SetOutfit(OriginalOutfit, false)
-			EndIf
-			StorageUtil.UnSetFormValue(akActor.GetActorBase(), "zad_OriginalOutfit")
-		endIf		
 		UnsetStoredDevice(akActor, kw)		
 		SendDeviceRemovalEvent(LookupDeviceType(zad_DeviousDevice), akActor)
 		SendDeviceRemovedEventVerbose(deviceInventory, kw, akActor)		
@@ -473,12 +466,12 @@ EndFunction
 
 ; Removes a device in a given slot by providing a keyword.
 Bool Function UnlockDeviceByKeyword(actor akActor, keyword zad_DeviousDevice, bool destroyDevice = false)
-	Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)					
-	Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
-	if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
-		return true
-	EndIf
-	return false
+    Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)
+    Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
+    if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
+        return true
+    EndIf
+    return false
 EndFunction
 
 ; Remove quest device from actor. To make sure the removal is legit this will work only if the keyword passed to the function in the RemovalToken parameter is present on the item. Standard DD and ZAP keywords will not be accepted. 
@@ -2327,10 +2320,6 @@ EndFunction
 
 Function ApplyGagEffect(actor akActor)
     ExpLibs.ApplyGagEffect(akActor)
-EndFunction
-
-Function ApplyGagEffect_v2(actor akActor,Int[] apGagExp,Faction[] apGagModFactions)
-    ExpLibs.ApplyGagEffect_v2(akActor,apGagExp,apGagModFactions)
 EndFunction
 
 Function RemoveGagEffect(actor akActor)

@@ -15,9 +15,8 @@ namespace DeviousDevices
         {
         public:
             bool                        enabled     = true;
-            std::vector<RE::NiNode*>    nodes;
+            std::vector<std::string>    nodes;
             float                       timer       = 0.0f;
-            bool operator==(const NodeHiderSlot& a_other);
         };
 
         #ifdef NH_IMPARMHIDER
@@ -43,20 +42,26 @@ namespace DeviousDevices
         void ShowWeapons(RE::Actor* a_actor);
 
         void Setup();
-
-        void Update(const float &a_delta);
-        bool ValidateActor(RE::Actor* a_actor);
-
+        void Update();
     protected:
-
+        bool ActorIsValid(RE::Actor* a_actor) const;
+        bool ShouldHideWeapons(RE::Actor* a_actor) const;
         bool AddHideNode(RE::Actor* a_actor, std::string a_nodename);
         bool RemoveHideNode(RE::Actor* a_actor, std::string a_nodename);
 
     private:
-        std::map<RE::Actor*,NodeHiderSlot> _slots;
+        bool _installed = false;
+        std::vector<uint32_t> _lastupdatestack;
     };
 
     //papyrus interface
-    void HideWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor);
-    void ShowWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor);
+    inline void HideWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor)
+    {
+        //NodeHider::GetSingleton()->HideWeapons(a_actor);
+    }
+
+    inline void ShowWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor)
+    {
+        //NodeHider::GetSingleton()->ShowWeapons(a_actor);
+    }
 }

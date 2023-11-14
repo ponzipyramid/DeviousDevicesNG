@@ -11,8 +11,8 @@ bool function hasAnyWeaponEquipped(actor a)
 	return true
 EndFunction
 
-function stripweapons(actor a, bool unequiponly = true)		
-	int i = 2	
+function stripweapons(actor a, bool unequiponly = true)
+	int i = 2
 	Spell spl
 	Weapon weap
 	Armor sh
@@ -20,27 +20,27 @@ function stripweapons(actor a, bool unequiponly = true)
 		i -= 1
 		if i == 0
 			Utility.Wait(1.0) 
-		EndIf	
+		EndIf
 		spl = a.getEquippedSpell(1)
 		if spl
-			a.unequipSpell(spl, 1)			
-		endIf			
+			a.unequipSpell(spl, 1)
+		endIf
 		weap = a.GetEquippedWeapon(true)
 		if weap 
-			a.unequipItem(weap, false, true)									
-		endIf			
+			a.unequipItem(weap, false, true)
+		endIf
 		sh = a.GetEquippedShield()
-		if sh 
-			a.unequipItem(sh, false, true)									
-		endIf				
+		if sh
+			a.unequipItem(sh, false, true)
+		endIf
 		spl = a.getEquippedSpell(0)
-		if spl 
-			a.unequipSpell(spl, 0)			
+		if spl
+			a.unequipSpell(spl, 0)
 		endIf
 		weap = a.GetEquippedWeapon(false)
-		if weap 			
-			a.unequipItem(weap, false, true)									
-		endIf		
+		if weap
+			a.unequipItem(weap, false, true)
+		endIf
 	EndWhile
 endfunction
 

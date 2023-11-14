@@ -2,9 +2,10 @@
 #include "Hooks.h"
 #include "Hider.h"
 #include "NodeHider.h"
-#include "UpdateHook.h"
+#include "UpdateManager.h"
 #include "DeviceReader.h"
 #include "Settings.h"
+#include "LibFunctions.h"
 #include <stddef.h>
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
@@ -66,11 +67,13 @@ namespace {
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
+                        DeviousDevices::LibFunctions::GetSingleton()->Setup();
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         DeviousDevices::InventoryFilter::GetSingleton()->Setup();
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        DeviousDevices::UpdateHook::GetSingleton()->Setup();
+                        DeviousDevices::UpdateManager::GetSingleton()->Setup();
+                        DeviousDevices::ExpressionManager::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was

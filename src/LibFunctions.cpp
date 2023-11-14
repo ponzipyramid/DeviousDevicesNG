@@ -2,75 +2,121 @@
 
 SINGLETONBODY(DeviousDevices::LibFunctions)
 
+void DeviousDevices::LibFunctions::Setup()
+{
+    if (!_installed)
+    {
+        RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
+
+        if (loc_datahandler == nullptr) 
+        {
+            LOG("LibFunctions::Setup() - loc_datahandler = NULL -> cant setup!")
+            return;
+        }
+
+        auto loc_kwid = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x02B5F0,"Devious Devices - Integration.esm"));
+        if (loc_kwid != nullptr) _idkw.push_back(loc_kwid);
+
+
+        auto loc_kwlockable = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x003894,"Devious Devices - Assets.esm"));
+        auto loc_kwplug     = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x003331,"Devious Devices - Assets.esm"));
+
+        if (loc_kwlockable  != nullptr) _rdkw.push_back(loc_kwlockable);
+        if (loc_kwplug      != nullptr) _rdkw.push_back(loc_kwplug);
+
+        _hbkw = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x05226C,"Devious Devices - Integration.esm"));  //zad_DeviousHeavyBondage
+
+        auto loc_ddanimationfaction = static_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x029567,"Devious Devices - Integration.esm"));  //dd animation faction
+        auto loc_slanimationfaction = static_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x00E50F,"SexLab.esm"));  //sexlab animation faction
+
+        if (loc_ddanimationfaction != nullptr) _animationfactions.push_back(loc_ddanimationfaction);
+        if (loc_slanimationfaction != nullptr) _animationfactions.push_back(loc_slanimationfaction);
+
+        LOG("LibFunctions::Setup() - Installed")
+        _installed = true;
+    }
+
+}
+
 std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Actor* a_actor, int a_mode, bool a_worn)
 {
     std::vector<RE::TESObjectARMO*> loc_res;
     if (a_actor == nullptr) return loc_res;
 
-    if (a_worn)
+    RE::Actor::InventoryItemMap loc_inv = a_actor->GetInventory([this,a_mode](RE::TESBoundObject& a_obj)
     {
-        for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
+        switch (a_mode)
         {
-            RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
-            if (loc_deviceRD != nullptr)
+        case 0: //inventory devices
+            return a_obj.IsArmor() && a_obj.HasKeywordInArray(_idkw,false); 
+        case 1: //render devices
+            return a_obj.IsArmor() && a_obj.HasKeywordInArray(_rdkw,false);
+        default:  //error mode
+            return false;
+        }
+    });
+
+    for (auto&& [i_obj, i_item] : loc_inv)
+    {
+        if (i_obj != nullptr && ((!a_worn) || ((i_item.second != nullptr) && (i_item.second->IsWorn()))))
+        {
+            if ((i_obj->As<RE::TESObjectARMO>() != nullptr))
             {
-                
-                if (auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD))
-                {
-                    if (a_mode == 0) loc_res.push_back(loc_device->deviceInventory);
-                    else loc_res.push_back(loc_device->deviceRendered);
-                }
+                if (a_mode == 0) loc_res.push_back(i_obj->As<RE::TESObjectARMO>());
+                else loc_res.push_back(i_obj->As<RE::TESObjectARMO>());
             }
         }
     }
-    else
-    {
-        RE::Actor::InventoryItemMap loc_inv = a_actor->GetInventory();
-        for (auto&& it : loc_inv)
-        {
-            RE::TESBoundObject* loc_obj = it.first;
-            if ((loc_obj != nullptr) && loc_obj->IsArmor())
-            {
-                RE::TESObjectARMO* loc_deviceID = loc_obj->As<RE::TESObjectARMO>();
-                RE::TESObjectARMO* loc_deviceRD = DeviceReader::GetSingleton()->GetDeviceRender(loc_deviceID);
-                if ((loc_deviceID != nullptr) && (loc_deviceRD != nullptr))
-                {
-                    if (a_mode == 0) loc_res.push_back(loc_deviceID);
-                    else loc_res.push_back(loc_deviceRD);
-                }
-            }
-        }
-    }
+
     return loc_res;
 }
 
 RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy) {
     if ((a_actor == nullptr) || (a_kw == nullptr)) return nullptr;
-    for (uint32_t loc_mask = 0x00000001U; loc_mask != 0x80000000U ;loc_mask <<= 1U)
+
+    RE::Actor::InventoryItemMap loc_inv = a_actor->GetInventory([this](RE::TESBoundObject& a_obj)
     {
-        RE::TESObjectARMO* loc_deviceRD = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_mask));
-        if (loc_deviceRD != nullptr)
+        return a_obj.IsArmor() && a_obj.HasKeywordInArray(_rdkw,false);
+    });
+
+    for (auto&& [i_obj, i_item] : loc_inv)
+    {
+        if (i_obj != nullptr && (i_item.second != nullptr) && (i_item.second->IsWorn()))
         {
-            auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD);
-            LOG("GetWornDevice: before")
-            if (loc_device != nullptr && ((!a_fuzzy && loc_device->kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw))))
+            RE::TESObjectARMO* loc_deviceRD = i_obj->As<RE::TESObjectARMO>();
+            if (loc_deviceRD != nullptr)
             {
-                LOG("GetWornDevice: inside")
-                return loc_device->deviceInventory;
+                auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD);
+                if (loc_device && ((!a_fuzzy && loc_device->kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw))))
+                {
+                    return loc_device->deviceInventory;
+                }
+                else if (loc_device == nullptr)
+                {
+                    WARN("Could not find device unit for device {:08X} because of db error, or because device is of legacy type",loc_deviceRD->GetFormID())
+                }
             }
         }
     }
     return nullptr;
 }
 
-std::vector<RE::TESObjectARMO*> DeviousDevices::GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn)
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetHandRestrain(RE::Actor* a_actor)
 {
-    LOG("GetDevices called")
-    return LibFunctions::GetSingleton()->GetDevices(a_actor,a_mode,a_worn);
+    RE::TESObjectARMO* loc_res = GetWornDevice(a_actor,_hbkw,true);
+    if (a_actor != nullptr)
+    {
+        LOG("GetHandRestrain({}) - res = {}",a_actor->GetName(),loc_res ? loc_res->GetName() : "NONE")
+    }
+    return loc_res;
 }
 
-RE::TESObjectARMO* DeviousDevices::GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw,
-                                                 bool a_fuzzy) {
-    LOG("GetWornDevice called")
-    return LibFunctions::GetSingleton()->GetWornDevice(a_actor, a_kw, a_fuzzy);
+bool DeviousDevices::LibFunctions::IsAnimating(RE::Actor* a_actor)
+{
+    if (a_actor == nullptr) return false;
+    for (auto&& it : _animationfactions)
+    {
+        if ((it != nullptr) && a_actor->IsInFaction(it)) return true;
+    }
+    return false;
 }
