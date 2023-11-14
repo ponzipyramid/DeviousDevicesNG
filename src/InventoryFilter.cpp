@@ -113,8 +113,8 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         if (loc_invMenu.get()) 
         {
             RE::DebugNotification("You can't eat or drink while wearing this gag.");
+            return true;
         }
-        return true;
     }
 
     // == Equip check
