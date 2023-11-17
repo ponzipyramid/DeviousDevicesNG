@@ -2,6 +2,7 @@
 #include "UI.h"
 #include "Settings.h"
 #include <articuno/archives/ryml/ryml.h>
+#include "Config.h"
 
 using namespace DeviousDevices;
 using namespace articuno::ryml;
@@ -428,7 +429,8 @@ void DeviceReader::LoadDB() {
     LOG("=== Building database DONE - Size = {}",_database.size())
     CLOG("Database loaded! Size = {}",_database.size())
 
-    #if (DD_PRINTDB == 1U)
+   if (ConfigManager::GetSingleton()->GetVariable<int>("Main.iPrintDB") == 1)
+   {
         for (auto&& it : _database) 
         {
             LOG("Database entry: 0x{:08X} = 0x{:08X} ({})",
@@ -438,7 +440,7 @@ void DeviceReader::LoadDB() {
             LOG("\tMod stack size = {:2}",it.second.history.size())
             for (size_t i = 0; i < it.second.history.size(); i++) LOG("\t0x{:02X} - {}",i,it.second.history[i].deviceMod->name)
         }
-    #endif
+   }
 }
 
 bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor) const

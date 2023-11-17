@@ -6,6 +6,7 @@
 #include "DeviceReader.h"
 #include "Settings.h"
 #include "LibFunctions.h"
+#include "Config.h"
 #include <stddef.h>
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
@@ -67,6 +68,7 @@ namespace {
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
                                                            // active.
+                        DeviousDevices::ConfigManager::GetSingleton()->Setup();
                         DeviousDevices::LibFunctions::GetSingleton()->Setup();
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         DeviousDevices::InventoryFilter::GetSingleton()->Setup();

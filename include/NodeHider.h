@@ -25,18 +25,7 @@ namespace DeviousDevices
         #endif
 
         //https://wiki.beyondskyrim.org/wiki/Arcane_University:Nifskope_Weapons_Setup
-        const std::vector<std::string> WeaponNodes = 
-        {
-            "QUIVER",
-            "SHIELD",
-            "WeaponAxe",
-            "WeaponBack",
-            "WeaponBow",
-            "WeaponDagger",
-            "WeaponMace",
-            "WeaponStaff",
-            "WeaponSword"
-        };
+        
 
         void HideWeapons(RE::Actor* a_actor);
         void ShowWeapons(RE::Actor* a_actor);
@@ -52,6 +41,7 @@ namespace DeviousDevices
     private:
         bool _installed = false;
         std::vector<uint32_t> _lastupdatestack;
+        std::vector<std::string> _WeaponNodes;
     };
 
     //papyrus interface
