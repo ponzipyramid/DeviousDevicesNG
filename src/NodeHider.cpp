@@ -144,12 +144,6 @@ void DeviousDevices::NodeHider::Update()
                               loc_addedactors.begin());
     loc_addedactors.resize(loc_it3-loc_addedactors.begin());
 
-    LOG("NodeHider::Update() - loc_currentactors = {}",loc_currentactors.size())
-    LOG("NodeHider::Update() - loc_lastactors = {}",loc_lastactors.size())
-    LOG("NodeHider::Update() - loc_samectors = {}",loc_samectors.size())
-    LOG("NodeHider::Update() - loc_addedactors = {}",loc_addedactors.size())
-    LOG("NodeHider::Update() - loc_removedactors = {}",loc_removedactors.size())
-
     //remove weapon node hider from removed actors
     for (auto&& it : loc_removedactors)
     {
@@ -193,7 +187,7 @@ bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const
 bool DeviousDevices::NodeHider::ShouldHideWeapons(RE::Actor* a_actor) const
 {
     if (!ActorIsValid(a_actor)) return false;
-    return LibFunctions::GetSingleton()->IsAnimating(a_actor) || (LibFunctions::GetSingleton()->GetHandRestrain(a_actor) != nullptr);
+    return LibFunctions::GetSingleton()->IsAnimating(a_actor) || (LibFunctions::GetSingleton()->IsBound(a_actor));
 }
 
 bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_nodename)

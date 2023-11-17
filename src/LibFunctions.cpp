@@ -74,40 +74,108 @@ std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Act
 RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy) {
     if ((a_actor == nullptr) || (a_kw == nullptr)) return nullptr;
 
-    RE::Actor::InventoryItemMap loc_inv = a_actor->GetInventory([this](RE::TESBoundObject& a_obj)
-    {
-        return a_obj.IsArmor() && a_obj.HasKeywordInArray(_rdkw,false);
-    });
+    //LOG("LibFunctions::GetWornDevice({},{},{}) called",a_actor->GetName(),a_kw->GetFormEditorID(),a_fuzzy)
 
-    for (auto&& [i_obj, i_item] : loc_inv)
+    RE::TESObjectARMO* loc_res = nullptr;
+    auto loc_visitor = WornVisitor([this,&loc_res,a_kw,a_fuzzy](RE::InventoryEntryData* a_entry)
     {
-        if (i_obj != nullptr && (i_item.second != nullptr) && (i_item.second->IsWorn()))
+        #undef GetObject
+        //LOG("LibFunctions::GetWornDevice() - Visited = {} {:08X}",a_entry->GetDisplayName(),a_entry->GetObject()->GetFormID())
+
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor())
         {
-            RE::TESObjectARMO* loc_deviceRD = i_obj->As<RE::TESObjectARMO>();
-            if (loc_deviceRD != nullptr)
+            loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+        }
+
+        if (loc_armor != nullptr && loc_armor->HasKeywordInArray(_rdkw,false))
+        {
+            auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_armor);
+            if (loc_device && ((!a_fuzzy && loc_device->kwd == a_kw) || (a_fuzzy && loc_armor->HasKeyword(a_kw))))
             {
-                auto loc_device = DeviceReader::GetSingleton()->LookupDeviceByRendered(loc_deviceRD);
-                if (loc_device && ((!a_fuzzy && loc_device->kwd == a_kw) || (a_fuzzy && loc_deviceRD->HasKeyword(a_kw))))
-                {
-                    return loc_device->deviceInventory;
-                }
-                else if (loc_device == nullptr)
-                {
-                    WARN("Could not find device unit for device {:08X} because of db error, or because device is of legacy type",loc_deviceRD->GetFormID())
-                }
+                loc_res = loc_device->deviceInventory;
+                //LOG("LibFunctions::GetWornDevice - Worn device found, res = {} {:08X}",loc_device->GetName(),loc_device->GetFormID())
+                return RE::BSContainer::ForEachResult::kStop;
+            }
+            else if (loc_device == nullptr)
+            {
+                WARN("Could not find device unit for device {:08X} because of db error, or because device is of legacy type",loc_armor->GetFormID())
+                return RE::BSContainer::ForEachResult::kStop;
+            }
+            else
+            {
+                return RE::BSContainer::ForEachResult::kContinue;
             }
         }
-    }
-    return nullptr;
+        else
+        {
+            return RE::BSContainer::ForEachResult::kContinue;
+        }
+    });
+
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+
+    return loc_res;
 }
 
 RE::TESObjectARMO* DeviousDevices::LibFunctions::GetHandRestrain(RE::Actor* a_actor)
 {
-    RE::TESObjectARMO* loc_res = GetWornDevice(a_actor,_hbkw,true);
-    if (a_actor != nullptr)
+    return GetWornDevice(a_actor,_hbkw,true);
+}
+
+bool DeviousDevices::LibFunctions::IsBound(RE::Actor* a_actor) const
+{
+    return WornHasKeyword(a_actor,_hbkw);
+}
+
+bool DeviousDevices::LibFunctions::WornHasKeyword(RE::Actor* a_actor, RE::BGSKeyword* a_kw) const
+{
+    if ((a_actor == nullptr) || (a_kw == nullptr)) return false;
+
+    //LOG("LibFunctions::WornHasKeyword({},{}) called",a_actor->GetName(),a_kw->GetFormEditorID())
+
+    bool loc_res = false;
+    auto loc_visitor = WornVisitor([this,&loc_res,a_kw](RE::InventoryEntryData* a_entry)
     {
-        LOG("GetHandRestrain({}) - res = {}",a_actor->GetName(),loc_res ? loc_res->GetName() : "NONE")
-    }
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr && loc_armor->HasKeyword(a_kw))
+        {
+            loc_res = true;
+            return RE::BSContainer::ForEachResult::kStop;
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+    return loc_res;
+}
+
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor, int a_mask) const
+{
+    if (a_actor == nullptr) return nullptr;
+
+    //LOG("LibFunctions::GetWornArmor({},{:08X}) called",a_actor->GetName(),a_mask)
+
+    RE::TESObjectARMO* loc_res = nullptr;
+    auto loc_visitor = WornVisitor([this,&loc_res,a_mask](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr && ((int)loc_armor->GetSlotMask() & a_mask))
+        {
+            loc_res = loc_armor;
+            return RE::BSContainer::ForEachResult::kStop;
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
     return loc_res;
 }
 

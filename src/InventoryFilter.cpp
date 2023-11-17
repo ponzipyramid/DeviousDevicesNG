@@ -2,6 +2,7 @@
 #include "Settings.h"
 #include "UI.h"
 #include "Config.h"
+#include "LibFunctions.h"
 
 SINGLETONBODY(DeviousDevices::InventoryFilter)
 
@@ -21,7 +22,8 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 
     if (loc_slot < 0) return nullptr;
 
-    const auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_slot));
+    const auto loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor,loc_slot);
+    //const auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_slot));
 
     if (loc_armor != nullptr && loc_armor->HasKeyword(kwd)) 
     {

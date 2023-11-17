@@ -1,6 +1,7 @@
 #include "Hider.h"
 
 #include <xbyak/xbyak.h>
+#include <LibFunctions.h>
 
 SINGLETONBODY(DeviousDevices::DeviceHiderManager)
 
@@ -124,42 +125,28 @@ const DeviousDevices::HiderSetting& DeviousDevices::DeviceHiderManager::GetSetti
 
 bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
 {
-    //_CheckResult = true;
-
     std::unordered_map<RE::TESObjectARMO*,uint32_t> loc_devices;
 
-    const auto inv = a_actor->GetInventory([](RE::TESBoundObject& a_object) 
+    auto loc_visitor = WornVisitor([this,&loc_devices](RE::InventoryEntryData* a_entry)
     {
-        return a_object.IsArmor();
-    },false);
+        #undef GetObject
+        //LOG("DeviceHiderManager::ProcessHider() - Visited = {} {:08X}",a_entry->GetDisplayName(),a_entry->GetObject()->GetFormID())
 
-    for (const auto& [item, invData] : inv) 
-    {
-        const auto& [count, entry] = invData;
-        if (count > 0 && entry->IsWorn()) 
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor())
         {
-            const auto armor = item->As<RE::TESObjectARMO>();
-            if (armor && IsDevice(armor)) 
-            {
-                loc_devices[armor] = (uint32_t)armor->GetSlotMask();
-                //loc_devices.push_back({armor,(uint32_t)armor->GetSlotMask()});
-            }
+            loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
         }
-    }
 
+        if (loc_armor != nullptr && IsDevice(loc_armor))
+        {
+            loc_devices[loc_armor] = (uint32_t)loc_armor->GetSlotMask();
+        }
+        return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
 
-    ////LOG("DeviceHiderManager::ProcessHider({:08X},{}) called",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
-    //std::array<std::thread,2> loc_threads = 
-    //{
-    //    std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,0,15,loc_devices),
-    //    std::thread(&DeviceHiderManager::CheckHiderSlots,this,a_armor,16,31,loc_devices)
-    //};
-    //
-    //for (auto&& it : loc_threads) it.join();
-
-    //LOG("DeviceHiderManager::ProcessHider res = {}",_CheckResult)
-
-    //LOG("DeviceHiderManager::ProcessHider({:08X},{}) called - result = {}",a_armor->GetFormID(),a_actor->GetName(),_CheckResult)
     return CheckHiderSlots(a_armor,0,31,loc_devices);
 }
 
@@ -259,11 +246,7 @@ bool DeviousDevices::DeviceHiderManager::CheckNPCArmor(RE::TESObjectARMO* a_armo
         return false;
     case sBoundNakedNPCs:
         //check if actor is bound. If not, then continue
-        const RE::TESObjectARMO* loc_device = a_actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kModChestPrimary);
-        if ((loc_device != nullptr) && loc_device->HasKeywordString("zad_DeviousHeavyBondage"))
-        {
-            return false;
-        }
+        return !LibFunctions::GetSingleton()->IsBound(a_actor);
 
         // TODO
         //const RE::ObjectRefHandle loc_furniture = a_actor->GetOccupiedFurniture();
