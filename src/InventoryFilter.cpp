@@ -1,6 +1,8 @@
 #include "InventoryFilter.h"
 #include "Settings.h"
 #include "UI.h"
+#include "Config.h"
+#include "LibFunctions.h"
 
 SINGLETONBODY(DeviousDevices::InventoryFilter)
 
@@ -20,7 +22,8 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 
     if (loc_slot < 0) return nullptr;
 
-    const auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_slot));
+    const auto loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor,loc_slot);
+    //const auto loc_armor = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(loc_slot));
 
     if (loc_armor != nullptr && loc_armor->HasKeyword(kwd)) 
     {
@@ -98,6 +101,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 
     // == Gag check
     bool loc_needgagcheck = false;
+
     if (a_item->Is(RE::FormType::Ingredient)) //remove all ingredients
     {
         loc_needgagcheck = true;
@@ -108,13 +112,16 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         if (!loc_alchitem->IsPoison()) loc_needgagcheck = true;
     }
 
-    if (loc_needgagcheck && ActorHasBlockingGag(a_actor)) 
+    bool loc_checkinventory = false;
+    if (ConfigManager::GetSingleton()->GetVariable<int>("InventoryFilter.iGagFilterModeMenu") == 1)
     {
-        if (loc_invMenu.get()) 
-        {
-            RE::DebugNotification("You can't eat or drink while wearing this gag.");
-            return true;
-        }
+        loc_checkinventory = true;
+    }
+
+    if (loc_needgagcheck && (!loc_checkinventory || loc_invMenu.get()) && ActorHasBlockingGag(a_actor)) 
+    {
+        RE::DebugNotification("You can't eat or drink while wearing this gag.");
+        return true;
     }
 
     // == Equip check

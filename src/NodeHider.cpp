@@ -1,6 +1,7 @@
 #include "NodeHider.h"
 #include "LibFunctions.h"
 #include "Hider.h"
+#include "Config.h"
 
 SINGLETONBODY(DeviousDevices::NodeHider)
 
@@ -50,7 +51,7 @@ void DeviousDevices::NodeHider::HideWeapons(RE::Actor* a_actor)
 
     //LOG("HideWeapons called for {}",a_actor->GetName());
 
-    for (auto&& it : WeaponNodes)
+    for (auto&& it : _WeaponNodes)
     {
         AddHideNode(a_actor,it);
     }
@@ -64,7 +65,7 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 
     //LOG("ShowWeapons called for {}",a_actor->GetName());
 
-    for (auto&& it : WeaponNodes)
+    for (auto&& it : _WeaponNodes)
     {
         RemoveHideNode(a_actor,it);
     }
@@ -75,6 +76,7 @@ void DeviousDevices::NodeHider::Setup()
     if (!_installed)
     {
         LOG("NodeHider::Setup() - Installed")
+        _WeaponNodes = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asWeaponNodes");
         _installed = true;
     }
 }
@@ -94,7 +96,10 @@ void DeviousDevices::NodeHider::Update()
     }
 
     uint16_t loc_updated = 0;
-    RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, 3000, [&](RE::TESObjectREFR& a_ref) {
+
+    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance");
+
+    RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
         auto loc_refBase    = a_ref.GetBaseObject();
         auto loc_actor      = a_ref.As<RE::Actor>();
         if (ShouldHideWeapons(loc_actor) && (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
@@ -139,12 +144,6 @@ void DeviousDevices::NodeHider::Update()
                               loc_addedactors.begin());
     loc_addedactors.resize(loc_it3-loc_addedactors.begin());
 
-    LOG("NodeHider::Update() - loc_currentactors = {}",loc_currentactors.size())
-    LOG("NodeHider::Update() - loc_lastactors = {}",loc_lastactors.size())
-    LOG("NodeHider::Update() - loc_samectors = {}",loc_samectors.size())
-    LOG("NodeHider::Update() - loc_addedactors = {}",loc_addedactors.size())
-    LOG("NodeHider::Update() - loc_removedactors = {}",loc_removedactors.size())
-
     //remove weapon node hider from removed actors
     for (auto&& it : loc_removedactors)
     {
@@ -188,7 +187,7 @@ bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const
 bool DeviousDevices::NodeHider::ShouldHideWeapons(RE::Actor* a_actor) const
 {
     if (!ActorIsValid(a_actor)) return false;
-    return LibFunctions::GetSingleton()->IsAnimating(a_actor) || (LibFunctions::GetSingleton()->GetHandRestrain(a_actor) != nullptr);
+    return LibFunctions::GetSingleton()->IsAnimating(a_actor) || (LibFunctions::GetSingleton()->IsBound(a_actor));
 }
 
 bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_nodename)
