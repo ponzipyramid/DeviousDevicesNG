@@ -11,7 +11,9 @@ int[] Property ShiftCache Auto
 
 int Property SlotMask Auto ; Avoid repeated lookups
 
-int Property Setting Auto Hidden
+int Property Setting = 1 Auto Hidden
+
+bool _init = false
 
 ;; [30]: 0x00000001
 ;; [31]: 0x00000002
@@ -44,10 +46,20 @@ int Property Setting Auto Hidden
 ;; [58]: 0x10000000
 ;; [59]: 0x20000000
 
-; Event OnInit()
-; 	Maintenance()
-; EndEvent
+Event OnInit()
+    RegisterForSingleUpdate(5.0)
+EndEvent
 
+Event OnUpdate()
+    SetDefaultSlotMasks()
+    _Init = true
+EndEvent
+
+Function Validate()
+    if !_Init
+        OnUpdate()
+    endif
+EndFunction
 
 Function SetDefaultSlotMasks()
     SlotMaskFilters = new int[128]
@@ -62,10 +74,10 @@ Function SetDefaultSlotMasks()
     HideEquipment(32, 56) ; When slot 32 is equipped, hide slot 56 (Chastity Bra's).
     HideEquipment(32, 58) ; When slot 32 is equipped, hide slot 58 (Corsets).
     HideEquipment(32, 49) ; When slot 32 is equipped, hide slot 49 (Belts).
+    HideEquipment(49, 52) ; When slot 49 (belt) is equipped, hide slot 52 (SoS).
     
     SyncSetting()
 EndFunction
-
 
 Function HideEquipment(int slot1, int slot2)
     if slot1 < 30 || slot1 > 61 || slot2 < 30 || slot2 > 61
@@ -92,51 +104,10 @@ EndFunction
 
 Function Maintenance()
     SyncSetting()
-    ;libs.Log("DevicesUnderneath::Maintenance()")
-    ;zad_DeviceHiderAA = zad_DeviceHider.GetNthArmorAddon(0)
-    ;if SlotMaskFilters.length <= 0 || ShiftCache.Length <= 0
-    ;    SetDefaultSlotMasks()
-    ;EndIf
-    ;UpdateDeviceHiderSlot()
-    
-    ;TODO - Call here to native, and also add it in MCM
 EndFunction
 
 Function ApplySlotmask(Actor akActor)
-    ;akActor.EquipItem(zad_DeviceHider, true, true)
-    ;Int loc_slot = ZadNativeFunctions.FilterMask(akActor, SlotMask)
-    ;if loc_slot != zad_DeviceHiderAA.GetSlotMask()
-    ;    if loc_slot < 0
-    ;        loc_slot = 0
-    ;    EndIf
-    ;    zad_DeviceHiderAA.SetSlotMask(loc_slot)
-    ;    akActor.UnEquipItem(zad_DeviceHider, false, true)
-    ;    akActor.EquipItem(zad_DeviceHider, true, true)
-    ;EndIf
 EndFunction
 
 Function RebuildSlotmask(actor akActor)
-    ;SlotMaskUsage = ZadNativeFunctions.RebuildSlotMask(akActor,SlotMaskFilters)
-    ;SlotMask = SlotMaskUsage[128]
-    ;ApplySlotMask(akActor)
-EndFunction
-
-Bool _HiderMutex = False
-Function StartHiderMutex()
-    if _HiderMutex ;destroy thread, no need to do the action multiple times
-        return
-    endif
-    _HiderMutex = True
-EndFunction
-
-Function EndHiderMutex()
-    _HiderMutex = False
-EndFunction
-
-Function UpdateDeviceHiderSlot()
-    ;StartHiderMutex()
-    ;int slot = libs.Config.DevicesUnderneathSlot - 1
-    ;zad_DeviceHider.SetSlotMask(Math.LeftShift(1, slot))
-    ;RebuildSlotMask(libs.PlayerRef)
-    ;EndHiderMutex()
 EndFunction

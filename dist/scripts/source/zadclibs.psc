@@ -88,17 +88,10 @@ Actor Function GetUser(ObjectReference FurnitureDevice)
 	return None
 EndFunction
 
-; Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
-; This is the old signature of the function, and is needed for backwards compatibility
-Bool Function IsValidActor(Actor akActor)
-    return IsValidActorV2(akActor, OverrideSceneCheck = false)
-EndFunction
-
 ; Checks if an actor can be used for furniture placement
 ; Caution: Sometimes even otherwise valid actors cannot be used at a given moment, e.g. when they are animating or running a scene (which frequently happens during sandboxing)! 
 ; Your code wants to be able to handle that and provide fallbacks etc.
-; This is the new signature of the function, and is needed for backwards compatibility
-Bool Function IsValidActorV2(Actor akActor, bool OverrideSceneCheck = false)
+Bool Function IsValidActor(Actor akActor, bool OverrideSceneCheck = false)
 	If !akActor || akActor.IsChild() || akActor.IsDisabled() || akActor.IsDead() || akActor.IsGhost()
 		return False
 	EndIf
@@ -206,18 +199,11 @@ Bool Function SetTimedRelease(ObjectReference FurnitureDevice, Int Hours, Bool R
 	EndIf
 EndFunction
 
-; Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
-; This is the old signature of the function, and is needed for backwards compatibility
-Bool Function LockActor(Actor akActor, ObjectReference FurnitureDevice, Package OverridePose = None)
-	return LockActorV2(akActor, FurnitureDevice, OverridePose, AllowActorInScene = false)
-EndFunction
-
 ; Locks an actor into a given device, using a specific pose, if given one, or a random one, if not.
 ; This function will fail if called for an invalid or busy actor. If you aren't sure, use IsValidActor() BEFORE calling this function!
 ; Return True if the actor got placed in the device, false otherwise.
-; This is the new signature of the function, and is needed for backwards compatibility
-Bool Function LockActorV2(Actor akActor, ObjectReference FurnitureDevice, Package OverridePose = None, Bool AllowActorInScene = false)
-	If !IsValidActorV2(akActor, AllowActorInScene) || !GetIsFurnitureDevice(FurnitureDevice)
+Bool Function LockActor(Actor akActor, ObjectReference FurnitureDevice, Package OverridePose = None, Bool AllowActorInScene = false)
+	If !IsValidActor(akActor, AllowActorInScene) || !GetIsFurnitureDevice(FurnitureDevice)
 		return False
 	Endif
 	zadcFurnitureScript fs = FurnitureDevice as zadcFurnitureScript
@@ -410,15 +396,8 @@ bool Function IsAnimating(actor akActor)
 	return (akActor.IsInFaction(libs.zadAnimatingFaction) || akActor.IsInFaction(libs.Sexlab.AnimatingFaction))
 EndFunction
 
-; Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
-; This is the old signature of the function, and is needed for backwards compatibility
-Function FurnitureAction()
-	return FurnitureActionV2(AllowActorInScene = false)
-EndFunction
-
 ; Player interactions - locking and releasing NPCs
-; This is the new signature of the function, and is needed for backwards compatibility
-Function FurnitureActionV2(Bool AllowActorInScene = false)
+Function FurnitureAction(Bool AllowActorInScene = false)
 	ObjectReference objr = Game.GetCurrentCrosshairRef()
 	Actor act = objr As Actor	
 	If act && act == Game.GetPlayer()		
@@ -450,7 +429,7 @@ Function FurnitureActionV2(Bool AllowActorInScene = false)
 		EndIf
 		If !SelectedUser				
 			; Make him or her the new target
-			if !IsValidActorV2(act,AllowActorInScene)
+			if !IsValidActor(act,AllowActorInScene)
 				debug.notification(act.GetLeveledActorBase().GetName() + " is invalid or busy.")				
 				return
 			EndIf
@@ -478,7 +457,7 @@ Function FurnitureActionV2(Bool AllowActorInScene = false)
 				return
 			Else
 				; clicked on a different actor: Check if they are valid, remove package from previous target when they are, and make them the new target.
-				if !IsValidActorV2(act, AllowActorInScene)
+				if !IsValidActor(act, AllowActorInScene)
 					debug.notification(act.GetLeveledActorBase().GetName() + " is invalid or busy.")				
 					return
 				EndIf

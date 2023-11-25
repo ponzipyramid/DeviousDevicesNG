@@ -322,7 +322,7 @@ Function SetupSlotMasks()
 	SlotMasks[9] = "Calves (38)"
 	SlotMasks[10] = "Shield (39)"
 	SlotMasks[11] = "Tail (40)"
-	SlotMasks[12] = "Device Hider + Long Hair (41)"
+	SlotMasks[12] = "Long Hair (41)"
 	SlotMasks[13] = "Circlet (42)"
 	SlotMasks[14] = "Ears (43)"
 	SlotMasks[15] = "Gags (44)"
@@ -606,7 +606,7 @@ Event OnOptionMenuOpen(int option)
 		SetMenuDialogDefaultIndex(DevicesUnderneathSlotDefault)
     elseif option == DeviceHiderSettingOID
 		SetMenuDialogOptions(hiderSetting)
-		SetMenuDialogStartIndex(1)
+		SetMenuDialogStartIndex(libs.DevicesUnderneath.Setting)
 		SetMenuDialogDefaultIndex(1)
 	EndIf
 	int i = 0
@@ -679,7 +679,6 @@ Event OnOptionMenuAccept(int option, int index)
         SendModEvent("zadBlindfoldEffectUpdate")
 	ElseIf option == DevicesUnderneathSlotOID
 		DevicesUnderneathSlot = index
-		libs.DevicesUnderneath.UpdateDeviceHiderSlot()
 		SetMenuOptionValue(DevicesUnderneathSlotOID, SlotMasks[DevicesUnderneathSlot])
     elseif option == DeviceHiderSettingOID
 		libs.DevicesUnderneath.Setting = index
@@ -692,6 +691,7 @@ Event OnOptionMenuAccept(int option, int index)
 			int value = 0
 			value = Math.LeftShift(1, (index - 1))
 			libs.Log("Index:" + index + " = " + value + "/" + SlotMaskValues.find(value))
+            libs.DevicesUnderneath.Validate()
 			libs.DevicesUnderneath.SlotMaskFilters[i] = value
 			SetMenuOptionValue(option, SlotMasks[index])
             libs.DevicesUnderneath.SyncSetting()
@@ -1379,6 +1379,7 @@ Event OnOptionSliderAccept(int option, float value)
 EndEvent
 
 int function LookupSlotMask(int i)
+    libs.DevicesUnderneath.Validate()
 	int value = (libs.DevicesUnderneath.SlotMaskFilters[i])
 	if value == 0
 		return 0

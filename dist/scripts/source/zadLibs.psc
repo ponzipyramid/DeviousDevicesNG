@@ -466,12 +466,12 @@ EndFunction
 
 ; Removes a device in a given slot by providing a keyword.
 Bool Function UnlockDeviceByKeyword(actor akActor, keyword zad_DeviousDevice, bool destroyDevice = false)
-    Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)
-    Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
-    if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
-        return true
-    EndIf
-    return false
+	Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)					
+	Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
+	if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
+		return true
+	EndIf
+	return false
 EndFunction
 
 ; Remove quest device from actor. To make sure the removal is legit this will work only if the keyword passed to the function in the RemovalToken parameter is present on the item. Standard DD and ZAP keywords will not be accepted. 
@@ -1033,7 +1033,7 @@ EndFunction
 ;====================
 ; Camera Manipulation
 ;====================
-bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool permitRestrictive=false)
+bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool permitRestrictive=false, Bool AllowActorInScene = false)
 	Log("StartThirdPersonAnimation("+akActor.GetLeveledActorBase().GetName()+","+animation+")")
 	bool[] ret = new bool[2]
 	if IsAnimating(akActor)
@@ -1778,11 +1778,7 @@ endFunction
 ;=====================REWORKED EXPRESSION SYSTEM=====================
 ;====================================================================
 ; Vib Expressions
-Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false)
-	if !IsValidActor(akActor)
-		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
-		return
-	EndIf
+Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false, Bool AllowActorInScene = false)
 	if !expression
 		Log("ApplyExpression(): Expression is none.")
 		return
@@ -1797,11 +1793,7 @@ Function ResetExpression(actor akActor, sslBaseExpression expression)
 EndFunction
 
 ;reworked function ApplyExpression to use expression priority
-Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false)
-	if !IsValidActor(akActor)
-		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
-		return
-	EndIf
+Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false, Bool AllowActorInScene = false)
 	if !expression
 		Log("ApplyExpression(): Expression is none.")
 		return
@@ -1879,23 +1871,23 @@ string Function BuildPostVibrationString(actor akActor, int vibStrength, bool vP
 	EndIf
 EndFunction
 
-; This is the old signature of the function, and is needed for backwards compatibility
-int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false)
-    return VibrateEffectV2(akActor, vibStrength, duration, teaseOnly, silent, AllowActorInScene = false)
-EndFunction
-
 ;;; Returns number of times actor came from this effect, -1 if it edged them, or -2 if an event was already ongoing.
 ; This function has suffered from feature creep pretty hard since it's inception, and is in need of refactoring. Still works, but very messy.
 ; Will split this up to a small library in the future. Will document this properly at that point.
-; V2 This one allows more fine-tuned control by allowing callers to consider actors in scenes as valid
-int Function VibrateEffectV2(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false, Bool AllowActorInScene = false)
+; Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
+; This is the old signature of the function, and is needed for backwards compatibility
+int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false)
+    return VibrateEffectAdv(akActor, vibStrength, duration, teaseOnly, silent, AllowActorInScene = false)
+EndFunction
+
+; This is the new signature of the function, and is needed for backwards compatibility
+int Function VibrateEffectAdv(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false, Bool AllowActorInScene = false)
 	; don't execute this function if the character is in combat. Nobody in their right mind starts playing with herself if there are people trying to kill her.
 	; Events that otherwise would call this function are responsible for providing alternatives as desired.
-	if akActor == PlayerRef && playerref.IsInCombat()
-		Log("Vibrate effect called on Player, but player is in combat. Don't start VibrateEffect.")
+	if playerref.IsInCombat() 
 		return -2
 	Endif
-	if !IsValidActorV2(akActor, AllowActorInScene)
+	if !IsActorValid(akActor, AllowActorInScene)
 		Log("Actor is not valid. Don't start VibrateEffect.")
 		return -2
 	EndIf
@@ -1993,7 +1985,7 @@ int Function VibrateEffectV2(actor akActor, int vibStrength, int duration, bool 
 	EndIf
 
 	; Main Loop
-	While IsValidActorV2(akActor, AllowActorInScene) && timeVibrated < GetVibrating(akActor) && (akActor.WornHasKeyword(zad_DeviousPlug) || akActor.WornHasKeyword(zad_DeviousPiercingsNipple) || akActor.WornHasKeyword(zad_DeviousPiercingsVaginal))
+	While IsActorValid(akActor, AllowActorInScene) && timeVibrated < GetVibrating(akActor) && (akActor.WornHasKeyword(zad_DeviousPlug) || akActor.WornHasKeyword(zad_DeviousPiercingsNipple) || akActor.WornHasKeyword(zad_DeviousPiercingsVaginal))
 		; Log("XXX VibrateEffect: Begin Tick "+timeVibrated)
 		if (timeVibrated % 2) == 0 ; Make noise
 			; Log("XXX VibrateEffect: Making Noise")
@@ -2089,7 +2081,7 @@ int Function VibrateEffectV2(actor akActor, int vibStrength, int duration, bool 
 
 	Sound.StopInstance(vsID)
 	Sound.StopInstance(msID)
-	if IsValidActorV2(akActor, AllowActorInScene)
+	if IsActorValid(akActor, AllowActorInScene)
 		; Reset expression
 		ResetExpressionRaw(akActor, 15)
 	EndIf
@@ -2212,13 +2204,13 @@ Function SpellCastVibrate(Actor akActor, Form tmp)
 	EndIf
 EndFunction
 
+;Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
 ; This is the old signature of the function, and is needed for backwards compatibility
 Bool Function IsValidActor(Actor akActor)
-    return IsValidActorV2(akActor, OverrideSceneCheck = false)
+    return IsActorValid(akActor, OverrideSceneCheck = false)
 EndFunction
-
-; This one allows more fine-tuned control by allowing callers to consider actors in scenes as valid
-Bool Function IsValidActorV2(Actor akActor, bool OverrideSceneCheck = false)
+; This is the new signature of the function, and is needed for backwards compatibility
+Bool Function IsActorValid(Actor akActor, bool OverrideSceneCheck = false)
 	If !akActor.Is3DLoaded() || akActor.IsChild() || akActor.IsDisabled() || akActor.IsDead()
 		return False
 	EndIf 	

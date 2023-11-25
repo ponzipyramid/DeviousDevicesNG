@@ -171,15 +171,15 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
     if !Utility.IsInMenuMode() && !((akBaseObject as Weapon) || (akBaseObject as Spell) || (akBaseObject as Light))
         Return
     EndIf
-    If akActor.WornHasKeyword(libs.zad_DeviousHeavyBondage) && ((akBaseObject as Weapon) || (akBaseObject as Spell) || (akBaseObject as Light) || ((akBaseObject as Armor) && (!isDeviousDevice(akBaseObject) && !isStrapOn(akBaseObject) && (akBaseObject != zad_DeviceHider))))
-        If UI.IsMenuOpen("InventoryMenu")
-            libs.notify("You can't equip this with your hands tied!")
-        Endif        
-        libs.playerRef.UnequipItem(akBaseObject)
-        while libs.hasAnyWeaponEquipped(libs.playerRef)
-            libs.stripweapons(libs.playerRef)
-        EndWhile
-    Endif
+    ;If akActor.WornHasKeyword(libs.zad_DeviousHeavyBondage) && ((akBaseObject as Weapon) || (akBaseObject as Spell) || (akBaseObject as Light) || ((akBaseObject as Armor) && (!isDeviousDevice(akBaseObject) && !isStrapOn(akBaseObject))))
+    ;    If UI.IsMenuOpen("InventoryMenu")
+    ;        libs.notify("You can't equip this with your hands tied!")
+    ;    Endif        
+    ;    libs.playerRef.UnequipItem(akBaseObject)
+    ;    while libs.hasAnyWeaponEquipped(libs.playerRef)
+    ;        libs.stripweapons(libs.playerRef)
+    ;    EndWhile
+    ;Endif
 EndEvent
  
  
