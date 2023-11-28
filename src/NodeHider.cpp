@@ -97,7 +97,7 @@ void DeviousDevices::NodeHider::Update()
 
     uint16_t loc_updated = 0;
 
-    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance");
+    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",3000);
 
     RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
         auto loc_refBase    = a_ref.GetBaseObject();

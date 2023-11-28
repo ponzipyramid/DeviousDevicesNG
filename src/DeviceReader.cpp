@@ -429,7 +429,7 @@ void DeviceReader::LoadDB() {
     LOG("=== Building database DONE - Size = {}",_database.size())
     CLOG("Database loaded! Size = {}",_database.size())
 
-   if (ConfigManager::GetSingleton()->GetVariable<int>("Main.iPrintDB") == 1)
+   if (ConfigManager::GetSingleton()->GetVariable<int>("Main.iPrintDB",0) == 1)
    {
         for (auto&& it : _database) 
         {

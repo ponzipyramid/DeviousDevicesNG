@@ -35,7 +35,7 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 
 bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj)
 {
-    if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj == nullptr ||
+    if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj == nullptr || obj->GetName() == "" ||
         a_actor->GetFormID() != 20 || UI::GetMenu<RE::BarterMenu>().get())
         return false;
 
@@ -113,7 +113,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     }
 
     bool loc_checkinventory = false;
-    if (ConfigManager::GetSingleton()->GetVariable<int>("InventoryFilter.iGagFilterModeMenu") == 1)
+    if (ConfigManager::GetSingleton()->GetVariable<int>("InventoryFilter.iGagFilterModeMenu",1) == 1)
     {
         loc_checkinventory = true;
     }

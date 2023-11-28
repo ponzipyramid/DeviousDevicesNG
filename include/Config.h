@@ -13,9 +13,10 @@ namespace DeviousDevices
     public:
         void Setup();
 
-        template<typename T> T GetVariable(std::string a_name) const;
+        template<typename T> T GetVariable(std::string a_name, T a_def) const;
         template<typename T> std::vector<T> GetArray(std::string a_name, std::string a_sep = ",") const;
     private:
+        bool _loaded = false;
         boost::property_tree::ptree _config;
         mutable std::unordered_map<std::string,void*> _catche;
         std::vector<std::string> GetArrayRaw(std::string a_name, std::string a_sep = ",") const;
