@@ -7,10 +7,17 @@ void DeviousDevices::LibFunctions::Setup()
     RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
 
     // TODO: FLM/KID events, and preload Faction forms in Setup and merge with _zadAnimatingFaction, _sexlabAnimatingFaction
-    _busyFactionsListForm = handler->LookupForm<RE::BGSListForm>(0x08CE36, "Devious Devices - Integration.esm"); // new zad_BusyFactions Form List
+    _busyFactionsListForm = handler->LookupForm<RE::BGSListForm>(0x08CE36, "Devious Devices - Integration.esm"); // new empty zad_BusyFactions Form List
 
-    _zadAnimatingFaction = handler->LookupForm<RE::TESFaction>(0x029567, "Devious Devices - Integration.esm");
-    _sexlabAnimatingFaction = handler->LookupForm<RE::TESFaction>(0x00E50F, "SexLab.esm");
+    auto zadAnimatingFaction = handler->LookupForm<RE::TESFaction>(0x029567, "Devious Devices - Integration.esm"); // zadAnimatingFaction
+    if (zadAnimatingFaction) {
+        _busyFactions.push_back(zadAnimatingFaction);
+    }
+
+    auto sexLabAnimatingFaction = handler->LookupForm<RE::TESFaction>(0x00E50F, "SexLab.esm");  // SexLabAnimatingFaction
+    if (sexLabAnimatingFaction) {
+        _busyFactions.push_back(sexLabAnimatingFaction);
+    }
 }
 
 std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Actor* a_actor, int a_mode, bool a_worn)
@@ -75,29 +82,35 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
 }
 
 bool DeviousDevices::LibFunctions::isActorBusy(RE::Actor* a_actor) {
-    // 1. Check General Factions
-    if ((_zadAnimatingFaction && a_actor->IsInFaction(_zadAnimatingFaction)) ||
-        (_sexlabAnimatingFaction && a_actor->IsInFaction(_sexlabAnimatingFaction))) {
-        LOG("isActorBusy: Actor {} in General Animation Factions", a_actor->GetName())
+    // 1. Sit/Mount; TODO: sitstate?
+    if (a_actor->IsOnMount()) {
+        LOG("isActorBusy: Actor {} on Mount or sit", a_actor->GetName())
         return true;
     }
 
+    // 2. Check _busyFactions
+    for (const RE::TESFaction* faction : _busyFactions) {
+        if (a_actor->IsInFaction(faction)) {
+            LOG("isActorBusy: Actor {} in Animation Faction {}", a_actor->GetName(), faction->GetName())
+            return true;
+        }
+    }
+
     // TODO: FLM/KID events, and preload Faction forms in Setup
-    // 2. Check _busyFactionsListForm
+    // 3. Check _busyFactionsListForm
     if (_busyFactionsListForm) {
         for (auto&& faction : _busyFactionsListForm->forms) {
-            if (faction->FORMTYPE == RE::FormType::Faction &&
+            if (faction->Is(RE::FormType::Faction) &&
                 a_actor->IsInFaction(static_cast<RE::TESFaction*>(faction))) {
                 LOG("isActorBusy: Actor {} in {} Factions", a_actor->GetName(), faction->GetName())
                 return true;
             }
         }
-
     }
 
-    // 3. Check Keywords ?
+    // 4. Check Keywords ?
 
-    // 4. Check Quests/Scenes ?
+    // 5. Check Quests/Scenes ?
 
     return false;
 }

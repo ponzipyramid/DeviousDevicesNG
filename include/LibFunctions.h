@@ -14,9 +14,9 @@ namespace DeviousDevices
         bool isActorBusy(RE::Actor* a_actor);
 
     private:
-        RE::BGSListForm* _busyFactionsListForm;
-        RE::TESFaction* _zadAnimatingFaction;
-        RE::TESFaction* _sexlabAnimatingFaction;
+        RE::BGSListForm* _busyFactionsListForm; // TODO: FLM/KID events for `SKSE::GetModCallbackEventSource()->AddEventSink`,
+                                                // and preload Faction forms in Setup and merge to `_busyFactions` (compatibility with FLM)
+        std::vector<RE::TESFaction*> _busyFactions;
     };
 
     std::vector<RE::TESObjectARMO*> GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn);

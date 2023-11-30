@@ -72,12 +72,12 @@ namespace {
                         DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
                         DeviousDevices::UpdateHook::GetSingleton()->Setup();
+                        DeviousDevices::LibFunctions::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
                     case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
-                        DeviousDevices::LibFunctions::GetSingleton()->Setup();
                         break;
                 }
             })) {
