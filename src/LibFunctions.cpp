@@ -2,6 +2,17 @@
 
 SINGLETONBODY(DeviousDevices::LibFunctions)
 
+void DeviousDevices::LibFunctions::Setup()
+{
+    RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
+
+    // TODO: FLM/KID events, and preload Faction forms in Setup and merge with _zadAnimatingFaction, _sexlabAnimatingFaction
+    _busyFactionsListForm = handler->LookupForm<RE::BGSListForm>(0x08CE36, "Devious Devices - Integration.esm"); // new zad_BusyFactions Form List
+
+    _zadAnimatingFaction = handler->LookupForm<RE::TESFaction>(0x029567, "Devious Devices - Integration.esm");
+    _sexlabAnimatingFaction = handler->LookupForm<RE::TESFaction>(0x00E50F, "SexLab.esm");
+}
+
 std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetDevices(RE::Actor* a_actor, int a_mode, bool a_worn)
 {
     std::vector<RE::TESObjectARMO*> loc_res;
@@ -63,6 +74,34 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
     return nullptr;
 }
 
+bool DeviousDevices::LibFunctions::isActorBusy(RE::Actor* a_actor) {
+    // 1. Check General Factions
+    if ((_zadAnimatingFaction && a_actor->IsInFaction(_zadAnimatingFaction)) ||
+        (_sexlabAnimatingFaction && a_actor->IsInFaction(_sexlabAnimatingFaction))) {
+        LOG("isActorBusy: Actor {} in General Animation Factions", a_actor->GetName())
+        return true;
+    }
+
+    // TODO: FLM/KID events, and preload Faction forms in Setup
+    // 2. Check _busyFactionsListForm
+    if (_busyFactionsListForm) {
+        for (auto&& faction : _busyFactionsListForm->forms) {
+            if (faction->FORMTYPE == RE::FormType::Faction &&
+                a_actor->IsInFaction(static_cast<RE::TESFaction*>(faction))) {
+                LOG("isActorBusy: Actor {} in {} Factions", a_actor->GetName(), faction->GetName())
+                return true;
+            }
+        }
+
+    }
+
+    // 3. Check Keywords ?
+
+    // 4. Check Quests/Scenes ?
+
+    return false;
+}
+
 std::vector<RE::TESObjectARMO*> DeviousDevices::GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn)
 {
     LOG("GetDevices called")
@@ -73,4 +112,10 @@ RE::TESObjectARMO* DeviousDevices::GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a
                                                  bool a_fuzzy) {
     LOG("GetWornDevice called")
     return LibFunctions::GetSingleton()->GetWornDevice(a_actor, a_kw, a_fuzzy);
+}
+
+bool DeviousDevices::zad_isActorBusy(PAPYRUSFUNCHANDLE, RE::Actor* a_actor)
+{
+    LOG("zad_isActorBusy called")
+    return LibFunctions::GetSingleton()->isActorBusy(a_actor);
 }

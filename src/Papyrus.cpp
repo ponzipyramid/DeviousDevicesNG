@@ -122,6 +122,7 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     //LibFunctions
     REGISTERPAPYRUSFUNC(GetDevices, true);
     REGISTERPAPYRUSFUNC(GetWornDevice, true);
+    REGISTERPAPYRUSFUNC(zad_isActorBusy, true);
 
     #undef REGISTERPAPYRUSFUNC
     return true;

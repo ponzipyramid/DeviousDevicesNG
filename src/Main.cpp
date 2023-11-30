@@ -4,6 +4,7 @@
 #include "NodeHider.h"
 #include "UpdateHook.h"
 #include "DeviceReader.h"
+#include "LibFunctions.h"
 #include "Settings.h"
 #include <stddef.h>
 
@@ -76,6 +77,7 @@ namespace {
                                                              // Data will be a boolean indicating whether the load was
                                                              // successful.
                     case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
+                        DeviousDevices::LibFunctions::GetSingleton()->Setup();
                         break;
                 }
             })) {

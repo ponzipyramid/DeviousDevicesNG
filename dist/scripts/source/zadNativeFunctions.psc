@@ -81,3 +81,4 @@ Armor[]  Function GetDevices(Actor akActor, int aiMode = 0, bool abWorn = False)
 
 ; Return worn device based on passed main keyword (set on equip script)
 Armor    Function GetWornDevice(Actor akActor, Keyword akKeyword, bool fuzzy = false)                   global native
+bool     Function zad_isActorBusy(Actor akActor)                                                        global native

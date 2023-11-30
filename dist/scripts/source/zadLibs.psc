@@ -2277,7 +2277,7 @@ bool Function IsAnimating(actor akActor)
 	if (akActor.GetSitState() != 0) || akActor.IsOnMount()
 		return True
 	endif
-	return (akActor.IsInFaction(zadAnimatingFaction) || akActor.IsInFaction(Sexlab.AnimatingFaction))
+	return zad_isActorBusy(akActor) ;(akActor.IsInFaction(zadAnimatingFaction) || akActor.IsInFaction(Sexlab.AnimatingFaction))
 EndFunction
 
 ; Set DD's actor animating status.
