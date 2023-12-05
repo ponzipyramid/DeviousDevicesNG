@@ -2769,26 +2769,24 @@ string Function LookupDeviceType(keyword kwd)
 EndFunction
 
 function strip(actor a, bool animate = false)
-	Spell spl
-	Weapon weap
-	Armor sh
-	Ammo amm
-	Form frm		
-	while hasAnyWeaponEquipped(a)
-		stripweapons(a)
-	EndWhile
-	frm = a.GetWornForm(0x00001000) ; circlet
-	if frm && !frm.HasKeyWordString("SexLabNoStrip")
+    Spell spl
+    Weapon weap
+    Armor sh
+    Ammo amm
+    Form frm
+    stripweapons(a)
+    frm = a.GetWornForm(0x00001000) ; circlet
+    if frm && !frm.HasKeyWordString("SexLabNoStrip")
         a.unequipItem(frm, abSilent = true)
     endif
     frm = a.GetWornForm(0x00000020) ; amulet
     if frm && !frm.HasKeyWordString("SexLabNoStrip")
         a.unequipItem(frm, abSilent = true)
     endif
-	If a.WornHasKeyWord(zad_DeviousHeavyBondage)
-		animate = false
-	EndIf
-	SexLab.StripActor(a, doanimate = animate, leadIn = false) 	
+    If a.WornHasKeyWord(zad_DeviousHeavyBondage)
+        animate = false
+    EndIf
+    SexLab.StripActor(a, doanimate = animate, leadIn = false) 	
 EndFunction
 
 bool function hasAnyWeaponEquipped(actor a)
@@ -2799,51 +2797,43 @@ bool function hasAnyWeaponEquipped(actor a)
 EndFunction
 
 function stripweapons(actor a, bool unequiponly = true)		
-	int i = 2
-	Spell spl
-	Weapon weap
-	Armor sh
-	While i > 0
-		i -= 1
-		if i == 0
-			Utility.Wait(1.0)
-		EndIf
-		spl = a.getEquippedSpell(1)
-		if spl
-			a.unequipSpell(spl, 1)
-		endIf
-		weap = a.GetEquippedWeapon(true)
-		if weap
-			a.unequipItem(weap, false, true)
-		endIf
-		sh = a.GetEquippedShield()
-		if sh
-			a.unequipItem(sh, false, true)
-		endIf
-		spl = a.getEquippedSpell(0)
-		if spl
-			a.unequipSpell(spl, 0)
-		endIf
-		weap = a.GetEquippedWeapon(false)
-		if weap
-			a.unequipItem(weap, false, true)
-		endIf
-	EndWhile
+    int i = 2
+    Spell spl
+    Form weap
+    Armor sh
+    spl = a.getEquippedSpell(1)
+    if spl
+        a.unequipSpell(spl, 1)
+    endIf
+    weap = a.GetEquippedObject(0)
+    if weap
+        a.unequipItem(weap, false, true)
+    endIf
+    sh = a.GetEquippedShield()
+    if sh
+        a.unequipItem(sh, false, true)
+    endIf
+    spl = a.getEquippedSpell(0)
+    if spl
+        a.unequipSpell(spl, 0)
+    endIf
+    weap = a.GetEquippedObject(1)
+    if weap
+        a.unequipItem(weap, false, true)
+    endIf
 endfunction
 
 Event StartBoundEffects(Actor akTarget)
 	if !akTarget.WornHasKeyword(zad_DeviousHeavyBondage) && !akTarget.WornHasKeyword(zad_DeviousHobbleSkirt) && !akTarget.WornHasKeyword(zad_DeviousPonyGear)
 		return
 	EndIf
-	while hasAnyWeaponEquipped(akTarget)
-		stripweapons(akTarget)
-	EndWhile
+	stripweapons(akTarget)
 	if akTarget != PlayerRef
 		BoundCombat.EvaluateAA(akTarget)
 		;BoundCombat.Apply_NPC_ABC(akTarget)
 		return
 	EndIf
-	Log("OnEffectStart(): Bound Effects")			
+	Log("OnEffectStart(): Bound Effects")
 	PlayBoundIdle()
 	RegisterForSingleUpdate(8.0)
 	if aktarget == PlayerRef
@@ -2852,14 +2842,14 @@ Event StartBoundEffects(Actor akTarget)
 EndEvent
 
 Event StopBoundEffects(Actor akTarget)
-	Log("OnEffectFinish(): Bound Effects")		
+	Log("OnEffectFinish(): Bound Effects")
 	;COMMENTED THAT OUT BECAUSE IdleForceDefaultState IS NOW SENT IN EVALUATE AA 	
 	;Debug.SendAnimationEvent(akTarget, "IdleForceDefaultState")	
 	if aktarget == PlayerRef
 		UnregisterForUpdate()
-		UpdateControls()			
+		UpdateControls()
 	EndIf	
-	BoundCombat.EvaluateAA(akTarget)	
+	BoundCombat.EvaluateAA(akTarget)
 EndEvent
 
 Event OnUpdate()
