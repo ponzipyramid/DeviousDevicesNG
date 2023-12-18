@@ -6,7 +6,7 @@
 #include "DeviceReader.h"
 #include "Settings.h"
 #include "LibFunctions.h"
-#include "Config.h"
+#include "Serialization.h"
 #include <stddef.h>
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
@@ -18,37 +18,33 @@ using namespace SKSE;
 using namespace SKSE::stl;
  
 namespace {
-#if (DD_LOGENABLED == 1U)
-    void InitializeLogging() {
-        auto loc_path = SKSE::log::log_directory();
-        if (!loc_path) 
-        {
-            report_and_fail("Unable to lookup SKSE logs directory.");
-        }
-        *loc_path += L"/DeviousDevicesNG.log";
-
-        std::shared_ptr<spdlog::logger> loc_log;
+    void InitializeLogging() 
+    {
+        auto logsFolder = SKSE::log::log_directory();
+        if (!logsFolder) SKSE::stl::report_and_fail("SKSE log_directory not provided, logs disabled.");
+        auto pluginName = SKSE::PluginDeclaration::GetSingleton()->GetName();
+        auto logFilePath = *logsFolder / "DeviousDevicesNG.log";
+        std::shared_ptr<spdlog::logger> loggerPtr;
         if (IsDebuggerPresent()) 
         {
-            loc_log = std::make_shared<spdlog::logger>("Global", std::make_shared<spdlog::sinks::msvc_sink_mt>());
+            loggerPtr = std::make_shared<spdlog::logger>("log", std::make_shared<spdlog::sinks::msvc_sink_mt>());
         } 
         else 
         {
-            loc_log = std::make_shared<spdlog::logger>(
-                "Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(loc_path->string(), true));
+            loggerPtr = std::make_shared<spdlog::logger>("log", std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true));
         }
-        loc_log->set_level(spdlog::level::from_str("info"));
-        loc_log->flush_on(spdlog::level::from_str("trace"));
-
-        spdlog::set_default_logger(std::move(loc_log));
-        spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
+        spdlog::set_default_logger(std::move(loggerPtr));
+        spdlog::set_level(spdlog::level::trace);
+        spdlog::flush_on(spdlog::level::trace);
+        DEBUG("Logging set - Log gfile = {}",logFilePath.string())
     }
-#endif
-    void InitializePapyrus() {
-        log::trace("Initializing Papyrus binding...");
+
+    void InitializePapyrus() 
+    {
+        //log::trace("Initializing Papyrus binding...");
         if (GetPapyrusInterface()->Register(DeviousDevices::RegisterFunctions)) 
         {
-            LOG("Papyrus functions bound.");
+            DEBUG("Papyrus functions bound.");
         } 
         else 
         {
@@ -56,9 +52,11 @@ namespace {
         }
     }
 
-    void InitializeMessaging() {
+    void InitializeMessaging() 
+    {
         const auto g_messaging = GetMessagingInterface();
         if (!g_messaging->RegisterListener([](MessagingInterface::Message* message) {
+                
                 switch (message->type) {
                     // Skyrim lifecycle events.
                     case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
@@ -67,8 +65,7 @@ namespace {
                     case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
                         break;
                     case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
-                                                           // active.
-                        DeviousDevices::ConfigManager::GetSingleton()->Setup();
+                                                           // active.  
                         DeviousDevices::LibFunctions::GetSingleton()->Setup();
                         DeviousDevices::DeviceReader::GetSingleton()->Setup();
                         DeviousDevices::InventoryFilter::GetSingleton()->Setup();
@@ -87,20 +84,28 @@ namespace {
             stl::report_and_fail("Unable to register message listener.");
         }
     }
+
+    void InitializeSerialization() {
+        DEBUG("Initializing cosave serialization...");
+        auto* loc_serde = SKSE::GetSerializationInterface();
+        loc_serde->SetUniqueID(_byteswap_ulong('DDNG'));
+        loc_serde->SetSaveCallback(DeviousDevices::OnGameSaved);
+        loc_serde->SetRevertCallback(DeviousDevices::OnRevert);
+        loc_serde->SetLoadCallback(DeviousDevices::OnGameLoaded);
+        DEBUG("Cosave serialization initialized.");
+    }
 }
 
-SKSEPluginLoad(const LoadInterface* skse) {
-#if (DD_LOGENABLED == 1U)
-    InitializeLogging();
-#endif
-    auto* plugin = PluginDeclaration::GetSingleton();
-    auto version = plugin->GetVersion();
-    LOG("{} {} is loading...", plugin->GetName(), version);
+SKSEPluginLoad(const LoadInterface* skse) 
+{
+    SKSE::Init(skse);
 
-    Init(skse);
+    InitializeLogging();
+    DeviousDevices::ConfigManager::GetSingleton()->Setup();
+
     InitializePapyrus();
     InitializeMessaging();
+    InitializeSerialization();
 
-    LOG("{} has finished loading.", plugin->GetName());
     return true;
 }

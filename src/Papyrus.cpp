@@ -99,10 +99,6 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(SetActorStripped,true);
     REGISTERPAPYRUSFUNC(IsActorStripped,true);
 
-    //node hider
-    REGISTERPAPYRUSFUNC(HideWeapons,true);
-    REGISTERPAPYRUSFUNC(ShowWeapons,true);
-
     //device reader
     REGISTERPAPYRUSFUNC(GetRenderDevice,true);
     REGISTERPAPYRUSFUNC(GetInventoryDevice,true);

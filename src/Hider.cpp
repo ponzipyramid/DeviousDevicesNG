@@ -9,12 +9,12 @@ void DeviousDevices::DeviceHiderManager::Setup()
 {
     if (!_setup)
     {
-        LOG("DeviceHiderManager::Setup()")
+        DEBUG("DeviceHiderManager::Setup()")
         RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
         if (loc_datahandler == nullptr) 
         {
-            LOG("DeviceHiderManager::Setup() - loc_datahandler = NULL -> cant setup!")
+            ERROR("DeviceHiderManager::Setup() - loc_datahandler = NULL -> cant setup!")
             return;
         }
 
@@ -77,7 +77,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
         if (dllHandle != NULL)
         {
             InitWornArmorDAV = ((fInitWornArmorDAV)(*((uint64_t*)hook.address() + 1)));
-            LOG("DeviceHiderManager::Setup() - DAV found - Copying original function -> {}",(uintptr_t)InitWornArmorDAV)
+            DEBUG("DeviceHiderManager::Setup() - DAV found - Copying original function -> {}",(uintptr_t)InitWornArmorDAV)
             _DAVInstalled = true;
         }
         else
@@ -146,7 +146,6 @@ bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor
         return RE::BSContainer::ForEachResult::kContinue;
     });
     a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
-
     return CheckHiderSlots(a_armor,0,31,loc_devices);
 }
 

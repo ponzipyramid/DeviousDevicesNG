@@ -11,10 +11,11 @@ void ConfigManager::Setup()
     {
         boost::property_tree::ini_parser::read_ini("Data\\skse\\plugins\\DeviousDevices.ini", _config);
         _loaded = true;
+        DEBUG("DeviousDevices.ini loaded succesfully")
     }
     catch( std::exception &ex )
     {
-        WARN("ERROR LOADING ini FILE: {}",ex.what())
+        ERROR("ERROR LOADING ini FILE: {}",ex.what())
         return;
     }
 
@@ -32,7 +33,7 @@ std::vector<std::string> ConfigManager::GetArrayRaw(std::string a_name, std::str
     }
     catch(...)
     {
-        WARN("Can't get config array {} - Returning empty array",a_name)
+        ERROR("Can't get config array {} - Returning empty array",a_name)
         loc_res = std::vector<std::string>();
     }
 
@@ -63,7 +64,7 @@ T ConfigManager::GetVariable(std::string a_name, T a_def) const
     }
     catch(...)
     {
-        WARN("Can't get config variable {} - Returning default value",a_name)
+        ERROR("Can't get config variable {} - Returning default value",a_name)
         loc_res = a_def;
     }
 
@@ -93,7 +94,7 @@ std::vector<T> ConfigManager::GetArray(std::string a_name, std::string a_sep) co
             }
             catch(...)
             {
-                WARN("Cant cast {} to {} - Using default value",it,typeid(T).name())
+                ERROR("Cant cast {} to {} - Using default value",it,typeid(T).name())
                 loc_res.push_back(T());
             }
         }

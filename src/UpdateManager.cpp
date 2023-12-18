@@ -19,9 +19,9 @@ void DeviousDevices::UpdateManager::Update(RE::Actor* a_actor, float a_delta)
     UpdateManager* loc_manager = UpdateManager::GetSingleton();
     if (a_actor == loc_player)
     {
-        if (!loc_manager->UpdateThread500) std::thread([loc_manager]
+        if (!loc_manager->UpdateThread1) std::thread([loc_manager]
         {
-            loc_manager->UpdateThread500 = true;
+            loc_manager->UpdateThread1 = true;
 
             //serialize task so it doesnt create race condition
             SKSE::GetTaskInterface()->AddTask([]
@@ -34,8 +34,8 @@ void DeviousDevices::UpdateManager::Update(RE::Actor* a_actor, float a_delta)
             });
 
             //wait
-            std::this_thread::sleep_for(std::chrono::milliseconds(500)); //wait 500ms before updating again
-            loc_manager->UpdateThread500 = false;
+            std::this_thread::sleep_for(std::chrono::milliseconds(ConfigManager::GetSingleton()->GetVariable<int>("UpdateThreads.iUpdateTime1",500))); //wait x ms before updating again
+            loc_manager->UpdateThread1 = false;
         }).detach();
 
     }

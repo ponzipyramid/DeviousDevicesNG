@@ -10,7 +10,7 @@ void DeviousDevices::LibFunctions::Setup()
 
         if (loc_datahandler == nullptr) 
         {
-            LOG("LibFunctions::Setup() - loc_datahandler = NULL -> cant setup!")
+            ERROR("LibFunctions::Setup() - loc_datahandler = NULL -> cant setup!")
             return;
         }
 
@@ -32,7 +32,7 @@ void DeviousDevices::LibFunctions::Setup()
         if (loc_ddanimationfaction != nullptr) _animationfactions.push_back(loc_ddanimationfaction);
         if (loc_slanimationfaction != nullptr) _animationfactions.push_back(loc_slanimationfaction);
 
-        LOG("LibFunctions::Setup() - Installed")
+        DEBUG("LibFunctions::Setup() - Installed")
         _installed = true;
     }
 

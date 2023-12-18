@@ -1,7 +1,6 @@
 #include "NodeHider.h"
 #include "LibFunctions.h"
 #include "Hider.h"
-#include "Config.h"
 
 SINGLETONBODY(DeviousDevices::NodeHider)
 
@@ -57,8 +56,6 @@ void DeviousDevices::NodeHider::HideWeapons(RE::Actor* a_actor)
     }
 }
 
-
-
 void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
@@ -75,7 +72,7 @@ void DeviousDevices::NodeHider::Setup()
 { 
     if (!_installed)
     {
-        LOG("NodeHider::Setup() - Installed")
+        DEBUG("NodeHider::Setup() - Installed")
         _WeaponNodes = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asWeaponNodes");
         _installed = true;
     }
@@ -83,6 +80,9 @@ void DeviousDevices::NodeHider::Setup()
 
 void DeviousDevices::NodeHider::Update()
 {
+    //check ini if node hider should be used
+    if (!ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true)) return;
+
     LOG("NodeHider::Update() - Updating...")
 
     static RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
@@ -171,6 +171,11 @@ void DeviousDevices::NodeHider::Update()
     }
 
     LOG("NodeHider::Update() - Node hider updated {} actors",loc_updated)
+}
+
+void DeviousDevices::NodeHider::Reload()
+{
+    _lastupdatestack.clear();
 }
 
 bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const

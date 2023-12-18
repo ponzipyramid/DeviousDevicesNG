@@ -2,6 +2,7 @@
 
 #include "NodeHider.h"
 #include "Expression.h"
+#include "Config.h"
 
 namespace DeviousDevices
 {
@@ -11,7 +12,7 @@ namespace DeviousDevices
     public:
         void Setup();
 
-        bool UpdateThread500 = false;
+        bool UpdateThread1 = false;
     private:
         bool _installed = false;
         static void Update(RE::Actor* a_actor, float a_delta);

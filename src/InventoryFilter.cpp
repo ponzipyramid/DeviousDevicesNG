@@ -1,7 +1,6 @@
 #include "InventoryFilter.h"
 #include "Settings.h"
 #include "UI.h"
-#include "Config.h"
 #include "LibFunctions.h"
 
 SINGLETONBODY(DeviousDevices::InventoryFilter)
@@ -86,9 +85,12 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor)
 bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item)
 {
     if ((a_actor == nullptr) || (a_item == nullptr)) return true;
-    
-    //item have no name -> most likely used internaly by other mod, and not equipped by player -> never filter it out
-    if (a_item->GetName() == "") return false;
+
+    auto loc_name = std::string(a_item->GetName());
+
+    // item have no name -> most likely used internaly by other mod, and not equipped by player -> never filter it out
+    // or is SMP object used by 3BA
+    if (loc_name == "" || (loc_name.find("3BBB SMP Body") != std::string::npos)) return false;
 
     RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
 
@@ -113,7 +115,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     }
 
     bool loc_checkinventory = false;
-    if (ConfigManager::GetSingleton()->GetVariable<int>("InventoryFilter.iGagFilterModeMenu",1) == 1)
+    if (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bGagFilterModeMenu",false) == 1)
     {
         loc_checkinventory = true;
     }

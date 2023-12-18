@@ -32,6 +32,7 @@ namespace DeviousDevices
 
         void Setup();
         void Update();
+        void Reload();
     protected:
         bool ActorIsValid(RE::Actor* a_actor) const;
         bool ShouldHideWeapons(RE::Actor* a_actor) const;
@@ -43,15 +44,4 @@ namespace DeviousDevices
         std::vector<uint32_t> _lastupdatestack;
         std::vector<std::string> _WeaponNodes;
     };
-
-    //papyrus interface
-    inline void HideWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor)
-    {
-        //NodeHider::GetSingleton()->HideWeapons(a_actor);
-    }
-
-    inline void ShowWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor)
-    {
-        //NodeHider::GetSingleton()->ShowWeapons(a_actor);
-    }
 }

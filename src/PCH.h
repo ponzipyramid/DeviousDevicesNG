@@ -107,20 +107,6 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/msvc_sink.h>
 
-#include <Switches.h>
-
-// Compatible declarations with other sample projects.
-#define DLLEXPORT __declspec(dllexport)
-
-#define PAPYRUSFUNCHANDLE RE::BSScript::Internal::VirtualMachine* a_vm, const RE::VMStackID a_stackID, RE::StaticFunctionTag*
-
-//print message to log file
-#define LOG(...)  {SKSE::log::info(__VA_ARGS__);}
-#define WARN(...)  {SKSE::log::warn(__VA_ARGS__);}
-
-//print message to console
-#define CLOG(...) {RE::ConsoleLog::GetSingleton()->Print((std::string("[DDNG] ") + std::format(__VA_ARGS__)).c_str());} 
-
 #define SINGLETONHEADER(cname)                          \
         public:                                         \
             cname(cname &) = delete;                    \
@@ -134,6 +120,23 @@
 #define SINGLETONBODY(cname)                            \
         cname * cname::_this = new cname;               \
         cname * cname::GetSingleton(){return _this;}
+
+#include <Switches.h>
+#include <Config.h>
+
+// Compatible declarations with other sample projects.
+#define DLLEXPORT __declspec(dllexport)
+
+#define PAPYRUSFUNCHANDLE RE::BSScript::Internal::VirtualMachine* a_vm, const RE::VMStackID a_stackID, RE::StaticFunctionTag*
+
+//print message to log file
+#define LOG(...)    { if (DeviousDevices::ConfigManager::GetSingleton()->GetVariable<int>("Main.iLogging",1) >= 2) SKSE::log::info(__VA_ARGS__);}
+#define WARN(...)   { if (DeviousDevices::ConfigManager::GetSingleton()->GetVariable<int>("Main.iLogging",1) >= 1) SKSE::log::warn(__VA_ARGS__);}
+#define ERROR(...)  { SKSE::log::error(__VA_ARGS__);}
+#define DEBUG(...)  { SKSE::log::debug(__VA_ARGS__);}
+
+//print message to console
+#define CLOG(...) {if(RE::ConsoleLog::GetSingleton() != nullptr) RE::ConsoleLog::GetSingleton()->Print((std::string("[DDNG] ") + std::format(__VA_ARGS__)).c_str());} 
 
 using namespace std::literals;
 using namespace REL::literals;
