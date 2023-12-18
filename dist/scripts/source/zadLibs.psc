@@ -1778,7 +1778,7 @@ endFunction
 ;=====================REWORKED EXPRESSION SYSTEM=====================
 ;====================================================================
 ; Vib Expressions
-Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false, Bool AllowActorInScene = false)
+Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false)
 	if !expression
 		Log("ApplyExpression(): Expression is none.")
 		return
@@ -1793,7 +1793,7 @@ Function ResetExpression(actor akActor, sslBaseExpression expression)
 EndFunction
 
 ;reworked function ApplyExpression to use expression priority
-Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false, Bool AllowActorInScene = false)
+Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false)
 	if !expression
 		Log("ApplyExpression(): Expression is none.")
 		return
@@ -1877,17 +1877,18 @@ EndFunction
 ; Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
 ; This is the old signature of the function, and is needed for backwards compatibility
 int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false)
-    return VibrateEffectAdv(akActor, vibStrength, duration, teaseOnly, silent, AllowActorInScene = false)
+    return VibrateEffectV2(akActor, vibStrength, duration, teaseOnly, silent, AllowActorInScene = false)
 EndFunction
 
-; This is the new signature of the function, and is needed for backwards compatibility
-int Function VibrateEffectAdv(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false, Bool AllowActorInScene = false)
+; V2 This one allows more fine-tuned control by allowing callers to consider actors in scenes as valid
+int Function VibrateEffectV2(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false, Bool AllowActorInScene = false)
 	; don't execute this function if the character is in combat. Nobody in their right mind starts playing with herself if there are people trying to kill her.
 	; Events that otherwise would call this function are responsible for providing alternatives as desired.
-	if playerref.IsInCombat() 
+	if akActor == PlayerRef && playerref.IsInCombat()
+        Log("Vibrate effect called on Player, but player is in combat. Don't start VibrateEffect.")
 		return -2
 	Endif
-	if !IsActorValid(akActor, AllowActorInScene)
+	if !IsValidActorV2(akActor, AllowActorInScene)
 		Log("Actor is not valid. Don't start VibrateEffect.")
 		return -2
 	EndIf
@@ -1985,7 +1986,7 @@ int Function VibrateEffectAdv(actor akActor, int vibStrength, int duration, bool
 	EndIf
 
 	; Main Loop
-	While IsActorValid(akActor, AllowActorInScene) && timeVibrated < GetVibrating(akActor) && (akActor.WornHasKeyword(zad_DeviousPlug) || akActor.WornHasKeyword(zad_DeviousPiercingsNipple) || akActor.WornHasKeyword(zad_DeviousPiercingsVaginal))
+	While IsValidActorV2(akActor, AllowActorInScene) && timeVibrated < GetVibrating(akActor) && (akActor.WornHasKeyword(zad_DeviousPlug) || akActor.WornHasKeyword(zad_DeviousPiercingsNipple) || akActor.WornHasKeyword(zad_DeviousPiercingsVaginal))
 		; Log("XXX VibrateEffect: Begin Tick "+timeVibrated)
 		if (timeVibrated % 2) == 0 ; Make noise
 			; Log("XXX VibrateEffect: Making Noise")
@@ -2081,7 +2082,7 @@ int Function VibrateEffectAdv(actor akActor, int vibStrength, int duration, bool
 
 	Sound.StopInstance(vsID)
 	Sound.StopInstance(msID)
-	if IsActorValid(akActor, AllowActorInScene)
+	if IsValidActorV2(akActor, AllowActorInScene)
 		; Reset expression
 		ResetExpressionRaw(akActor, 15)
 	EndIf
@@ -2207,10 +2208,11 @@ EndFunction
 ;Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
 ; This is the old signature of the function, and is needed for backwards compatibility
 Bool Function IsValidActor(Actor akActor)
-    return IsActorValid(akActor, OverrideSceneCheck = false)
+    return IsValidActorV2(akActor, OverrideSceneCheck = false)
 EndFunction
-; This is the new signature of the function, and is needed for backwards compatibility
-Bool Function IsActorValid(Actor akActor, bool OverrideSceneCheck = false)
+
+; This one allows more fine-tuned control by allowing callers to consider actors in scenes as valid
+Bool Function IsValidActorV2(Actor akActor, bool OverrideSceneCheck = false)
 	If !akActor.Is3DLoaded() || akActor.IsChild() || akActor.IsDisabled() || akActor.IsDead()
 		return False
 	EndIf 	
