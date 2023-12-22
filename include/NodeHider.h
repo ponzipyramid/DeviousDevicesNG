@@ -11,22 +11,17 @@ namespace DeviousDevices
     {
     SINGLETONHEADER(NodeHider)
     public:
-        class NodeHiderSlot
+        enum ArmState : uint8_t
         {
-        public:
-            bool                        enabled     = true;
-            std::vector<std::string>    nodes;
-            float                       timer       = 0.0f;
+            sShown  = 0,
+            sHidden = 1
         };
 
-        #ifdef NH_IMPARMHIDER
         void HideArms(RE::Actor* a_actor);
         void ShowArms(RE::Actor* a_actor);
-        #endif
+        void UpdateArms(RE::Actor* a_actor);
 
         //https://wiki.beyondskyrim.org/wiki/Arcane_University:Nifskope_Weapons_Setup
-        
-
         void HideWeapons(RE::Actor* a_actor);
         void ShowWeapons(RE::Actor* a_actor);
 
@@ -43,5 +38,8 @@ namespace DeviousDevices
         bool _installed = false;
         std::vector<uint32_t> _lastupdatestack;
         std::vector<std::string> _WeaponNodes;
+        std::vector<std::string> _ArmNodes;
+        std::unordered_map<uint32_t,ArmState> _armhiddenstates;
+        RE::BGSKeyword* _straitjacket;
     };
 }

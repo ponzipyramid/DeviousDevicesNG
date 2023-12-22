@@ -26,9 +26,6 @@ void DeviousDevices::UpdateManager::Update(RE::Actor* a_actor, float a_delta)
             //serialize task so it doesnt create race condition
             SKSE::GetTaskInterface()->AddTask([]
             {
-                //update node hider
-                NodeHider::GetSingleton()->Update();
-
                 //update gag expressions
                 ExpressionManager::GetSingleton()->UpdateGagExpForNPCs();
             });
@@ -38,6 +35,21 @@ void DeviousDevices::UpdateManager::Update(RE::Actor* a_actor, float a_delta)
             loc_manager->UpdateThread1 = false;
         }).detach();
 
+        if (!loc_manager->UpdateThread2) std::thread([loc_manager]
+        {
+            loc_manager->UpdateThread2 = true;
+
+            //serialize task so it doesnt create race condition
+            SKSE::GetTaskInterface()->AddTask([]
+            {
+                //update node hider
+                NodeHider::GetSingleton()->Update();
+            });
+
+            //wait
+            std::this_thread::sleep_for(std::chrono::milliseconds(ConfigManager::GetSingleton()->GetVariable<int>("UpdateThreads.iUpdateTime2",2000))); //wait x ms before updating again
+            loc_manager->UpdateThread2 = false;
+        }).detach();
     }
     Update_old(a_actor,a_delta);
 }

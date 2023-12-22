@@ -13,6 +13,7 @@ namespace DeviousDevices
         void Setup();
 
         bool UpdateThread1 = false;
+        bool UpdateThread2 = false;
     private:
         bool _installed = false;
         static void Update(RE::Actor* a_actor, float a_delta);

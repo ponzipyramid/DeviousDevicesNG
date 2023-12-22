@@ -1033,7 +1033,7 @@ EndFunction
 ;====================
 ; Camera Manipulation
 ;====================
-bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool permitRestrictive=false, Bool AllowActorInScene = false)
+bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool permitRestrictive=false)
 	Log("StartThirdPersonAnimation("+akActor.GetLeveledActorBase().GetName()+","+animation+")")
 	bool[] ret = new bool[2]
 	if IsAnimating(akActor)

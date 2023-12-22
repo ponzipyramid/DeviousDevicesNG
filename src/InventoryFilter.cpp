@@ -86,11 +86,9 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 {
     if ((a_actor == nullptr) || (a_item == nullptr)) return true;
 
-    auto loc_name = std::string(a_item->GetName());
-
     // item have no name -> most likely used internaly by other mod, and not equipped by player -> never filter it out
     // or is SMP object used by 3BA
-    if (loc_name == "" || (loc_name.find("3BBB SMP Body") != std::string::npos)) return false;
+    if (!CheckWhitelist(a_item)) return false;
 
     RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
 
@@ -208,6 +206,25 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
         return GetMaskForSlot(33);
     else
         return -1;
+}
+
+bool DeviousDevices::InventoryFilter::CheckWhitelist(const RE::TESBoundObject* a_item) const
+{
+    if (a_item == nullptr) return false;
+    auto loc_whitelist = ConfigManager::GetSingleton()->GetArray<std::string>("InventoryFilter.asWhitelist");
+
+    std::string loc_name = a_item->GetName();
+    std::transform(loc_name.begin(), loc_name.end(), loc_name.begin(), ::tolower); //to lower case
+
+    if (loc_name == "") return false;
+
+    //check whitelist
+    for (auto&& it : loc_whitelist)
+    {
+        if ((it != "") && (it != " ") && (loc_name.find(it) != std::string::npos)) return false;
+    }
+
+    return true;
 }
 
 void DeviousDevices::InventoryFilter::Setup() 
