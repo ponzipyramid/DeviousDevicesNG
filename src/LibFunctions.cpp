@@ -188,3 +188,17 @@ bool DeviousDevices::LibFunctions::IsAnimating(RE::Actor* a_actor)
     }
     return false;
 }
+
+bool DeviousDevices::LibFunctions::PluginInstalled(std::string a_dll)
+{
+    HINSTANCE dllHandle = LoadLibraryA(a_dll.c_str());
+    if (dllHandle != NULL)
+    {
+        FreeLibrary(dllHandle);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
