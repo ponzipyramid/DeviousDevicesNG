@@ -2,16 +2,12 @@
 
 namespace DeviousDevices
 {
-    #define NH_UPDTIME 0.5f   // update every 0.5s
-
-    //#define NH_IMPARMHIDER
-
     //for implementing this, I used https://github.com/ArranzCNL/ImprovedCameraSE-NG as reference which also hides arms using nodes
     class NodeHider
     {
     SINGLETONHEADER(NodeHider)
     public:
-        enum ArmState : uint8_t
+        enum HidderState : uint8_t
         {
             sShown  = 0,
             sHidden = 1
@@ -24,6 +20,7 @@ namespace DeviousDevices
         //https://wiki.beyondskyrim.org/wiki/Arcane_University:Nifskope_Weapons_Setup
         void HideWeapons(RE::Actor* a_actor);
         void ShowWeapons(RE::Actor* a_actor);
+        void UpdateWapons(RE::Actor* a_actor);
 
         void Setup();
         void Update();
@@ -36,10 +33,11 @@ namespace DeviousDevices
 
     private:
         bool _installed = false;
-        std::vector<uint32_t> _lastupdatestack;
-        std::vector<std::string> _WeaponNodes;
-        std::vector<std::string> _ArmNodes;
-        std::unordered_map<uint32_t,ArmState> _armhiddenstates;
-        RE::BGSKeyword* _straitjacket;
+        RE::BGSKeyword*             _straitjacket;
+        std::vector<uint32_t>       _lastupdatestack;
+        std::vector<std::string>    _WeaponNodes;
+        std::vector<std::string>    _ArmNodes;
+        std::unordered_map<uint32_t,HidderState> _armhiddenstates;    //temporary array with state of arm nodes on updated actors
+        std::unordered_map<uint32_t,HidderState> _weaponhiddenstates; //temporary array with state of weapon nodes on updated actors
     };
 }

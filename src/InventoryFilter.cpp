@@ -63,7 +63,7 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
 
 bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) 
 {
-    const auto loc_armor = GetWornWithDeviousKeyword(a_actor, _deviousGagKwd);
+    const auto loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor,GetMaskForSlot(44));
     if (loc_armor != nullptr)
     {
         if (loc_armor->HasKeyword(_deviousGagKwd))
@@ -74,7 +74,7 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor)
             }
             else if (loc_armor->HasKeyword(_deviousGagPanelKwd))  // is panel gag, additional check needed
             {
-                return a_actor->GetFactionRank(_gagpanelfaction, true) == 1;
+                return a_actor->GetFactionRank(_gagpanelfaction, a_actor->IsPlayer()) == 1;
             }
             return true;
         }
@@ -90,56 +90,65 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     // or is SMP object used by 3BA
     if (!CheckWhitelist(a_item)) return false;
 
-    RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
-
-    // UI can be still not loaded even after save is loaded. 
-    // Because of that it is important to always check that UI singleton is initiated
-    if (RE::UI::GetSingleton() != nullptr)
-    {
-        loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
-    }
-
     // == Gag check
     bool loc_needgagcheck = false;
 
-    if (a_item->Is(RE::FormType::Ingredient)) //remove all ingredients
+    if (a_item->Is(RE::FormType::Ingredient)) //filter all ingredients
     {
         loc_needgagcheck = true;
     }
-    else if (a_item->Is(RE::FormType::AlchemyItem)) //remove all food and potions (which are not poisons)
+    else if (a_item->Is(RE::FormType::AlchemyItem)) //filter all food and potions (which are not poisons)
     {
         RE::AlchemyItem* loc_alchitem = a_item->As<RE::AlchemyItem>();
         if (!loc_alchitem->IsPoison()) loc_needgagcheck = true;
     }
 
     bool loc_checkinventory = false;
-    if (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bGagFilterModeMenu",false) == 1)
+    if (loc_needgagcheck)
     {
-        loc_checkinventory = true;
-    }
+        if (!CheckWhitelistFood(a_item)) return false; //check food filter
+        if (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bGagFilterModeMenu",false) == 1) loc_checkinventory = true;
 
-    if (loc_needgagcheck && (!loc_checkinventory || loc_invMenu.get()) && ActorHasBlockingGag(a_actor)) 
-    {
-        RE::DebugNotification("You can't eat or drink while wearing this gag.");
-        return true;
+        // UI can be still not loaded even after save is loaded. 
+        // Because of that it is important to always check that UI singleton is initiated
+        RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
+        if (RE::UI::GetSingleton() != nullptr)
+        {
+            loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
+        }
+        else ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
+
+        if ((!loc_checkinventory || loc_invMenu.get()) && ActorHasBlockingGag(a_actor)) 
+        {
+            RE::DebugNotification("You can't eat or drink while wearing this gag.");
+            return true;
+        }
     }
 
     // == Equip check
     if ((a_item->Is(RE::FormType::Spell) || a_item->Is(RE::FormType::Weapon) || a_item->Is(RE::FormType::Light) ||
          (a_item->Is(RE::FormType::Armor) && !IsDevious(a_item) && !IsStrapon(a_item)))) 
     {
-
-        auto mittens = GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
-        auto heavyBondage = GetWornWithDeviousKeyword(a_actor, _deviousHeavyBondageKwd);
-
-        if (mittens || heavyBondage) 
+        const bool loc_heavyBondage   = GetWornWithDeviousKeyword(a_actor, _deviousHeavyBondageKwd);
+        const bool loc_mittens        = !loc_heavyBondage && GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
+        
+        if (loc_heavyBondage || loc_mittens) 
         {
-            std::string msg = heavyBondage ? "You can't equip this with your hands tied!"
+            const std::string loc_msg = loc_heavyBondage ? "You can't equip this with your hands tied!"
                                       : "You can't equip this while locked in bondage mittens!";
+
+            // UI can be still not loaded even after save is loaded. 
+            // Because of that it is important to always check that UI singleton is initiated
+            RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
+            if (RE::UI::GetSingleton() != nullptr)
+            {
+                loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
+            }
+            else ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
 
             if (loc_invMenu.get()) 
             {
-                RE::DebugNotification(msg.c_str());
+                RE::DebugNotification(loc_msg.c_str());
             }
 
             return true;
@@ -152,7 +161,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 bool DeviousDevices::InventoryFilter::IsDevious(RE::TESBoundObject* obj)
 {
     static std::vector<RE::BGSKeyword*> loc_deviousKwds = {_lockableKwd,_inventoryDeviceKwd};
-    return obj->HasKeywordInArray(loc_deviousKwds, false) || obj->GetFormID() == _deviceHiderId;
+    return obj->HasKeywordInArray(loc_deviousKwds, false);
 }
 
 bool DeviousDevices::InventoryFilter::IsStrapon(RE::TESBoundObject* obj)
@@ -173,12 +182,15 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
         return GetMaskForSlot(58);
     else if (kwd == _deviousCollarKwd)
         return GetMaskForSlot(45);
-    else if (kwd == _deviousHeavyBondageKwd) {
-        if (auto worn = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(32))) {
+    else if (kwd == _deviousHeavyBondageKwd) 
+    {
+        if (auto worn = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(32))) 
+        {
             if (worn->HasKeyword(_deviousStraitJacketKwd)) return GetMaskForSlot(32);
         }
         return GetMaskForSlot(46);
-    } else if (kwd == _deviousPlugAnalKwd)
+    } 
+    else if (kwd == _deviousPlugAnalKwd)
         return GetMaskForSlot(48);
     else if (kwd == _deviousBeltKwd)
         return GetMaskForSlot(49);
@@ -227,9 +239,28 @@ bool DeviousDevices::InventoryFilter::CheckWhitelist(const RE::TESBoundObject* a
     return true;
 }
 
+bool DeviousDevices::InventoryFilter::CheckWhitelistFood(const RE::TESBoundObject* a_item) const
+{
+    if (a_item == nullptr) return false;
+    auto loc_whitelist = ConfigManager::GetSingleton()->GetArray<std::string>("InventoryFilter.asWhitelistFood");
+
+    std::string loc_name = a_item->GetName();
+    std::transform(loc_name.begin(), loc_name.end(), loc_name.begin(), ::tolower); //to lower case
+
+    if (loc_name == "") return false;
+
+    //check whitelist
+    for (auto&& it : loc_whitelist)
+    {
+        if ((it != "") && (it != " ") && (loc_name.find(it) != std::string::npos)) return false;
+    }
+
+    return true;
+}
+
 void DeviousDevices::InventoryFilter::Setup() 
 {
-    if (!_init) 
+    if (!_init)
     {
         _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
