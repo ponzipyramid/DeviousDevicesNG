@@ -60,7 +60,6 @@ Float[]     Function GetPropertyFloatArray  (Armor akInvDevice, String asPropert
 Bool[]      Function GetPropertyBoolArray   (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
 String[]    Function GetPropertyStringArray (Armor akInvDevice, String asPropertyName, Int aiMode = 0)  global native
 
-
 ; === equip rework
         Function SetManipulated (Actor akActor, Armor akInvDevice, bool abManip)    global native
 bool    Function GetManipulated (Actor akActor, Armor akInvDevice)                  global native
@@ -77,3 +76,6 @@ Armor[]  Function GetDevices(Actor akActor, int aiMode = 0, bool abWorn = False)
 
 ; Return worn device based on passed main keyword (set on equip script)
 Armor    Function GetWornDevice(Actor akActor, Keyword akKeyword, bool fuzzy = false)                   global native
+
+; Returns true if plugin is installed. Full name with extension is required
+Bool Function PluginInstalled(String asName) global native
