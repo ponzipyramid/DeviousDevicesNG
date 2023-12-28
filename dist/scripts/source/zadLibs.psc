@@ -17,7 +17,6 @@ The vision of Devious Devices is providing a foundation for a mulitude of bondag
 ; Libraries
 SexLabFramework property SexLab auto
 ; import sslExpressionLibrary
-import MfgConsoleFunc
 import StringUtil
 import zadNativeFunctions
 import zadprebuildedexpressions
@@ -435,8 +434,6 @@ Bool Function UnlockDevice(actor akActor, armor deviceInventory, armor deviceRen
 		If kw == zad_DeviousGag
 			log("Removing Gag Effects")
 			RemoveGagEffect(akActor)
-			akActor.ClearExpressionOverride()
-			ResetPhonemeModifier(akActor)			
 			if rDevice.HasKeyWord(zad_DeviousGagPanel)
 				if akActor.GetFactionRank(zadGagPanelFaction) == 0
 					akActor.RemoveItem(zad_GagPanelPlug, 1)
@@ -1749,30 +1746,6 @@ float Function GetMoanVolume(actor akActor, int exposure = -1)
 	EndIf
 EndFunction
 
-function DoApplyExpression(int[] presets, actor ActorRef, bool hasGag = false) global
-	if ActorRef == none
-		return ; Nobody to express with!
-	endIf
-	; Clear existing mfg from actor
-	; ActorRef.ClearExpressionOverride()
-	ResetPhonemeModifier(ActorRef)
-	; Apply preset, [n + 0] = mode, [n + 1] = id, [n + 2] = value
-	int i = presets.Length
-	while i > 2
-		i -= 3
-		if presets[i] == 2 && !hasGag
-			ActorRef.SetExpressionOverride(presets[(i + 1)], presets[(i + 2)])
-		else
-			if hasGag && presets[i+1] == 1
-				SetPhonemeModifier(ActorRef, 0, 1, 100)
-			ElseIf hasGag &&  presets[i+1] == 11
-				SetPhonemeModifier(ActorRef, 0, 11, 70)
-			Else
-				SetPhonemeModifier(ActorRef, presets[i], presets[(i + 1)], presets[(i + 2)])
-			Endif
-		endIf
-	endWhile
-endFunction
 
 ;====================================================================
 ;=====================REWORKED EXPRESSION SYSTEM=====================
