@@ -70,7 +70,7 @@ void DeviousDevices::NodeHider::HideWeapons(RE::Actor* a_actor)
     if (a_actor == nullptr) return;
 
     HidderState loc_state = _weaponhiddenstates[a_actor->GetHandle().native_handle()];
-    if (loc_state == HidderState::sHidden) return;
+    //if (loc_state == HidderState::sHidden) return;
 
     for (auto&& it : _WeaponNodes)
     {
@@ -133,7 +133,7 @@ void DeviousDevices::NodeHider::Update()
     RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
         auto loc_refBase    = a_ref.GetBaseObject();
         auto loc_actor      = a_ref.As<RE::Actor>();
-        if ((loc_actor == loc_player) || (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
+        if (loc_actor && (loc_actor == loc_player) || (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
         {
             loc_currentactors.push_back(loc_actor);
         }
@@ -203,11 +203,11 @@ void DeviousDevices::NodeHider::Update()
 
     LOG("NodeHider::Update() - Node hider updated")
     LOG("NodeHider::Update() - Removed actors...")
-    for (auto&& it : loc_removedactors) LOG("\t{}",it->GetName())
+    for (auto&& it : loc_removedactors) LOG("\t{}",it ? it->GetName() : "NONE")
     LOG("NodeHider::Update() - Same actors...")
-    for (auto&& it : loc_samectors) LOG("\t{}",it->GetName())
+    for (auto&& it : loc_samectors) LOG("\t{}",it ? it->GetName() : "NONE")
     LOG("NodeHider::Update() - Added actors...")
-    for (auto&& it : loc_addedactors) LOG("\t{}",it->GetName())
+    for (auto&& it : loc_addedactors) LOG("\t{}",it ? it->GetName() : "NONE")
 }
 
 void DeviousDevices::NodeHider::Reload()
@@ -221,7 +221,7 @@ bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const
 {
     if (a_actor == nullptr) return false;
     
-    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled() || (a_actor->GetFormID() == 0))
+    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled())
     {
         return false;
     }

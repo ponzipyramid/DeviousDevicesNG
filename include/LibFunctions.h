@@ -72,7 +72,7 @@ namespace DeviousDevices
 
     inline bool PluginInstalled(PAPYRUSFUNCHANDLE,std::string a_dll)
     {
-        LOG("GetWornDevice({}) called",a_dll)
+        LOG("PluginInstalled({}) called",a_dll)
         return LibFunctions::GetSingleton()->PluginInstalled(a_dll);
     }
 }

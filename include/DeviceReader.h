@@ -261,6 +261,11 @@ namespace DeviousDevices
         }
 
         DeviceUnit EmptyDeviceUnit;
+
+        const std::map<RE::TESObjectARMO*, DeviceUnit>& GetDatabase()
+        {
+            return _database;
+        }
     private:
         void LoadDDMods();
         void ParseMods();

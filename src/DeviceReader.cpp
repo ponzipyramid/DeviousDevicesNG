@@ -342,6 +342,7 @@ void DeviceReader::LoadDB() {
     
     LOG("Manipulate Menu: {}", defaultManipMenu != nullptr);
 
+    ConfigManager::GetSingleton()->SetLoggingDisable(true);
     DEBUG("=== Building database")
     for (auto && it1 : _ddmodspars)
     {
@@ -428,8 +429,8 @@ void DeviceReader::LoadDB() {
     DEBUG("=== Building database DONE - Size = {}",_database.size())
     CLOG("Database loaded! Size = {}",_database.size())
 
-   if (ConfigManager::GetSingleton()->GetVariable<bool>("Main.bPrintDB",false) == 1)
-   {
+    if (ConfigManager::GetSingleton()->GetVariable<bool>("Main.bPrintDB",false) == 1)
+    {
         for (auto&& it : _database) 
         {
             DEBUG("Database entry: 0x{:08X} = 0x{:08X} ({})",
@@ -439,7 +440,9 @@ void DeviceReader::LoadDB() {
             DEBUG("\tMod stack size = {:2}",it.second.history.size())
             for (size_t i = 0; i < it.second.history.size(); i++) DEBUG("\t0x{:02X} - {}",i,it.second.history[i].deviceMod->name)
         }
-   }
+    }
+
+    ConfigManager::GetSingleton()->SetLoggingDisable(false);
 }
 
 bool DeviceReader::DeviceUnit::CanEquip(RE::Actor* a_actor) const
@@ -1296,6 +1299,8 @@ std::vector<std::string> DeviousDevices::GetEditingMods(PAPYRUSFUNCHANDLE, RE::T
     auto loc_unit   = DeviceReader::GetSingleton()->GetDeviceUnit(a_invdevice);
 
     for (auto&& it : loc_unit.history) loc_res.push_back(it.deviceMod->name);
+
+    constexpr size_t loc_s = sizeof(DeviceGroup);
 
     return loc_res;
 }

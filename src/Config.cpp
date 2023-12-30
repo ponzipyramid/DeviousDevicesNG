@@ -24,6 +24,16 @@ void ConfigManager::Setup()
     _catche.clear();
 }
 
+void DeviousDevices::ConfigManager::SetLoggingDisable(bool a_val)
+{
+    _LogDisable = a_val;
+}
+
+bool DeviousDevices::ConfigManager::GetLoggingDisable() const
+{
+    return _LogDisable;
+}
+
 std::vector<std::string> ConfigManager::GetArrayRaw(std::string a_name, std::string a_sep) const
 {
     std::vector<std::string> loc_res;

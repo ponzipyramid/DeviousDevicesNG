@@ -51,46 +51,54 @@ void DeviousDevices::DeviceHiderManager::Setup()
             _contraption = static_cast<RE::BGSKeyword*>(loc_datahandler->LookupForm(0x0022FF,"Devious Devices - Contraptions.esm"));
             if (_contraption != nullptr) _nohidekeywords.push_back(_contraption);
         }
-        auto hook = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
 
-        // Expected size: 0x12
-        struct Patch : public Xbyak::CodeGenerator
         {
-            Patch(std::uintptr_t a_funcAddr)
+            auto loc_hookIWA = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
+
+            // Expected size: 0x12
+            struct PatchIWA: public Xbyak::CodeGenerator
             {
-                mov(rdx, r13);
-                mov(rcx, rbp);
-                mov(rax, a_funcAddr);
-                call(rax);
-            }
-        };
+                PatchIWA(std::uintptr_t a_funcAddr)
+                {
+                    mov(rdx, r13);
+                    mov(rcx, rbp);
+                    mov(rax, a_funcAddr);
+                    call(rax);
+                }
+            };
         
-        Patch patch{ reinterpret_cast<std::uintptr_t>(InitWornArmor) };
-        patch.ready();
+            PatchIWA loc_patchIWA{ reinterpret_cast<std::uintptr_t>(InitWornArmor) };
+            loc_patchIWA.ready();
 
-        if (patch.getSize() > 0x17) 
-        {
-            util::report_and_fail("Patch was too large, failed to install"sv);
+            if (loc_patchIWA.getSize() > 0x17) 
+            {
+                util::report_and_fail("PatchIWA was too large, failed to install"sv);
+            }
+
+            HINSTANCE dllHandle = LoadLibrary(TEXT("DynamicArmorVariants.dll"));
+            if (dllHandle != NULL)
+            {
+                InitWornArmorDAV = ((fInitWornArmorDAV)(*((uint64_t*)loc_hookIWA.address() + 1)));
+                DEBUG("DeviceHiderManager::Setup() - DAV found - Copying original function -> {}",(uintptr_t)InitWornArmorDAV)
+                _DAVInstalled = true;
+            }
+            else
+            {
+                LOG("DeviceHiderManager::Setup() - No DAV found")
+                _DAVInstalled = false;
+            }
+
+            REL::safe_fill(loc_hookIWA.address(), REL::NOP, 0x17);
+            REL::safe_write(loc_hookIWA.address(), loc_patchIWA.getCode(), loc_patchIWA.getSize());
+            DEBUG("InitWornArmor patch installed!")
         }
-
-        HINSTANCE dllHandle = LoadLibrary(TEXT("DynamicArmorVariants.dll"));
-        if (dllHandle != NULL)
-        {
-            InitWornArmorDAV = ((fInitWornArmorDAV)(*((uint64_t*)hook.address() + 1)));
-            DEBUG("DeviceHiderManager::Setup() - DAV found - Copying original function -> {}",(uintptr_t)InitWornArmorDAV)
-            _DAVInstalled = true;
-        }
-        else
-        {
-            LOG("DeviceHiderManager::Setup() - No DAV found")
-            _DAVInstalled = false;
-        }
-
-        REL::safe_fill(hook.address(), REL::NOP, 0x17);
-        REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
-
         _setup = true;
     }
+}
+
+void DeviousDevices::DeviceHiderManager::Reload()
+{
+    _forcestrip.clear();
 }
 
 bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_armor) const
@@ -175,55 +183,38 @@ void DeviousDevices::DeviceHiderManager::SetActorStripped(RE::Actor* a_actor, bo
 {
     if (a_actor == nullptr) return;
 
+    const uint32_t loc_handle = a_actor->GetHandle().native_handle();
+
     if (a_stripped)
     {
-        if (IsActorStripped(a_actor)) return;
-        _forcestrip.push_back({a_actor,a_armorfilter,a_devicefilter});
+        _forcestrip[loc_handle] = {a_armorfilter,a_devicefilter};
         Update3DSafe(a_actor);
     }
     else
     {
-        if (IsActorStripped(a_actor)) return;
-        const auto loc_it = std::find_if(_forcestrip.begin(),_forcestrip.end(),[a_actor] (const ForceStripSetting& a_strip)
-            {
-                return (a_strip.actor == a_actor);
-            }
-        );
-        if (loc_it != _forcestrip.end()) 
-        {
-            _forcestrip.erase(loc_it);
-            Update3DSafe(a_actor);
-        }
+        _forcestrip.erase(loc_handle);
+        Update3DSafe(a_actor);
     }
 }
 
 bool DeviousDevices::DeviceHiderManager::IsActorStripped(RE::Actor* a_actor)
 {
-    const auto loc_it = std::find_if(_forcestrip.begin(),_forcestrip.end(),[a_actor] (const ForceStripSetting& a_strip)
-        {
-            return (a_strip.actor == a_actor);
-        }
-    );
-    return (loc_it != _forcestrip.end());
+    if (a_actor == nullptr) return false;
+    const auto loc_data = _forcestrip.find(a_actor->GetHandle().native_handle());
+    return (loc_data != _forcestrip.end());
 }
 
 bool DeviousDevices::DeviceHiderManager::CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
 {
-    if (_forcestrip.size() == 0) return true;
-    const auto loc_it = std::find_if(_forcestrip.begin(),_forcestrip.end(),[a_actor] (const ForceStripSetting& a_strip)
-        {
-            return (a_strip.actor == a_actor);
-        }
-    );
+    if (_forcestrip.size() == 0 || a_actor == nullptr) return true;
 
-    const bool loc_forcestriped = (loc_it != _forcestrip.end());
-
+    const auto loc_data         = _forcestrip.find(a_actor->GetHandle().native_handle());
+    const bool loc_forcestriped = (loc_data != _forcestrip.end());
     if (loc_forcestriped)
     {
-        const int loc_armorfilter = loc_it->armorfilter;
-        const int loc_devicefilter = loc_it->devicefilter;
-
-        const int loc_mask = (int)a_armor->GetSlotMask();
+        const int loc_armorfilter   = loc_data->second.armorfilter;
+        const int loc_devicefilter  = loc_data->second.devicefilter;
+        const int loc_mask          = (int)a_armor->GetSlotMask();
 
         const bool loc_isdevice = IsDevice(a_armor);
         if (((loc_mask & loc_devicefilter) && loc_isdevice) || ((loc_mask & loc_armorfilter) && !loc_isdevice))
@@ -276,7 +267,6 @@ bool DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_ar
                 {
                     if (loc_mask & loc_filter[i3])
                     {
-                        _CheckResult = false;
                         return false;
                     }
                 }

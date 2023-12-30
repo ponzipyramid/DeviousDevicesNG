@@ -13,6 +13,9 @@ namespace DeviousDevices
     public:
         void Setup();
 
+        void SetLoggingDisable(bool a_val);
+        bool GetLoggingDisable() const;
+
         template<typename T> T GetVariable(std::string a_name, T a_def) const;
         template<typename T> std::vector<T> GetArray(std::string a_name, std::string a_sep = ",") const;
     private:
@@ -20,5 +23,6 @@ namespace DeviousDevices
         boost::property_tree::ptree _config;
         mutable std::unordered_map<std::string,void*> _catche;
         std::vector<std::string> GetArrayRaw(std::string a_name, std::string a_sep = ",") const;
+        bool _LogDisable = false;
     };
 }
