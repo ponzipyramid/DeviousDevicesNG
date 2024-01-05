@@ -17,7 +17,6 @@ The vision of Devious Devices is providing a foundation for a mulitude of bondag
 ; Libraries
 SexLabFramework property SexLab auto
 ; import sslExpressionLibrary
-import MfgConsoleFunc
 import StringUtil
 import zadNativeFunctions
 import zadprebuildedexpressions
@@ -435,8 +434,6 @@ Bool Function UnlockDevice(actor akActor, armor deviceInventory, armor deviceRen
 		If kw == zad_DeviousGag
 			log("Removing Gag Effects")
 			RemoveGagEffect(akActor)
-			akActor.ClearExpressionOverride()
-			ResetPhonemeModifier(akActor)			
 			if rDevice.HasKeyWord(zad_DeviousGagPanel)
 				if akActor.GetFactionRank(zadGagPanelFaction) == 0
 					akActor.RemoveItem(zad_GagPanelPlug, 1)
@@ -466,12 +463,12 @@ EndFunction
 
 ; Removes a device in a given slot by providing a keyword.
 Bool Function UnlockDeviceByKeyword(actor akActor, keyword zad_DeviousDevice, bool destroyDevice = false)
-    Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)
-    Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
-    if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
-        return true
-    EndIf
-    return false
+	Log("UnlockDeviceByKeyword called for " + zad_DeviousDevice)					
+	Armor idevice = GetWornDevice(akActor, zad_DeviousDevice)
+	if UnlockDevice(akActor, idevice, zad_DeviousDevice = zad_DeviousDevice, destroyDevice = destroyDevice, genericonly = true)
+		return true
+	EndIf
+	return false
 EndFunction
 
 ; Remove quest device from actor. To make sure the removal is legit this will work only if the keyword passed to the function in the RemovalToken parameter is present on the item. Standard DD and ZAP keywords will not be accepted. 
@@ -1749,40 +1746,12 @@ float Function GetMoanVolume(actor akActor, int exposure = -1)
 	EndIf
 EndFunction
 
-function DoApplyExpression(int[] presets, actor ActorRef, bool hasGag = false) global
-	if ActorRef == none
-		return ; Nobody to express with!
-	endIf
-	; Clear existing mfg from actor
-	; ActorRef.ClearExpressionOverride()
-	ResetPhonemeModifier(ActorRef)
-	; Apply preset, [n + 0] = mode, [n + 1] = id, [n + 2] = value
-	int i = presets.Length
-	while i > 2
-		i -= 3
-		if presets[i] == 2 && !hasGag
-			ActorRef.SetExpressionOverride(presets[(i + 1)], presets[(i + 2)])
-		else
-			if hasGag && presets[i+1] == 1
-				SetPhonemeModifier(ActorRef, 0, 1, 100)
-			ElseIf hasGag &&  presets[i+1] == 11
-				SetPhonemeModifier(ActorRef, 0, 11, 70)
-			Else
-				SetPhonemeModifier(ActorRef, presets[i], presets[(i + 1)], presets[(i + 2)])
-			Endif
-		endIf
-	endWhile
-endFunction
 
 ;====================================================================
 ;=====================REWORKED EXPRESSION SYSTEM=====================
 ;====================================================================
 ; Vib Expressions
 Function ApplyExpression(Actor akActor, sslBaseExpression expression, int strength, bool openMouth=false)
-	if !IsValidActor(akActor)
-		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
-		return
-	EndIf
 	if !expression
 		Log("ApplyExpression(): Expression is none.")
 		return
@@ -1798,10 +1767,6 @@ EndFunction
 
 ;reworked function ApplyExpression to use expression priority
 Function ApplyExpression_v2(Actor akActor, sslBaseExpression expression,int iPriority, int strength = 100,bool openMouth=false)
-	if !IsValidActor(akActor)
-		Log("ApplyExpression(): Actor is not loaded (Or is otherwise invalid). Aborting.")
-		return
-	EndIf
 	if !expression
 		Log("ApplyExpression(): Expression is none.")
 		return
@@ -1879,20 +1844,21 @@ string Function BuildPostVibrationString(actor akActor, int vibStrength, bool vP
 	EndIf
 EndFunction
 
+;;; Returns number of times actor came from this effect, -1 if it edged them, or -2 if an event was already ongoing.
+; This function has suffered from feature creep pretty hard since it's inception, and is in need of refactoring. Still works, but very messy.
+; Will split this up to a small library in the future. Will document this properly at that point.
+; Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
 ; This is the old signature of the function, and is needed for backwards compatibility
 int Function VibrateEffect(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false)
     return VibrateEffectV2(akActor, vibStrength, duration, teaseOnly, silent, AllowActorInScene = false)
 EndFunction
 
-;;; Returns number of times actor came from this effect, -1 if it edged them, or -2 if an event was already ongoing.
-; This function has suffered from feature creep pretty hard since it's inception, and is in need of refactoring. Still works, but very messy.
-; Will split this up to a small library in the future. Will document this properly at that point.
 ; V2 This one allows more fine-tuned control by allowing callers to consider actors in scenes as valid
 int Function VibrateEffectV2(actor akActor, int vibStrength, int duration, bool teaseOnly=false, bool silent = false, Bool AllowActorInScene = false)
 	; don't execute this function if the character is in combat. Nobody in their right mind starts playing with herself if there are people trying to kill her.
 	; Events that otherwise would call this function are responsible for providing alternatives as desired.
 	if akActor == PlayerRef && playerref.IsInCombat()
-		Log("Vibrate effect called on Player, but player is in combat. Don't start VibrateEffect.")
+        Log("Vibrate effect called on Player, but player is in combat. Don't start VibrateEffect.")
 		return -2
 	Endif
 	if !IsValidActorV2(akActor, AllowActorInScene)
@@ -2212,6 +2178,7 @@ Function SpellCastVibrate(Actor akActor, Form tmp)
 	EndIf
 EndFunction
 
+;Parameters are persitant in pex files. 2-stage function call to avoid breaking older mods.
 ; This is the old signature of the function, and is needed for backwards compatibility
 Bool Function IsValidActor(Actor akActor)
     return IsValidActorV2(akActor, OverrideSceneCheck = false)
@@ -2777,26 +2744,24 @@ string Function LookupDeviceType(keyword kwd)
 EndFunction
 
 function strip(actor a, bool animate = false)
-	Spell spl
-	Weapon weap
-	Armor sh
-	Ammo amm
-	Form frm		
-	while hasAnyWeaponEquipped(a)
-		stripweapons(a)
-	EndWhile
-	frm = a.GetWornForm(0x00001000) ; circlet
-	if frm && !frm.HasKeyWordString("SexLabNoStrip")
+    Spell spl
+    Weapon weap
+    Armor sh
+    Ammo amm
+    Form frm
+    stripweapons(a)
+    frm = a.GetWornForm(0x00001000) ; circlet
+    if frm && !frm.HasKeyWordString("SexLabNoStrip")
         a.unequipItem(frm, abSilent = true)
     endif
     frm = a.GetWornForm(0x00000020) ; amulet
     if frm && !frm.HasKeyWordString("SexLabNoStrip")
         a.unequipItem(frm, abSilent = true)
     endif
-	If a.WornHasKeyWord(zad_DeviousHeavyBondage)
-		animate = false
-	EndIf
-	SexLab.StripActor(a, doanimate = animate, leadIn = false) 	
+    If a.WornHasKeyWord(zad_DeviousHeavyBondage)
+        animate = false
+    EndIf
+    SexLab.StripActor(a, doanimate = animate, leadIn = false) 	
 EndFunction
 
 bool function hasAnyWeaponEquipped(actor a)
@@ -2807,51 +2772,43 @@ bool function hasAnyWeaponEquipped(actor a)
 EndFunction
 
 function stripweapons(actor a, bool unequiponly = true)		
-	int i = 2
-	Spell spl
-	Weapon weap
-	Armor sh
-	While i > 0
-		i -= 1
-		if i == 0
-			Utility.Wait(1.0)
-		EndIf
-		spl = a.getEquippedSpell(1)
-		if spl
-			a.unequipSpell(spl, 1)
-		endIf
-		weap = a.GetEquippedWeapon(true)
-		if weap
-			a.unequipItem(weap, false, true)
-		endIf
-		sh = a.GetEquippedShield()
-		if sh
-			a.unequipItem(sh, false, true)
-		endIf
-		spl = a.getEquippedSpell(0)
-		if spl
-			a.unequipSpell(spl, 0)
-		endIf
-		weap = a.GetEquippedWeapon(false)
-		if weap
-			a.unequipItem(weap, false, true)
-		endIf
-	EndWhile
+    int i = 2
+    Spell spl
+    Form weap
+    Armor sh
+    spl = a.getEquippedSpell(1)
+    if spl
+        a.unequipSpell(spl, 1)
+    endIf
+    weap = a.GetEquippedObject(0)
+    if weap
+        a.unequipItem(weap, false, true)
+    endIf
+    sh = a.GetEquippedShield()
+    if sh
+        a.unequipItem(sh, false, true)
+    endIf
+    spl = a.getEquippedSpell(0)
+    if spl
+        a.unequipSpell(spl, 0)
+    endIf
+    weap = a.GetEquippedObject(1)
+    if weap
+        a.unequipItem(weap, false, true)
+    endIf
 endfunction
 
 Event StartBoundEffects(Actor akTarget)
 	if !akTarget.WornHasKeyword(zad_DeviousHeavyBondage) && !akTarget.WornHasKeyword(zad_DeviousHobbleSkirt) && !akTarget.WornHasKeyword(zad_DeviousPonyGear)
 		return
 	EndIf
-	while hasAnyWeaponEquipped(akTarget)
-		stripweapons(akTarget)
-	EndWhile
+	stripweapons(akTarget)
 	if akTarget != PlayerRef
 		BoundCombat.EvaluateAA(akTarget)
 		;BoundCombat.Apply_NPC_ABC(akTarget)
 		return
 	EndIf
-	Log("OnEffectStart(): Bound Effects")			
+	Log("OnEffectStart(): Bound Effects")
 	PlayBoundIdle()
 	RegisterForSingleUpdate(8.0)
 	if aktarget == PlayerRef
@@ -2860,14 +2817,14 @@ Event StartBoundEffects(Actor akTarget)
 EndEvent
 
 Event StopBoundEffects(Actor akTarget)
-	Log("OnEffectFinish(): Bound Effects")		
+	Log("OnEffectFinish(): Bound Effects")
 	;COMMENTED THAT OUT BECAUSE IdleForceDefaultState IS NOW SENT IN EVALUATE AA 	
 	;Debug.SendAnimationEvent(akTarget, "IdleForceDefaultState")	
 	if aktarget == PlayerRef
 		UnregisterForUpdate()
-		UpdateControls()			
+		UpdateControls()
 	EndIf	
-	BoundCombat.EvaluateAA(akTarget)	
+	BoundCombat.EvaluateAA(akTarget)
 EndEvent
 
 Event OnUpdate()

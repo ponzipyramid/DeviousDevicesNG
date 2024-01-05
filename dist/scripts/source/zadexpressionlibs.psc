@@ -1,12 +1,8 @@
 scriptname zadexpressionlibs extends Quest
 
-import MfgConsoleFunc
 import sslBaseExpression
 import PapyrusUtil
 import zadprebuildedexpressions
-
-;for debuging
-import ConsoleUtil
 
 Faction         Property BlockExpressionFaction                             auto
 zadlibs         Property libs                                               auto

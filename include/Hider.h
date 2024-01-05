@@ -2,6 +2,7 @@
 #include <RE/Skyrim.h>
 #include <detours/detours.h>
 #include "DeviceReader.h"
+#include "LibFunctions.h"
 
 namespace DeviousDevices
 {
@@ -14,9 +15,8 @@ namespace DeviousDevices
 
     struct ForceStripSetting
     {
-        RE::Actor* actor    = nullptr;
-        int armorfilter     = 0xFFFFFFFF;
-        int devicefilter    = 0x00000000;
+        int armorfilter         = 0xFFFFFFFF;
+        int devicefilter        = 0x00000000;
     };
 
     struct ArmorSlot
@@ -30,6 +30,7 @@ namespace DeviousDevices
     SINGLETONHEADER(DeviceHiderManager)
     public:
         void                    Setup();
+        void                    Reload();
         std::vector<int>        RebuildSlotMask(RE::Actor* a_actor, std::vector<int> a_slotfilter);
         int                     FilterMask(RE::Actor* a_actor, int a_slotmask);
         bool                    IsValidForHide(RE::TESObjectARMO* a_armor) const;
@@ -41,30 +42,30 @@ namespace DeviousDevices
         inline uint16_t         UpdateActors3D();
         void                    SetActorStripped(RE::Actor* a_actor, bool a_stripped, int a_armorfilter, int a_devicefilter);
         bool                    IsActorStripped(RE::Actor* a_actor);
-
         bool                    CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
         bool                    CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
-
         bool                    IsDAVInstalled() {return _DAVInstalled;}
+
     protected:
-        bool _setup                 = false;
-        RE::BGSKeyword* _kwnohide   = nullptr;
-        RE::BGSKeyword* _kwlockable = nullptr;
-        RE::BGSKeyword* _kwplug     = nullptr;
-        RE::BGSKeyword* _kwsos      = nullptr;
-        RE::BGSKeyword* _contraption = nullptr;
+        bool _setup                     = false;
+        RE::BGSKeyword* _kwnohide       = nullptr;
+        RE::BGSKeyword* _kwlockable     = nullptr;
+        RE::BGSKeyword* _kwplug         = nullptr;
+        RE::BGSKeyword* _kwsos          = nullptr;
+        RE::BGSKeyword* _contraption    = nullptr;
+        bool           _DAVInstalled    = false;
+
         std::vector<RE::BGSKeyword*> _hidekeywords;
         std::vector<RE::BGSKeyword*> _nohidekeywords;
-        bool           _DAVInstalled = false;
 
-        mutable std::atomic_bool _CheckResult = false;
+    private:
 
         bool CheckHiderSlots(RE::TESObjectARMO* a_armor, uint8_t a_min, uint8_t a_max, const std::unordered_map<RE::TESObjectARMO*,uint32_t>& a_slots) const;
 
         std::vector<int>    _filter;
         HiderSetting        _setting;
 
-        std::vector<ForceStripSetting> _forcestrip;
+        std::unordered_map<uint32_t,ForceStripSetting> _forcestrip;
 
         //=== copied from Dynamic Armor Variables ===
         //returns true if addon have passed race
@@ -85,9 +86,6 @@ namespace DeviousDevices
         typedef void(*fInitWornArmorDAV)(RE::TESObjectARMO* a_armor,RE::Actor* a_actor,RE::BSTSmartPointer<RE::BipedAnim>* a_biped);
         static inline fInitWornArmorDAV InitWornArmorDAV;
     };
-
-
-
 
     inline void SyncSetting(PAPYRUSFUNCHANDLE,std::vector<int> a_slotfilter, int a_setting)
     {

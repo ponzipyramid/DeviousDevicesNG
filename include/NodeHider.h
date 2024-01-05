@@ -2,36 +2,29 @@
 
 namespace DeviousDevices
 {
-    #define NH_UPDTIME 0.5f   // update every 0.5s
-
-    //#define NH_IMPARMHIDER
-
     //for implementing this, I used https://github.com/ArranzCNL/ImprovedCameraSE-NG as reference which also hides arms using nodes
     class NodeHider
     {
     SINGLETONHEADER(NodeHider)
     public:
-        class NodeHiderSlot
+        enum HidderState : uint8_t
         {
-        public:
-            bool                        enabled     = true;
-            std::vector<std::string>    nodes;
-            float                       timer       = 0.0f;
+            sShown  = 0,
+            sHidden = 1
         };
 
-        #ifdef NH_IMPARMHIDER
         void HideArms(RE::Actor* a_actor);
         void ShowArms(RE::Actor* a_actor);
-        #endif
+        void UpdateArms(RE::Actor* a_actor);
 
         //https://wiki.beyondskyrim.org/wiki/Arcane_University:Nifskope_Weapons_Setup
-        
-
         void HideWeapons(RE::Actor* a_actor);
         void ShowWeapons(RE::Actor* a_actor);
+        void UpdateWapons(RE::Actor* a_actor);
 
         void Setup();
         void Update();
+        void Reload();
     protected:
         bool ActorIsValid(RE::Actor* a_actor) const;
         bool ShouldHideWeapons(RE::Actor* a_actor) const;
@@ -40,18 +33,11 @@ namespace DeviousDevices
 
     private:
         bool _installed = false;
-        std::vector<uint32_t> _lastupdatestack;
-        std::vector<std::string> _WeaponNodes;
+        RE::BGSKeyword*             _straitjacket;
+        std::vector<uint32_t>       _lastupdatestack;
+        std::vector<std::string>    _WeaponNodes;
+        std::vector<std::string>    _ArmNodes;
+        std::unordered_map<uint32_t,HidderState> _armhiddenstates;    //temporary array with state of arm nodes on updated actors
+        std::unordered_map<uint32_t,HidderState> _weaponhiddenstates; //temporary array with state of weapon nodes on updated actors
     };
-
-    //papyrus interface
-    inline void HideWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor)
-    {
-        //NodeHider::GetSingleton()->HideWeapons(a_actor);
-    }
-
-    inline void ShowWeapons(PAPYRUSFUNCHANDLE,RE::Actor* a_actor)
-    {
-        //NodeHider::GetSingleton()->ShowWeapons(a_actor);
-    }
 }

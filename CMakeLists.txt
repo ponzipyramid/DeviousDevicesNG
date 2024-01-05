@@ -35,6 +35,8 @@ set(headers
         include/Settings.h
         include/LibFunctions.h
         include/Config.h
+        include/Serialization.h
+        include/Export.h
 )
 
 set(sources
@@ -48,6 +50,8 @@ set(sources
         src/DeviceReader.cpp
         src/LibFunctions.cpp
         src/Config.cpp
+        src/Serialization.cpp
+        src/Export.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 set(tests

@@ -10,7 +10,7 @@ void DeviousDevices::LibFunctions::Setup()
 
         if (loc_datahandler == nullptr) 
         {
-            LOG("LibFunctions::Setup() - loc_datahandler = NULL -> cant setup!")
+            ERROR("LibFunctions::Setup() - loc_datahandler = NULL -> cant setup!")
             return;
         }
 
@@ -32,7 +32,7 @@ void DeviousDevices::LibFunctions::Setup()
         if (loc_ddanimationfaction != nullptr) _animationfactions.push_back(loc_ddanimationfaction);
         if (loc_slanimationfaction != nullptr) _animationfactions.push_back(loc_slanimationfaction);
 
-        LOG("LibFunctions::Setup() - Installed")
+        DEBUG("LibFunctions::Setup() - Installed")
         _installed = true;
     }
 
@@ -187,4 +187,18 @@ bool DeviousDevices::LibFunctions::IsAnimating(RE::Actor* a_actor)
         if ((it != nullptr) && a_actor->IsInFaction(it)) return true;
     }
     return false;
+}
+
+bool DeviousDevices::LibFunctions::PluginInstalled(std::string a_dll)
+{
+    HINSTANCE dllHandle = LoadLibraryA(a_dll.c_str());
+    if (dllHandle != NULL)
+    {
+        FreeLibrary(dllHandle);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

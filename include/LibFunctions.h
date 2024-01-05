@@ -50,6 +50,7 @@ namespace DeviousDevices
         bool WornHasKeyword(RE::Actor* a_actor, RE::BGSKeyword* a_kw) const;
         RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,int a_mask) const;
         bool IsAnimating(RE::Actor* a_actor);
+        bool PluginInstalled(std::string a_dll);
     private:
         bool _installed = false;
         std::vector<RE::BGSKeyword*>    _idkw;
@@ -60,12 +61,18 @@ namespace DeviousDevices
 
     inline std::vector<RE::TESObjectARMO*> GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn)
     {
-        LOG("GetDevices called")
+        LOG("GetDevices({},{},{}) called",a_actor ? a_actor->GetName() : "NONE",a_mode,a_worn)
         return LibFunctions::GetSingleton()->GetDevices(a_actor,a_mode,a_worn);
     }
     inline RE::TESObjectARMO* GetWornDevice(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy) 
     {
-        LOG("GetWornDevice called")
+        LOG("GetWornDevice({},{},{}) called",a_actor ? a_actor->GetName() : "NONE",a_kw ? a_kw->GetName() : "NONE",a_fuzzy)
         return LibFunctions::GetSingleton()->GetWornDevice(a_actor, a_kw, a_fuzzy);
+    }
+
+    inline bool PluginInstalled(PAPYRUSFUNCHANDLE,std::string a_dll)
+    {
+        LOG("PluginInstalled({}) called",a_dll)
+        return LibFunctions::GetSingleton()->PluginInstalled(a_dll);
     }
 }

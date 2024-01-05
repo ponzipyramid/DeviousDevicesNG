@@ -169,20 +169,21 @@ EndFunction
 
 Function Maintenance()
 	libs.log("Maintenance routine called")
+    CheckNativePlugins()
 	; benchmark.SetupBenchmarks()
 	float curVersion = libs.GetVersion()
-	checkBlindfoldDarkFog()		
+	checkBlindfoldDarkFog()
 	if zad_DeviousDevice == None
 		Debug.MessageBox("Devious Devices has not been correctly upgraded from its previous version. Please Clean Save, as per the instructions in the support thread.")
 		Libs.Error("zad_DeviousDevice == none in Maintenance()")
 	Endif
 	bool regDevices = false 
-	if modVersion != curVersion		
+	if modVersion != curVersion
 		modVersion = curVersion
 		debug.notification("Devious Devices, version " + libs.GetVersionString() + " initialized.")
 		libs.Log("Initializing.")
 		regDevices = true
-	EndIf	
+	EndIf
 	Parent.Maintenance()
 	; I doubt this will actually fix the MCM issue people are reporting, though who knows. Doesn't make sense that the animation failing 
 	; to register with Sexlab would cause zadConfig to not initialize properly. All the same, better to avoid that race condition
@@ -270,6 +271,15 @@ Function VersionChecks()
 	libs.Log("==========End Compatibility Checks==========")
 EndFunction
 
+;Check native plugins
+Function CheckNativePlugins()
+    if !zadNativeFunctions.PluginInstalled("mfgfix.dll")
+        Debug.MessageBox("-Devious Devices-\n Can't find mfgfix.dll. Please install the Mfg Fix, otherwise the expressions will not work correctly!")
+    endif
+    if !zadNativeFunctions.PluginInstalled("skee64.dll")
+        Debug.MessageBox("-Devious Devices-\n Can't find skee64.dll. Please install the Racemenu, otherwise the mod will not work correctly!")
+    endif
+EndFunction
 
 function Rehook()
 	libs.Log("Rehooking Mod Events")

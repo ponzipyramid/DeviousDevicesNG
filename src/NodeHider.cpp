@@ -1,88 +1,121 @@
 #include "NodeHider.h"
 #include "LibFunctions.h"
 #include "Hider.h"
-#include "Config.h"
 
 SINGLETONBODY(DeviousDevices::NodeHider)
 
-#ifdef NH_IMPARMHIDER
 
 void DeviousDevices::NodeHider::HideArms(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    RE::NiNode* thirdpersonNode = a_actor->Get3D(0)->AsNode();
+    HidderState loc_state = _armhiddenstates[a_actor->GetHandle().native_handle()];
+    if (loc_state == HidderState::sHidden) return;
 
+    RE::NiNode* thirdpersonNode = a_actor->Get3D(0)->AsNode();
     if (thirdpersonNode == nullptr) return;
 
-    RE::NiNode* leftarmNode     = thirdpersonNode->GetObjectByName("NPC L UpperArm [LUar]")->AsNode();
-    if (leftarmNode == nullptr) return;
+    for (auto&& it : _ArmNodes)
+    {
+        RE::NiNode* loc_node = thirdpersonNode->GetObjectByName(it)->AsNode();
+        if (loc_node != nullptr) loc_node->local.scale = 0.002f;
+        else ERROR("NodeHider::HideArms - Cant find node {}",it)
+    }
 
-    RE::NiNode* rightarmNode    = thirdpersonNode->GetObjectByName("NPC R UpperArm [RUar]")->AsNode();
-    if (rightarmNode == nullptr) return;
+    _armhiddenstates[a_actor->GetHandle().native_handle()] = HidderState::sHidden;
 
-    leftarmNode->local.scale  = 0.002f;
-    rightarmNode->local.scale = 0.002f;
+    LOG("NodeHider::HideArms({}) - Arm nodes hidden",a_actor->GetName())
 }
 
 void DeviousDevices::NodeHider::ShowArms(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    RE::NiNode* thirdpersonNode = a_actor->Get3D(0)->AsNode();
+    HidderState loc_state = _armhiddenstates[a_actor->GetHandle().native_handle()];
+    if (loc_state == HidderState::sShown) return;
 
+    RE::NiNode* thirdpersonNode = a_actor->Get3D(0)->AsNode();
     if (thirdpersonNode == nullptr) return;
 
-    RE::NiNode* leftarmNode     = thirdpersonNode->GetObjectByName("NPC L UpperArm [LUar]")->AsNode();
-    if (leftarmNode == nullptr) return;
+    for (auto&& it : _ArmNodes)
+    {
+        RE::NiNode* loc_node = thirdpersonNode->GetObjectByName(it)->AsNode();
+        if (loc_node != nullptr) loc_node->local.scale = 1.000f;
+        else ERROR("NodeHider::ShowArms - Cant find node {}",it)
+    }
 
-    RE::NiNode* rightarmNode    = thirdpersonNode->GetObjectByName("NPC R UpperArm [RUar]")->AsNode();
-    if (rightarmNode == nullptr) return;
+    _armhiddenstates[a_actor->GetHandle().native_handle()] = HidderState::sShown;
 
-    leftarmNode->local.scale  = 1.000f;
-    rightarmNode->local.scale = 1.000f;
+    LOG("NodeHider::ShowArms({}) - Arm nodes shown",a_actor->GetName())
 }
 
-#endif
+void DeviousDevices::NodeHider::UpdateArms(RE::Actor* a_actor)
+{
+    if (a_actor == nullptr) return;
+
+    if (LibFunctions::GetSingleton()->WornHasKeyword(a_actor,_straitjacket)) HideArms(a_actor);
+    else ShowArms(a_actor);
+}
+
+void DeviousDevices::NodeHider::UpdateWapons(RE::Actor* a_actor)
+{
+    if (a_actor == nullptr) return;
+
+    if (ShouldHideWeapons(a_actor)) HideWeapons(a_actor);
+    else ShowWeapons(a_actor);
+}
 
 void DeviousDevices::NodeHider::HideWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    //LOG("HideWeapons called for {}",a_actor->GetName());
+    HidderState loc_state = _weaponhiddenstates[a_actor->GetHandle().native_handle()];
+    //if (loc_state == HidderState::sHidden) return;
 
     for (auto&& it : _WeaponNodes)
     {
         AddHideNode(a_actor,it);
     }
+
+    _weaponhiddenstates[a_actor->GetHandle().native_handle()] = HidderState::sHidden;
+
+    LOG("NodeHider::HideWeapons({}) - Weapon nodes hidden",a_actor->GetName())
 }
-
-
 
 void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    //LOG("ShowWeapons called for {}",a_actor->GetName());
+    HidderState loc_state = _weaponhiddenstates[a_actor->GetHandle().native_handle()];
+    if (loc_state == HidderState::sShown) return;
 
     for (auto&& it : _WeaponNodes)
     {
         RemoveHideNode(a_actor,it);
     }
+
+    _weaponhiddenstates[a_actor->GetHandle().native_handle()] = HidderState::sShown;
+
+    LOG("NodeHider::ShowWeapons({}) - Weapon nodes shown",a_actor->GetName())
 }
 
 void DeviousDevices::NodeHider::Setup()
 { 
     if (!_installed)
     {
-        LOG("NodeHider::Setup() - Installed")
+        DEBUG("NodeHider::Setup() - Installed")
         _WeaponNodes = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asWeaponNodes");
+        _ArmNodes    = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asArmNodes");
+        _straitjacket = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
         _installed = true;
     }
 }
 
 void DeviousDevices::NodeHider::Update()
 {
+    //check ini if node hider should be used
+    if (!ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true)) return;
+
     LOG("NodeHider::Update() - Updating...")
 
     static RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
@@ -95,23 +128,17 @@ void DeviousDevices::NodeHider::Update()
         loc_lastactors.push_back(RE::Actor::LookupByHandle(it).get());
     }
 
-    uint16_t loc_updated = 0;
-
-    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance");
+    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",2000);
 
     RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
         auto loc_refBase    = a_ref.GetBaseObject();
         auto loc_actor      = a_ref.As<RE::Actor>();
-        if (ShouldHideWeapons(loc_actor) && (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
+        if (loc_actor && (loc_actor == loc_player) || (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
         {
-            loc_updated += 1;
             loc_currentactors.push_back(loc_actor);
-            //UpdateGagExpression(loc_actor);
-
         }
         return RE::BSContainer::ForEachResult::kContinue;
     });
-
 
     std::sort(loc_lastactors.begin(),loc_lastactors.end());
     std::sort(loc_currentactors.begin(),loc_currentactors.end());
@@ -144,23 +171,27 @@ void DeviousDevices::NodeHider::Update()
                               loc_addedactors.begin());
     loc_addedactors.resize(loc_it3-loc_addedactors.begin());
 
+    const bool loc_hidearms = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bHideArms",false);
+
     //remove weapon node hider from removed actors
     for (auto&& it : loc_removedactors)
     {
-        ShowWeapons(it);
+        //UpdateWapons(it);
+        if (loc_hidearms) UpdateArms(it);
     }
 
     //hide weapons for same actors, so it stay hidden
     for (auto&& it : loc_samectors)
     {
-        HideWeapons(it);
+        UpdateWapons(it);
+        if (loc_hidearms) UpdateArms(it);
     }
 
     //hide weapons for added actors
     for (auto&& it : loc_addedactors)
     {
-        HideWeapons(it);
-        //DeviceHiderManager::GetSingleton()->Update3DSafe(it);
+        UpdateWapons(it);
+        if (loc_hidearms) UpdateArms(it);
     }
 
     //update last actors
@@ -170,14 +201,27 @@ void DeviousDevices::NodeHider::Update()
         _lastupdatestack.push_back(it->GetHandle().native_handle());
     }
 
-    LOG("NodeHider::Update() - Node hider updated {} actors",loc_updated)
+    LOG("NodeHider::Update() - Node hider updated")
+    LOG("NodeHider::Update() - Removed actors...")
+    for (auto&& it : loc_removedactors) LOG("\t{}",it ? it->GetName() : "NONE")
+    LOG("NodeHider::Update() - Same actors...")
+    for (auto&& it : loc_samectors) LOG("\t{}",it ? it->GetName() : "NONE")
+    LOG("NodeHider::Update() - Added actors...")
+    for (auto&& it : loc_addedactors) LOG("\t{}",it ? it->GetName() : "NONE")
+}
+
+void DeviousDevices::NodeHider::Reload()
+{
+    _lastupdatestack.clear();
+    _armhiddenstates.clear();
+    _weaponhiddenstates.clear();
 }
 
 bool DeviousDevices::NodeHider::ActorIsValid(RE::Actor* a_actor) const
 {
     if (a_actor == nullptr) return false;
     
-    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled() || (a_actor->GetFormID() == 0))
+    if (a_actor->IsDead() || !a_actor->Is3DLoaded() || a_actor->IsDisabled())
     {
         return false;
     }
