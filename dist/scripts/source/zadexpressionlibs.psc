@@ -295,6 +295,9 @@ Event OnInit()
 EndEvent
 
 Function Maintenance()
+    GagKeyword_Ring = Keyword.GetKeyword("zad_DeviousGagRing")
+    GagKeyword_Bit = Keyword.GetKeyword("zad_DeviousGagBit")
+
     zadNativeFunctions.RegisterGagType(libs.zad_GagNoOpenMouth,new Faction[1],new Int[16])
     zadNativeFunctions.RegisterGagType(libs.zad_DeviousGagLarge,PhonemeModifierFactions_Large,DefaultGagExpression_Large)
     zadNativeFunctions.RegisterGagType(libs.zad_DeviousGagPanel,PhonemeModifierFactions_Panel,DefaultGagExpression_Panel)

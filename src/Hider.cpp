@@ -135,6 +135,8 @@ bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor
 {
     std::unordered_map<RE::TESObjectARMO*,uint32_t> loc_devices;
 
+    static const bool loc_onlydevices = ConfigManager::GetSingleton()->GetVariable<bool>("DeviceHider.bOnlyDevices",true);
+
     auto loc_visitor = WornVisitor([this,&loc_devices](RE::InventoryEntryData* a_entry)
     {
         #undef GetObject
@@ -147,7 +149,7 @@ bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor
             loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
         }
 
-        if (loc_armor != nullptr && IsDevice(loc_armor))
+        if (loc_armor != nullptr && (!loc_onlydevices || IsDevice(loc_armor)))
         {
             loc_devices[loc_armor] = (uint32_t)loc_armor->GetSlotMask();
         }
