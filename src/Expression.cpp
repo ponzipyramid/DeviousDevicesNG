@@ -1,5 +1,6 @@
 #include "Expression.h"
 #include "Config.h"
+#include "LibFunctions.h"
 
 SINGLETONBODY(DeviousDevices::ExpressionManager)
 
@@ -24,6 +25,8 @@ namespace DeviousDevices
 
     bool ExpressionManager::ApplyExpression(RE::Actor* a_actor, const std::vector<float> &a_expression, float a_strength, bool a_openMouth,int a_priority)
     {
+        LOG("ApplyExpression({},{},{},{}) called",a_actor ? a_actor->GetName() : "NONE",a_strength,a_openMouth,a_priority)
+
         if (a_actor == nullptr || !a_actor->Is3DLoaded())
         {
             WARN("ExpressionManager::ApplyExpression - Actor is none, or not loaded")
@@ -32,7 +35,7 @@ namespace DeviousDevices
 
         if (a_expression.size() != 32)
         {
-            WARN("ExpressionManager::ApplyExpression - Expression size have to be 32!")
+            ERROR("ExpressionManager::ApplyExpression - Expression size have to be 32!")
             return false;
         }
 
@@ -57,11 +60,13 @@ namespace DeviousDevices
 
     std::vector<float> ExpressionManager::ApplyExpressionRaw(RE::Actor* a_actor, const std::vector<float> &a_expression)
     {
+        LOG("ApplyExpressionRaw({}) called",a_actor ? a_actor->GetName() : "NONE")
+
         if (a_actor == nullptr) return std::vector<float>();
 
         if (a_expression.size() != 32) 
         {
-            LOG("Expression is of incorrect size - returning")
+            ERROR("Expression is of incorrect size - returning")
             return GetExpression(a_actor);
         }
         std::vector<float> loc_expression = GetExpression(a_actor);
@@ -69,8 +74,8 @@ namespace DeviousDevices
         //check if its not same
         if (loc_expression == a_expression) 
         {
-            LOG("Expression is same as previous one - returning")
-            return loc_expression; 
+            WARN("Expression is same as previous one - returning")
+            return loc_expression;
         }
 
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
@@ -143,6 +148,8 @@ namespace DeviousDevices
 
     std::vector<float> ExpressionManager::GetExpression(RE::Actor* a_actor)
     {
+        LOG("GetExpression({}) called",a_actor ? a_actor->GetName() : "NONE")
+
         if (a_actor == nullptr) return std::vector<float>(32,0.0f);
 
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
@@ -181,6 +188,8 @@ namespace DeviousDevices
 
     bool ExpressionManager::ResetExpression(RE::Actor* a_actor, int a_priority)
     {
+        LOG("ResetExpression({},{}) called",a_actor ? a_actor->GetName() : "NONE",a_priority)
+
         if (a_actor == nullptr) return false;
         
         if (!CheckExpressionBlock(a_actor,a_priority,mReset)) return false;
@@ -239,7 +248,7 @@ namespace DeviousDevices
 
         if (a_expression.size() != 16) 
         {
-            LOG("ExpressionManager::ApplyGagExpression - Expression is of incorrect size - returning")
+            ERROR("ExpressionManager::ApplyGagExpression - Expression is of incorrect size - returning")
             return;
         }
 
@@ -436,7 +445,7 @@ namespace DeviousDevices
     {
         std::vector<float> loc_res(16,0);
 
-        const RE::TESObjectARMO* loc_gag = a_actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
+        const RE::TESObjectARMO* loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,(int)RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
 
         if (loc_gag == nullptr) return loc_res;
 
@@ -452,7 +461,11 @@ namespace DeviousDevices
         }
 
         //check if gag type was found. If not, use default one
-        if (!loc_gagtypefound) ApplyPhonemsFaction(a_actor,loc_res,_DefaultGagType.factions,_DefaultGagType.defaults);
+        if (!loc_gagtypefound) 
+        {
+            WARN("No gag type found! Using default type")
+            ApplyPhonemsFaction(a_actor,loc_res,_DefaultGagType.factions,_DefaultGagType.defaults);
+        }
 
         return loc_res;
     }
