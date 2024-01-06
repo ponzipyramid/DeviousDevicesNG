@@ -236,7 +236,7 @@ namespace DeviousDevices
     bool ExpressionManager::IsGagged(RE::Actor* a_actor) const
     {
         if (a_actor == nullptr) return false;
-        const RE::TESObjectARMO* loc_gag = a_actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
+        const RE::TESObjectARMO* loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,(int)RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
         if (loc_gag == nullptr) return false;
 
         return loc_gag->HasKeywordString("zad_DeviousGag");
@@ -421,7 +421,7 @@ namespace DeviousDevices
 
         uint16_t loc_updated = 0;
 
-        const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance",3000);
+        const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance",500);
 
         RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
             auto loc_refBase    = a_ref.GetBaseObject();
