@@ -59,6 +59,7 @@ endEvent
 Event OnPlayerLoadGame()
 	actor akActor = libs.PlayerRef
 	libs.SpellCastVibrateCooldown = 0.0
+	CheckForSoftDepends()
 	questScript.Maintenance()
 	cameraState.Maintenance()
 	libs.ResetDialogue()
@@ -73,7 +74,20 @@ Event OnPlayerLoadGame()
 	RegisterEvents()
 	InitGagSpeak(false)
 EndEvent
- 
+
+Function CheckForSoftDepends()
+	If Game.IsPluginInstalled("OSLAroused.esp")
+		libs.config.GotOSLA = True 		;OSL Aroused is here
+	Else
+		libs.config.GotOSLA = False     ;not here
+	EndIf
+
+	If Game.IsPluginInstalled("SexLab Inflation Framework.esp")
+		libs.config.GotSLIF = True  ;SexLab Inflation Framework is here
+	Else
+		libs.config.GotSLIF = False ;not here
+	EndIf
+EndFunction
  
 Event OnItemRemoved(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akDestContainer)
 	if akBaseItem == libs.SoulgemFilled
