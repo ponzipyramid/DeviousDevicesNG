@@ -9,7 +9,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
 {
     if (!_setup)
     {
-        DEBUG("DeviceHiderManager::Setup()")
+        DEBUG("DeviceHiderManager::Setup() - called")
         RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
         if (loc_datahandler == nullptr) 
@@ -93,6 +93,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
             DEBUG("InitWornArmor patch installed!")
         }
         _setup = true;
+        DEBUG("DeviceHiderManager::Setup() - complete")
     }
 }
 

@@ -4,6 +4,18 @@
 
 SINGLETONBODY(DeviousDevices::NodeHider)
 
+void DeviousDevices::NodeHider::Setup()
+{ 
+    if (!_installed)
+    {
+        DEBUG("NodeHider::Setup() - called")
+        _WeaponNodes = ConfigManager::GetSingleton()->GetArrayText("NodeHider.asWeaponNodes",false);
+        _ArmNodes    = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asArmNodes");
+        _straitjacket = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
+        _installed = true;
+        DEBUG("NodeHider::Setup() - complete")
+    }
+}
 
 void DeviousDevices::NodeHider::HideArms(RE::Actor* a_actor)
 {
@@ -99,17 +111,6 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
     LOG("NodeHider::ShowWeapons({}) - Weapon nodes shown",a_actor->GetName())
 }
 
-void DeviousDevices::NodeHider::Setup()
-{ 
-    if (!_installed)
-    {
-        DEBUG("NodeHider::Setup() - Installed")
-        _WeaponNodes = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asWeaponNodes");
-        _ArmNodes    = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asArmNodes");
-        _straitjacket = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
-        _installed = true;
-    }
-}
 
 void DeviousDevices::NodeHider::Update()
 {
@@ -243,9 +244,11 @@ bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_no
     if (loc_thirdpersonNode == nullptr) return false;
     
     RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(a_nodename);
-    if (loc_node != nullptr)
+    
+    if (loc_node != nullptr && loc_node->AsNode()->local.scale >= 0.5f)
     {
-        loc_node->AsNode()->local.scale = 0.00f;
+        loc_node->AsNode()->local.scale = 0.002f;
+        _weaponnodestates[a_actor->GetHandle().native_handle()][a_nodename] = HidderState::sHidden;
         return true;
     }
     return false;
@@ -260,10 +263,11 @@ bool DeviousDevices::NodeHider::RemoveHideNode(RE::Actor* a_actor, std::string a
     if (loc_thirdpersonNode == nullptr) return false;
     
     RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(a_nodename);
-    if (loc_node != nullptr)
+    if (loc_node != nullptr && _weaponnodestates[a_actor->GetHandle().native_handle()][a_nodename] == HidderState::sHidden)
     {
-            loc_node->AsNode()->local.scale = 1.00f;
-            return true;
+        loc_node->AsNode()->local.scale = 1.00f;
+        _weaponnodestates[a_actor->GetHandle().native_handle()][a_nodename] = HidderState::sShown;
+        return true;
     }
     return false;
 }

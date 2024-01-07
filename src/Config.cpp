@@ -34,7 +34,7 @@ bool DeviousDevices::ConfigManager::GetLoggingDisable() const
     return _LogDisable;
 }
 
-std::vector<std::string> ConfigManager::GetArrayRaw(std::string a_name, std::string a_sep) const
+std::vector<std::string> ConfigManager::GetArrayRaw(std::string a_name, bool a_tolower, std::string a_sep) const
 {
     std::vector<std::string> loc_res;
     try
@@ -53,7 +53,7 @@ std::vector<std::string> ConfigManager::GetArrayRaw(std::string a_name, std::str
         const auto loc_first = it.find_first_not_of(' ');
         const auto loc_last  = it.find_last_not_of(' ');
         it = it.substr(loc_first,loc_last - loc_first + 1);
-        std::transform(it.begin(), it.end(), it.begin(), ::tolower);
+        if (a_tolower) std::transform(it.begin(), it.end(), it.begin(), ::tolower);
     }
 
     return loc_res;
@@ -91,7 +91,7 @@ std::vector<T> ConfigManager::GetArray(std::string a_name, std::string a_sep) co
     void* loc_cres = _catche[a_name];
     if (loc_cres != nullptr) return *(std::vector<T>*)loc_cres;
 
-    std::vector<std::string> loc_raw = GetArrayRaw(a_name,a_sep);
+    std::vector<std::string> loc_raw = GetArrayRaw(a_name,true,a_sep);
     std::vector<T> loc_res;
 
     for (auto&&it : loc_raw)
@@ -111,6 +111,20 @@ std::vector<T> ConfigManager::GetArray(std::string a_name, std::string a_sep) co
     }
 
     _catche[a_name] = new std::vector<T>(loc_res);
+
+    return loc_res;
+}
+
+std::vector<std::string> ConfigManager::GetArrayText(std::string a_name, bool a_lowercase, std::string a_sep) const
+{
+    if (!_loaded) return std::vector<std::string>();
+
+    void* loc_cres = _catche[a_name];
+    if (loc_cres != nullptr) return *(std::vector<std::string>*)loc_cres;
+
+    std::vector<std::string> loc_res = GetArrayRaw(a_name,a_lowercase,a_sep);
+
+    _catche[a_name] = new std::vector<std::string>(loc_res);
 
     return loc_res;
 }

@@ -30,7 +30,6 @@ namespace DeviousDevices
         bool ShouldHideWeapons(RE::Actor* a_actor) const;
         bool AddHideNode(RE::Actor* a_actor, std::string a_nodename);
         bool RemoveHideNode(RE::Actor* a_actor, std::string a_nodename);
-
     private:
         bool _installed = false;
         RE::BGSKeyword*             _straitjacket;
@@ -39,5 +38,6 @@ namespace DeviousDevices
         std::vector<std::string>    _ArmNodes;
         std::unordered_map<uint32_t,HidderState> _armhiddenstates;    //temporary array with state of arm nodes on updated actors
         std::unordered_map<uint32_t,HidderState> _weaponhiddenstates; //temporary array with state of weapon nodes on updated actors
+        std::unordered_map<uint32_t,std::unordered_map<std::string,HidderState>> _weaponnodestates; //temporary array with states of weapon nodes on updated actors
     };
 }
