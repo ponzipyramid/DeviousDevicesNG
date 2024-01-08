@@ -38,6 +38,21 @@ namespace DeviousDevices
     };
 
 
+    enum BondageState : uint32_t
+    {
+        sNone               = 0x0000,  // Non bondage state
+        sHandsBound         = 0x0001,  // actors wears any kind of heavy bondage device
+        sHandsBoundNoAnim   = 0x0002,  // actor wears heavy bondage device which hides arms. Because of that it can be to some extend used with normal animations
+        sGaggedBlocking     = 0x0004,  // actor wears gag which block mouth
+        sChastifiedGenital  = 0x0008,  // actor wears chastity belt which blocks genitals
+        sChastifiedAnal     = 0x0010,  // actor wears chastity belt which blocks anal
+        sChastifiedBreasts  = 0x0020,  // actor wears chastity bra which blocks breasts
+        sBlindfolded        = 0x0040,  // ...
+        sMittens            = 0x0080,  // ...
+        sBoots              = 0x0100,  // ...
+        sTotal              = 0x0200   // Last bit for looping
+    };
+
     class LibFunctions
     {
     SINGLETONHEADER(LibFunctions)
@@ -45,8 +60,10 @@ namespace DeviousDevices
         void Setup();
         std::vector<RE::TESObjectARMO*> GetDevices(RE::Actor* a_actor, int a_mode, bool a_worn);
         RE::TESObjectARMO* GetWornDevice(RE::Actor* a_actor, RE::BGSKeyword* a_kw, bool a_fuzzy);
+        std::vector<RE::TESObjectARMO*> GetWornDevices(RE::Actor* a_actor) const;
         RE::TESObjectARMO* GetHandRestrain(RE::Actor* a_actor);
         bool IsBound(RE::Actor* a_actor) const;
+        BondageState GetBondageState(RE::Actor* a_actor) const;
         bool WornHasKeyword(RE::Actor* a_actor, RE::BGSKeyword* a_kw) const;
         RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,int a_mask) const;
         bool IsAnimating(RE::Actor* a_actor);

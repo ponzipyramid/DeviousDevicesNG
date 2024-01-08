@@ -1,5 +1,7 @@
 #pragma once
 #include "DeviceReader.h"
+#include "Expression.h"
+#include "LibFunctions.h"
 
 //Device mod prototype
 struct DeviceModPrototype
@@ -52,6 +54,21 @@ struct DeviceUnitPrototype
     std::vector<HistoryRecord>      history; //history stack
 };
 static_assert(sizeof(DeviceUnitPrototype) == sizeof(DeviousDevices::DeviceReader::DeviceUnit));
+
+enum BondageState : uint32_t
+{
+    sNone               = 0x0000,  // Non bondage state
+    sHandsBound         = 0x0001,  // actors wears any kind of heavy bondage device
+    sHandsBoundNoAnim   = 0x0002,  // actor wears heavy bondage device which hides arms. Because of that it can be to some extend used with normal animations
+    sGaggedBlocking     = 0x0004,  // actor wears gag which block mouth
+    sChastifiedGenital  = 0x0008,  // actor wears chastity belt which blocks genitals
+    sChastifiedAnal     = 0x0010,  // actor wears chastity belt which blocks anal
+    sChastifiedBreasts  = 0x0020,  // actor wears chastity bra which blocks breasts
+    sBlindfolded        = 0x0040,  // ...
+    sMittens            = 0x0080,  // ...
+    sBoots              = 0x0100,  // ...
+    sTotal              = 0x0200   // Last bit for looping
+};
 
 extern "C"
 {
@@ -124,5 +141,25 @@ extern "C"
     DLLEXPORT std::vector<std::string>* GetPropertyStringArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode)
     {
         return new std::vector<std::string>(DeviousDevices::DeviceReader::GetSingleton()->GetPropertyStringArray(a_invdevice,a_propertyname,a_mode));
+    }
+
+    DLLEXPORT void UpdateGagExpression(RE::Actor* a_actor)
+    {
+        DeviousDevices::ExpressionManager::GetSingleton()->UpdateGagExpression(a_actor);
+    }
+
+    DLLEXPORT void ResetGagExpression(RE::Actor* a_actor)
+    {
+        DeviousDevices::ExpressionManager::GetSingleton()->ResetGagExpression(a_actor);
+    }
+
+    DLLEXPORT bool IsGagged(RE::Actor* a_actor)
+    {
+        return DeviousDevices::ExpressionManager::GetSingleton()->IsGagged(a_actor);
+    }
+
+    DLLEXPORT BondageState GetBondageState(RE::Actor* a_actor)
+    {
+        return (BondageState)DeviousDevices::LibFunctions::GetSingleton()->GetBondageState(a_actor);
     }
 }

@@ -1,6 +1,9 @@
 #include "LibFunctions.h"
+#include "InventoryFilter.h"
 
 SINGLETONBODY(DeviousDevices::LibFunctions)
+
+using DeviousDevices::BondageState;
 
 void DeviousDevices::LibFunctions::Setup()
 {
@@ -119,6 +122,40 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornDevice(RE::Actor* a_acto
     return loc_res;
 }
 
+std::vector<RE::TESObjectARMO*> DeviousDevices::LibFunctions::GetWornDevices(RE::Actor* a_actor) const
+{
+    if ((a_actor == nullptr)) return std::vector<RE::TESObjectARMO*>();
+
+    LOG("LibFunctions::GetWornDevices({}) called",a_actor->GetName())
+
+    std::vector<RE::TESObjectARMO*> loc_res;
+    auto loc_visitor = WornVisitor([this,&loc_res](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor())
+        {
+            loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+        }
+
+        if (loc_armor != nullptr && loc_armor->HasKeywordInArray(_rdkw,false))
+        {
+            loc_res.push_back(loc_armor);
+            return RE::BSContainer::ForEachResult::kContinue;
+        }
+        else
+        {
+            return RE::BSContainer::ForEachResult::kContinue;
+        }
+    });
+
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+
+    return loc_res;
+}
+
 RE::TESObjectARMO* DeviousDevices::LibFunctions::GetHandRestrain(RE::Actor* a_actor)
 {
     return GetWornDevice(a_actor,_hbkw,true);
@@ -127,6 +164,42 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetHandRestrain(RE::Actor* a_ac
 bool DeviousDevices::LibFunctions::IsBound(RE::Actor* a_actor) const
 {
     return WornHasKeyword(a_actor,_hbkw);
+}
+
+BondageState DeviousDevices::LibFunctions::GetBondageState(RE::Actor* a_actor) const
+{
+    if (a_actor == nullptr) return sNone;
+
+    const auto loc_devices = GetWornDevices(a_actor);
+
+    if (loc_devices.size() == 0) return sNone;
+
+    uint32_t loc_res = sNone;
+
+    for (auto&& it : loc_devices) 
+    {
+        if (it == nullptr) continue;
+
+        if (it->HasKeywordString("zad_DeviousHeavyBondage"))
+        {
+            loc_res |= sHandsBound;
+            if (it->HasKeywordString("zad_DeviousStraitJacket")) loc_res |= sHandsBoundNoAnim;
+        }
+
+        if (it->HasKeywordString("zad_DeviousBelt"))
+        {
+            if (!it->HasKeywordString("zad_PermitVaginal")) loc_res |= sChastifiedGenital;
+            if (!it->HasKeywordString("zad_PermitAnal"))    loc_res |= sChastifiedAnal;
+        }
+
+        if (InventoryFilter::GetSingleton()->ActorHasBlockingGag(a_actor,it)) loc_res |= sGaggedBlocking;
+        if (it->HasKeywordString("zad_DeviousBlindfold"))       loc_res |= sBlindfolded;
+        if (it->HasKeywordString("zad_DeviousBoots"))           loc_res |= sBoots;
+        if (it->HasKeywordString("zad_DeviousBondageMittens"))  loc_res |= sMittens;
+        if (it->HasKeywordString("zad_DeviousBra"))             loc_res |= sChastifiedBreasts;
+    }
+
+    return (BondageState)loc_res;
 }
 
 bool DeviousDevices::LibFunctions::WornHasKeyword(RE::Actor* a_actor, RE::BGSKeyword* a_kw) const
