@@ -33,11 +33,13 @@ RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
 RE::TESObjectARMO* DeviousDevices::DeviceReader::GetDeviceInventory(RE::TESObjectARMO* a_renddevice)
 {
     //RE::TESObjectARMO* loc_res;
-    auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
+    const auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
     {
         return (p.second.deviceRendered == a_renddevice);
     });
     
+    if (loc_res == _database.end()) return nullptr;
+
     return loc_res->first;
 }
 
@@ -1215,6 +1217,8 @@ RE::TESObjectARMO* DeviousDevices::GetRenderDevice(PAPYRUSFUNCHANDLE, RE::TESObj
 RE::TESObjectARMO* DeviousDevices::GetInventoryDevice(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_renddevice)
 {
     LOG("GeInventoryDevice called")
+
+    if (a_renddevice == nullptr) return nullptr;
 
     RE::TESObjectARMO* loc_res = DeviceReader::GetSingleton()->GetDeviceInventory(a_renddevice);
 

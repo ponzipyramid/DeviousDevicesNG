@@ -417,15 +417,21 @@ namespace DeviousDevices
 
     int ExpressionManager::UpdateGagExpForNPCs()
     {
-        static RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
+        RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
+
+        if (loc_player == nullptr) return 0;
 
         uint16_t loc_updated = 0;
 
         const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance",500);
 
+        LOG("UpdateGagExpForNPCs() called - Distance = {}",loc_distance)
+
         RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
-            auto loc_refBase    = a_ref.GetBaseObject();
-            auto loc_actor      = a_ref.As<RE::Actor>();
+
+            if (!a_ref.IsHandleValid())RE::BSContainer::ForEachResult::kContinue;
+            RE::TESBoundObject* loc_refBase = a_ref.GetBaseObject();
+            RE::Actor*          loc_actor   = a_ref.As<RE::Actor>();
             if (loc_actor && !loc_actor->IsDisabled() && 
                 loc_actor->Is3DLoaded() && 
                 IsGagged(loc_actor) &&

@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         DeviousDevices
-        VERSION 0.0.0.1
+        VERSION 3.0.0.1
         DESCRIPTION "NG Implementation of Devious Devices"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
