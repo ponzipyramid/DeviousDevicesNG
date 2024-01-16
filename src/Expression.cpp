@@ -1,5 +1,6 @@
 #include "Expression.h"
 #include "Config.h"
+#include "Utils.h"
 
 SINGLETONBODY(DeviousDevices::ExpressionManager)
 
@@ -414,7 +415,7 @@ namespace DeviousDevices
 
         const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance",3000);
 
-        RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
+        Utils::ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
             auto loc_refBase    = a_ref.GetBaseObject();
             auto loc_actor      = a_ref.As<RE::Actor>();
             if (loc_actor && !loc_actor->IsDisabled() && 
