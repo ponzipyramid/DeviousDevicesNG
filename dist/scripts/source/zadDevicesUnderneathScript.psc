@@ -47,7 +47,7 @@ bool _init = false
 ;; [59]: 0x20000000
 
 Event OnInit()
-    RegisterForSingleUpdate(5.0)
+    RegisterForSingleUpdate(15.0)
 EndEvent
 
 Event OnUpdate()

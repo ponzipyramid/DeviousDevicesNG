@@ -52,9 +52,13 @@ function RegisterEvents()
 EndFunction
 
 event OnInit()
+    RegisterForSingleUpdate(5.0)
+endEvent
+
+Event OnUpdate()
     RegisterEvents()
     InitGagSpeak(true)
-endEvent
+EndEvent
 
 Event OnPlayerLoadGame()
     actor akActor = libs.PlayerRef

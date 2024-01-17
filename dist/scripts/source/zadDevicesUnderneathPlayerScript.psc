@@ -6,9 +6,10 @@ import zadNativeFunctions
 Bool Property Working Auto
 
 Event OnPlayerLoadGame()
-    libs.DevicesUnderneath.Maintenance()
-    libs.PlayerRef.RemoveItem(libs.DevicesUnderneath.zad_DeviceHider, 999, true)
+    RegisterForSingleUpdate(3.0)
 EndEvent
 
 Function OnUpdate()
+    libs.DevicesUnderneath.Maintenance()
+    libs.PlayerRef.RemoveItem(libs.DevicesUnderneath.zad_DeviceHider, 999, true)
 EndFunction
