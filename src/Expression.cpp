@@ -74,7 +74,7 @@ namespace DeviousDevices
         //check if its not same
         if (loc_expression == a_expression) 
         {
-            WARN("Expression is same as previous one - returning")
+            //WARN("Expression is same as previous one - returning")
             return loc_expression;
         }
 
@@ -469,7 +469,7 @@ namespace DeviousDevices
         //check if gag type was found. If not, use default one
         if (!loc_gagtypefound) 
         {
-            WARN("No gag type found! Using default type")
+            //WARN("No gag type found! Using default type")
             ApplyPhonemsFaction(a_actor,loc_res,_DefaultGagType.factions,_DefaultGagType.defaults);
         }
 
