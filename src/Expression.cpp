@@ -1,5 +1,6 @@
 #include "Expression.h"
 #include "Config.h"
+#include "Utils.h"
 #include "LibFunctions.h"
 
 SINGLETONBODY(DeviousDevices::ExpressionManager)
@@ -427,12 +428,12 @@ namespace DeviousDevices
 
         LOG("UpdateGagExpForNPCs() called - Distance = {}",loc_distance)
 
-        RE::TES::GetSingleton()->ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
+        Utils::ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
+            if (!a_ref.IsHandleValid()) RE::BSContainer::ForEachResult::kContinue;
+            auto loc_refBase    = a_ref.GetBaseObject();
+            auto loc_actor      = a_ref.As<RE::Actor>();
 
-            if (!a_ref.IsHandleValid())RE::BSContainer::ForEachResult::kContinue;
-            RE::TESBoundObject* loc_refBase = a_ref.GetBaseObject();
-            RE::Actor*          loc_actor   = a_ref.As<RE::Actor>();
-            if (loc_actor && !loc_actor->IsDisabled() && 
+          if (loc_actor && !loc_actor->IsDisabled() && 
                 loc_actor->Is3DLoaded() && 
                 IsGagged(loc_actor) &&
                 (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))
