@@ -61,9 +61,12 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
     return loc_rollFailure;
 }
 
-bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor) 
+bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag) 
 {
-    const auto loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor,GetMaskForSlot(44));
+    RE::TESObjectARMO* loc_armor = nullptr;
+    if (a_gag) loc_armor = a_gag;
+    else loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor,GetMaskForSlot(44));
+    
     if (loc_armor != nullptr)
     {
         if (loc_armor->HasKeyword(_deviousGagKwd))

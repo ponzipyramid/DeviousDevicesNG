@@ -33,11 +33,13 @@ RE::TESObjectARMO* DeviceReader::GetDeviceRender(RE::TESObjectARMO* a_invdevice)
 RE::TESObjectARMO* DeviousDevices::DeviceReader::GetDeviceInventory(RE::TESObjectARMO* a_renddevice)
 {
     //RE::TESObjectARMO* loc_res;
-    auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
+    const auto loc_res = std::find_if(_database.begin(),_database.end(),[&](std::pair<RE::TESObjectARMO * const, DeviceUnit> &p)
     {
         return (p.second.deviceRendered == a_renddevice);
     });
     
+    if (loc_res == _database.end()) return nullptr;
+
     return loc_res->first;
 }
 
@@ -54,30 +56,36 @@ void DeviceReader::LoadDDMods()
     
     for (auto && it : *loc_filelist)
     {
-      if (std::any_of(loc_masters.begin(), loc_masters.end(), 
-          [&](std::string a_ddmaster)
-          {
+        const auto loc_indx = RE::TESDataHandler::GetSingleton()->GetModIndex(it->GetFilename());
+
+        if (!loc_indx.has_value() || loc_indx.value() == 255U)
+        {
+            WARN("Skipping mod {} because is it disabled",it->GetFilename())
+            continue;
+        }
+        if (std::any_of(loc_masters.begin(), loc_masters.end(),
+            [&](std::string a_ddmaster)
+            {
             if (it->GetFilename() == a_ddmaster)
             {
                 return true;
             }
-            else if (std::any_of(it->masters.begin(), it->masters.end(), 
+            else if (std::any_of(it->masters.begin(), it->masters.end(),
             [&](std::string a_master)
             {
-               if (a_master == a_ddmaster) return true;
-               else return false;
+                if (a_master == a_ddmaster) return true;
+                else return false;
             }
             ))
             {
                 return true;
             }
             else return false;
-          }
-      ))
-      {
+            }
+        ))
+        {
         _ddmods.push_back(it);
-        
-      }
+        }
     }
     LOG("=== DD mods found: {:03}",_ddmods.size())
     CLOG("Mods found = {:02}",_ddmods.size())
@@ -1209,6 +1217,8 @@ RE::TESObjectARMO* DeviousDevices::GetRenderDevice(PAPYRUSFUNCHANDLE, RE::TESObj
 RE::TESObjectARMO* DeviousDevices::GetInventoryDevice(PAPYRUSFUNCHANDLE, RE::TESObjectARMO* a_renddevice)
 {
     LOG("GeInventoryDevice called")
+
+    if (a_renddevice == nullptr) return nullptr;
 
     RE::TESObjectARMO* loc_res = DeviceReader::GetSingleton()->GetDeviceInventory(a_renddevice);
 

@@ -5,6 +5,18 @@
 
 SINGLETONBODY(DeviousDevices::NodeHider)
 
+void DeviousDevices::NodeHider::Setup()
+{ 
+    if (!_installed)
+    {
+        DEBUG("NodeHider::Setup() - called")
+        _WeaponNodes = ConfigManager::GetSingleton()->GetArrayText("NodeHider.asWeaponNodes",false);
+        _ArmNodes    = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asArmNodes");
+        _straitjacket = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
+        _installed = true;
+        DEBUG("NodeHider::Setup() - complete")
+    }
+}
 
 void DeviousDevices::NodeHider::HideArms(RE::Actor* a_actor)
 {
@@ -100,17 +112,6 @@ void DeviousDevices::NodeHider::ShowWeapons(RE::Actor* a_actor)
     LOG("NodeHider::ShowWeapons({}) - Weapon nodes shown",a_actor->GetName())
 }
 
-void DeviousDevices::NodeHider::Setup()
-{ 
-    if (!_installed)
-    {
-        DEBUG("NodeHider::Setup() - Installed")
-        _WeaponNodes = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asWeaponNodes");
-        _ArmNodes    = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asArmNodes");
-        _straitjacket = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
-        _installed = true;
-    }
-}
 
 void DeviousDevices::NodeHider::Update()
 {
@@ -129,12 +130,12 @@ void DeviousDevices::NodeHider::Update()
         loc_lastactors.push_back(RE::Actor::LookupByHandle(it).get());
     }
 
-    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",2000);
+    const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",500);
 
     Utils::ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
         auto loc_refBase    = a_ref.GetBaseObject();
         auto loc_actor      = a_ref.As<RE::Actor>();
-        if (loc_actor && (loc_actor == loc_player) || (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
+        if (loc_actor && ((loc_actor == loc_player) || (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))) 
         {
             loc_currentactors.push_back(loc_actor);
         }
@@ -244,9 +245,11 @@ bool DeviousDevices::NodeHider::AddHideNode(RE::Actor* a_actor, std::string a_no
     if (loc_thirdpersonNode == nullptr) return false;
     
     RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(a_nodename);
-    if (loc_node != nullptr)
+    
+    if (loc_node != nullptr && loc_node->AsNode()->local.scale >= 0.5f)
     {
-        loc_node->AsNode()->local.scale = 0.00f;
+        loc_node->AsNode()->local.scale = 0.002f;
+        _weaponnodestates[a_actor->GetHandle().native_handle()][a_nodename] = HidderState::sHidden;
         return true;
     }
     return false;
@@ -261,10 +264,11 @@ bool DeviousDevices::NodeHider::RemoveHideNode(RE::Actor* a_actor, std::string a
     if (loc_thirdpersonNode == nullptr) return false;
     
     RE::NiAVObject* loc_node = loc_thirdpersonNode->GetObjectByName(a_nodename);
-    if (loc_node != nullptr)
+    if (loc_node != nullptr && _weaponnodestates[a_actor->GetHandle().native_handle()][a_nodename] == HidderState::sHidden)
     {
-            loc_node->AsNode()->local.scale = 1.00f;
-            return true;
+        loc_node->AsNode()->local.scale = 1.00f;
+        _weaponnodestates[a_actor->GetHandle().native_handle()][a_nodename] = HidderState::sShown;
+        return true;
     }
     return false;
 }

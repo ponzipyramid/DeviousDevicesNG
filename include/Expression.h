@@ -30,6 +30,7 @@ namespace DeviousDevices
         bool                RegisterGagType(RE::BGSKeyword* a_keyword, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
         bool                RegisterDefaultGagType(std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
         int                 UpdateGagExpForNPCs();
+        bool                IsGagged(RE::Actor* a_actor) const;
 
     private:
         bool                    _installed = false;
@@ -41,7 +42,6 @@ namespace DeviousDevices
         std::vector<float>  GetGagEffectPreset(RE::Actor* a_actor);
         void                ApplyPhonemsFaction(RE::Actor* a_actor, std::vector<float>& a_exp, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
         std::vector<float>  FactionsToPreset(RE::Actor* a_actor, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
-        bool                IsGagged(RE::Actor* a_actor) const;
         void                ApplyGagExpression(RE::Actor* a_actor, const std::vector<float> &a_expression);
         std::vector<float>  ApplyStrengthToExpression(const std::vector<float>& a_expression,float a_strength);
         bool                CheckExpressionBlock(RE::Actor* a_actor, int a_priority, BlockCheckMode a_mode);

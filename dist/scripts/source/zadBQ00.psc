@@ -137,13 +137,15 @@ function Shutdown(bool silent=false)
     EndIf
 EndFunction
 
-
 Event OnInit()
+    RegisterForSingleUpdate(10.0)
+EndEvent
+
+Event OnUpdate()
 	RegisterForModEvent("__DeviousDevicesInit", "OnInitialize")
 	libs.BoundCombat.CONFIG_ABC()
 	checkBlindfoldDarkFog()
 EndEvent
-
 
 Event OnInitialize(string eventName, string strArg, float numArg, Form sender)
 	UnregisterForModEvent("__DeviousDevicesInit")

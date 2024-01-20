@@ -336,8 +336,12 @@ EndFunction
 
 ; INTERNAL FUNCTIONS - should normally not be called from outsides the framework.
 
-Event OnInit()		
-	InitLibrary()
+Event OnInit()
+    RegisterForSingleUpdate(10.0)
+EndEvent
+
+Event OnUpdate()
+    InitLibrary()
 EndEvent
 
 Function InitLibrary()
