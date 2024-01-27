@@ -39,7 +39,7 @@ RE::TESObjectARMO* DeviousDevices::DeviceReader::GetDeviceInventory(RE::TESObjec
         return (p.second.deviceRendered == a_renddevice);
     });
     
-    return loc_res->first;
+    return loc_res != _database.end() ? loc_res->first : nullptr;
 }
 
 void DeviceReader::LoadDDMods()
