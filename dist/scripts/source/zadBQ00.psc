@@ -433,7 +433,7 @@ sslBaseAnimation function GetBoundAnim(actor a, actor b, bool permitOral, bool p
 				EndIf
 			;not a male
 			Else
-				If permitOral || permitVaginal
+				If permitVaginal && permitOral
 					Return SexLab.GetAnimationObject( ArmbinderLesbian[Utility.RandomInt( 0, ArmbinderLesbian.Length - 1 )] )
 				ElseIf permitVaginal && permitAnal
 					String[] AnimArray = PapyrusUtil.MergeStringArray( ArmbinderVaginal, ArmbinderAnal )
@@ -492,13 +492,15 @@ sslBaseAnimation function GetBoundAnim(actor a, actor b, bool permitOral, bool p
 				EndIf
 			; not a male
 			Else
-				If permitOral || permitVaginal
+				If permitVaginal && permitOral
 					Return SexLab.GetAnimationObject( YokeLesbian[Utility.RandomInt( 0, YokeLesbian.Length - 1 )] )
 				ElseIf permitVaginal && permitAnal
 					String[] AnimArray = PapyrusUtil.MergeStringArray( YokeVaginal, YokeAnal )
 					Return SexLab.GetAnimationObject( AnimArray[Utility.RandomInt( 0, AnimArray.Length - 1 )] )
 				ElseIf permitVaginal
 					Return SexLab.GetAnimationObject( YokeVaginal[Utility.RandomInt( 0, YokeVaginal.Length - 1 )] )
+				ElseIf permitOral
+					Return SexLab.GetAnimationObject( YokeBlowjob[Utility.RandomInt( 0, YokeVaginal.Length - 1 )] )
 				ElseIf permitAnal	
 					Return SexLab.GetAnimationObject( YokeAnal[Utility.RandomInt( 0, YokeAnal.Length - 1 )] )
 				Else	
@@ -535,7 +537,7 @@ sslBaseAnimation function GetBoundAnim(actor a, actor b, bool permitOral, bool p
 					Return SexLab.GetAnimationObject( CuffedOther[Utility.RandomInt( 0, CuffedOther.Length - 1 )] )
 				EndIf
 			Else
-				If permitOral || permitVaginal
+				If permitVaginal && permitOral
 					Return SexLab.GetAnimationObject( CuffedLesbian[Utility.RandomInt( 0, CuffedLesbian.Length - 1 )] )
 				ElseIf permitVaginal && permitAnal
 					String[] AnimArray = PapyrusUtil.MergeStringArray( CuffedVaginal, CuffedAnal )
@@ -611,7 +613,7 @@ sslBaseAnimation function GetBoundAnim(actor a, actor b, bool permitOral, bool p
 					Return SexLab.GetAnimationObject( ElbowbinderAnal[Utility.RandomInt( 0, ElbowbinderAnal.Length - 1 )] )	
 				EndIf
 			Else
-				If permitOral || permitVaginal
+				If permitVaginal && permitOral
 					Return SexLab.GetAnimationObject( ElbowbinderLesbian[Utility.RandomInt( 0, ElbowbinderLesbian.Length - 1 )] )
 				ElseIf permitVaginal && permitAnal
 					String[] AnimArray = PapyrusUtil.MergeStringArray( ElbowbinderVaginal, ElbowbinderAnal )
@@ -1569,9 +1571,8 @@ EndFunction
 
 
 Bool Function HasBelt(Actor akActor)
-	Return (akActor != None) && (akActor.WornHasKeyword(zad_DeviousDevice))
+	Return (akActor != None) && (akActor.WornHasKeyword(libs.zad_DeviousBelt))
 EndFunction
-
 
 Bool Function HasArmbinder(Actor akActor)
 	Return (akActor != None) && (akActor.WornHasKeyword(libs.zad_DeviousArmbinder) || akActor.WornHasKeyword(libs.zad_DeviousArmbinderElbow))

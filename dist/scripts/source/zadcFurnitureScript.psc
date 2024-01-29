@@ -973,7 +973,7 @@ Function StruggleScene(actor akActor)
 	libs.SexlabMoan(akActor)
 	Utility.Wait(2)
 	ActorUtil.RemovePackageOverride(akActor, CurrentStruggle)
-	;ActorUtil.AddPackageOverride(akActor, CurrentPose, 99)		
+	ActorUtil.AddPackageOverride(akActor, CurrentPose, 99)		
 	akActor.EvaluatePackage()
 	libs.SexlabMoan(akActor)
 	strugglemutex = false
