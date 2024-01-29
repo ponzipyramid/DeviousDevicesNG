@@ -40,7 +40,7 @@ RE::TESObjectARMO* DeviousDevices::DeviceReader::GetDeviceInventory(RE::TESObjec
     
     if (loc_res == _database.end()) return nullptr;
 
-    return loc_res->first;
+    return loc_res != _database.end() ? loc_res->first : nullptr;
 }
 
 void DeviceReader::LoadDDMods()

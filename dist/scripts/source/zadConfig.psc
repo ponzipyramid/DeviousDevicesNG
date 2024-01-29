@@ -355,25 +355,8 @@ Event OnConfigInit()
 	SetupEscapeDifficulties()
 	SetupBlindfolds()
 	SetupSoundDuration()
-	CheckForSoftDepends()
 	SlotMaskOIDS = new int[128]
 EndEvent
-
-Function CheckForSoftDepends()
-
-	If Game.IsPluginInstalled("OSLAroused.esp")
-		GotOSLA = True 		;OSL Aroused is here
-	Else
-		GotOSLA = False     ;not here
-	EndIf
-	
-	If Game.IsPluginInstalled("SexLab Inflation Framework.esp")
-		GotSLIF = True  ;SexLab Inflation Framework is here
-	Else
-		GotSLIF = False ;not here
-	EndIf
-
-EndFunction
 
 int Function GetVersion()
 	return 30 ; mcm menu version
@@ -537,7 +520,7 @@ Event OnPageReset(string page)
 			i += 1
 		EndWhile	
 	ElseIf page == "Debug"
-		SetCursorFillMode(TOP_TO_BOTTOM)								
+		SetCursorFillMode(TOP_TO_BOTTOM)
 		SetCursorPosition(1) ; Move cursor to top right position		
 		AddHeaderOption("Message Visibility Settings")
 		npcMessagesOID = AddToggleOption("Show NPC Messages", NpcMessages)
