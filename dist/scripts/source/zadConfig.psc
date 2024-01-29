@@ -212,6 +212,7 @@ int darkfogStrengthOID
 int[] eventOIDs
 int[] slotMaskOIDs
 int DevicesUnderneathSlotOID
+int DeviceHiderSettingOID
 int UseQueueNiNodeOID
 int breastNodeManagementOID
 int bellyNodeManagementOID
@@ -245,6 +246,7 @@ string[] Property EsccapeDifficultyList Auto
 string[] difficultyList
 string[] blindfoldList
 string[] slotMasks
+string[] hiderSetting
 string[] SoundList
 int[] SlotMaskValues
 
@@ -320,7 +322,7 @@ Function SetupSlotMasks()
 	SlotMasks[9] = "Calves (38)"
 	SlotMasks[10] = "Shield (39)"
 	SlotMasks[11] = "Tail (40)"
-	SlotMasks[12] = "Device Hider + Long Hair (41)"
+	SlotMasks[12] = "Long Hair (41)"
 	SlotMasks[13] = "Circlet (42)"
 	SlotMasks[14] = "Ears (43)"
 	SlotMasks[15] = "Gags (44)"
@@ -340,6 +342,10 @@ Function SetupSlotMasks()
 	SlotMasks[29] = "Harnesses / Corsets (58)"
 	SlotMasks[30] = "Cuffs (Arms) / Armbinder (59)"
 
+    hiderSetting = new String[3]
+    hiderSetting[0] = "No hide"
+    hiderSetting[1] = "Hide when bound"
+    hiderSetting[2] = "Hide always"
 EndFunction
 
 Event OnConfigInit()
@@ -478,8 +484,9 @@ Event OnPageReset(string page)
 	ElseIf page == "Devices Underneath (1)"
 		SetupSlotMasks()
 		SetCursorFillMode(TOP_TO_BOTTOM)
-		DevicesUnderneathSlotOID = AddMenuOption("Item Hider Slot", SlotMasks[DevicesUnderneathSlot])
-		UseQueueNiNodeOID = AddToggleOption("Use QueueNiNode", UseQueueNiNode)
+		DevicesUnderneathSlotOID = AddMenuOption("Item Hider Slot", SlotMasks[DevicesUnderneathSlot],OPTION_FLAG_DISABLED)
+		;UseQueueNiNodeOID = AddToggleOption("Use QueueNiNode", UseQueueNiNode,OPTION_FLAG_DISABLED)
+        DeviceHiderSettingOID = AddMenuOption("NPC setting", hiderSetting[libs.DevicesUnderneath.Setting])
 		; AddMenuOption("Item Hider Slot", SlotMasks[DevicesUnderneathSlot])
 		int i = 1
 		while i < 16
@@ -580,6 +587,10 @@ Event OnOptionMenuOpen(int option)
 		SetMenuDialogOptions(SlotMasks)
 		SetMenuDialogStartIndex(DevicesUnderneathSlot)
 		SetMenuDialogDefaultIndex(DevicesUnderneathSlotDefault)
+    elseif option == DeviceHiderSettingOID
+		SetMenuDialogOptions(hiderSetting)
+		SetMenuDialogStartIndex(libs.DevicesUnderneath.Setting)
+		SetMenuDialogDefaultIndex(1)
 	EndIf
 	int i = 0
 	while i < 128
@@ -651,8 +662,11 @@ Event OnOptionMenuAccept(int option, int index)
         SendModEvent("zadBlindfoldEffectUpdate")
 	ElseIf option == DevicesUnderneathSlotOID
 		DevicesUnderneathSlot = index
-		libs.DevicesUnderneath.UpdateDeviceHiderSlot()
 		SetMenuOptionValue(DevicesUnderneathSlotOID, SlotMasks[DevicesUnderneathSlot])
+    elseif option == DeviceHiderSettingOID
+		libs.DevicesUnderneath.Setting = index
+		SetMenuOptionValue(DeviceHiderSettingOID, hiderSetting[libs.DevicesUnderneath.Setting])
+        libs.DevicesUnderneath.SyncSetting()
 	EndIf
 	int i = 0
 	while i < 128
@@ -660,12 +674,10 @@ Event OnOptionMenuAccept(int option, int index)
 			int value = 0
 			value = Math.LeftShift(1, (index - 1))
 			libs.Log("Index:" + index + " = " + value + "/" + SlotMaskValues.find(value))
+            libs.DevicesUnderneath.Validate()
 			libs.DevicesUnderneath.SlotMaskFilters[i] = value
 			SetMenuOptionValue(option, SlotMasks[index])
-			libs.DevicesUnderneath.RebuildSlotmask(libs.PlayerRef)
-			; if libs.DevicesUnderneath.IsStopped()
-			; 	libs.DevicesUnderneath.Start()
-			; EndIf
+            libs.DevicesUnderneath.SyncSetting()
 		EndIf
 		i += 1
 	EndWhile
@@ -980,6 +992,10 @@ Event OnOptionDefault(int option)
 	elseIf (option == DevicesUnderneathSlotOID)
 		DevicesUnderneathSlot = DevicesUnderneathSlotDefault
 		SetMenuOptionValue(DevicesUnderneathSlotOID, SlotMasks[DevicesUnderneathSlot])
+    elseif (option == DeviceHiderSettingOID)
+		libs.DevicesUnderneath.Setting = 1
+		SetMenuOptionValue(DeviceHiderSettingOID, hiderSetting[libs.DevicesUnderneath.Setting])
+        libs.DevicesUnderneath.SyncSetting()
 	elseIf (option == npcMessagesOID)
 		NpcMessages = npcMessagesDefault
 		SetToggleOptionValue(npcMessagesOID, npcMessagesDefault)
@@ -1144,7 +1160,9 @@ Event OnOptionHighlight(int option)
 		SetInfoText("Switch between the four provided blindfold modes. DD's mode is intended for First Person play. While in first person, you will be able to move freely, and one of two effects will be applied to your screen. While in third person, you will be unable to move, but will be able to see clearly. The advantage of this mode is that you will be able to clearly see yourself in scenes (Sex, animations, etc), while still being forced to endure the blindfold to advance gameplay.\nLeeche's mode applies a dof-based blindfold effect constantly, and is intended for third person play. The last mode is dark fog (requires ConsoleUtil mod to work).  Default:"+blindfoldList[blindfoldModeDefault])
 	elseIf (option == DevicesUnderneathSlotOID)
 		SetInfoText("Configure which slot the hidden (Device / Equipment) Hider operates on. It doesn't matter what slot is set, though a slot must be set. If you set this to the same slot as a slot that is being used by a device, bad things will happen. Don't touch this unless you know what you're doing.\nDefault: "+SlotMasks[DevicesUnderneathSlotDefault])
-	elseIf (option == animsRegisterOID)
+	elseif (option == DeviceHiderSettingOID)
+        SetInfoText("How should hider manage NPCs non device clothes")
+    elseIf (option == animsRegisterOID)
 		SetInfoText("Reregister animations provided by this mod.")
 	elseIf (option == npcMessagesOID)
 		SetInfoText("Enable/disable device related messages for NPC's.\nDefault:"+npcMessagesDefault)
@@ -1344,6 +1362,7 @@ Event OnOptionSliderAccept(int option, float value)
 EndEvent
 
 int function LookupSlotMask(int i)
+    libs.DevicesUnderneath.Validate()
 	int value = (libs.DevicesUnderneath.SlotMaskFilters[i])
 	if value == 0
 		return 0

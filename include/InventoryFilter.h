@@ -3,24 +3,25 @@
 #include <RE/Skyrim.h>
 #include <REL/Relocation.h>
 
-namespace DeviousDevices {
-    class InventoryFilter {
-        SINGLETONHEADER(InventoryFilter)
+namespace DeviousDevices 
+{
+    class InventoryFilter 
+    {
+    SINGLETONHEADER(InventoryFilter)
     public:
         void Setup();
-
         bool TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj);
-        // return true if equip operation should be filter out (no item state will be changed)
-        bool EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item);
-
-        RE::TESObjectARMO* GetWornWithDeviousKeyword(RE::Actor* actor, RE::BGSKeyword* kwd);
-
+        bool EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item); // return true if equip operation should be filtered out (no item state will be changed)
+        bool ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag = nullptr);
     private:
         bool IsDevious(RE::TESBoundObject* obj);
         bool IsStrapon(RE::TESBoundObject* obj);
-        bool ActorHasBlockingGag(RE::Actor* a_actor);
-        int GetMaskForKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd);
+        int  GetMaskForKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd);
+        bool CheckWhitelist(const RE::TESBoundObject* a_item) const;
+        bool CheckWhitelistFood(const RE::TESBoundObject* a_item) const;
+        RE::TESObjectARMO* GetWornWithDeviousKeyword(RE::Actor* actor, RE::BGSKeyword* kwd);
 
+     private:
         bool _init = false;
 
         // misc
@@ -76,5 +77,7 @@ namespace DeviousDevices {
 
         RE::BGSKeyword* _lockableKwd;
         RE::BGSKeyword* _inventoryDeviceKwd;
+
+        RE::BGSKeyword* _PermitOralKwd; 
     };
-}  // namespace DeviousDevices
+}

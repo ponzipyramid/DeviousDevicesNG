@@ -336,8 +336,12 @@ EndFunction
 
 ; INTERNAL FUNCTIONS - should normally not be called from outsides the framework.
 
-Event OnInit()		
-	InitLibrary()
+Event OnInit()
+    RegisterForSingleUpdate(10.0)
+EndEvent
+
+Event OnUpdate()
+    InitLibrary()
 EndEvent
 
 Function InitLibrary()
@@ -648,16 +652,12 @@ Function RestoreBondage(Actor akActor)
 				; Items with AA need AA resets when they are re-equipped.
 				NeedsAAReset = True
 			EndIf
-			If Item.HasKeyword(libs.zad_DeviousGag)
-				; if the actor is wearing a gag, it will get stuffed back into her mouth, so open it wide again!
-				libs.ApplyGagEffect(akActor)
-			EndIf
-		endif		
+		endif
 	endwhile
 	StorageUtil.FormListClear(akActor, "DDC_StoredBondage")
 	If NeedsAAReset
-		libs.BoundCombat.EvaluateAA(akActor)		
-	EndIf		
+		libs.BoundCombat.EvaluateAA(akActor)
+	EndIf
 EndFunction
 
 Function SetNiOverrideOverride(Actor aktarget)

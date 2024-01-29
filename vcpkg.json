@@ -28,7 +28,8 @@
             "dependencies": [
               "articuno",
               "commonlibsse-ng",
-              "detours"
+              "detours",
+              "boost"
             ]
         },
         "tests": {

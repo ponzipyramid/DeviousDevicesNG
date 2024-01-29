@@ -233,31 +233,39 @@ namespace DeviousDevices
         std::vector<T*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
         std::vector<RE::TESForm*> GetPropertyFormArray(RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode) const;
 
-        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* item) {
-            if (!item) return nullptr;
-            return _devicesByInventory[item->GetFormID()];
+        inline DeviceUnit* LookupDeviceByInventory(RE::TESObjectARMO* a_id)
+        {
+            if (!a_id) return nullptr;
+            const RE::FormID loc_formId = a_id->GetFormID();
+            return _devicesByInventory[loc_formId];
         }
 
-        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* item) {
-            if (!item) return nullptr;
-            return _devicesByRendered[item->GetFormID()];
+        inline DeviceUnit* LookupDeviceByRendered(RE::TESObjectARMO* a_rd)
+        {
+            if (!a_rd) return nullptr;
+            const RE::FormID loc_formId = a_rd->GetFormID();
+            return _devicesByRendered[loc_formId];
         }
 
-        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool manip) 
+        inline void SetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv, bool a_manip) 
         {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return;
-            auto pair = std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID());
-            if (manip)  _manipulated.insert(pair);
-            else        _manipulated.erase(pair);
+            if (a_manip)  _manipulated.insert({a_actor->GetFormID(), a_inv->GetFormID()});
+            else          _manipulated.erase({a_actor->GetFormID(), a_inv->GetFormID()});
         }
 
         inline bool GetManipulated(RE::Actor* a_actor, RE::TESObjectARMO* a_inv) const
         {
             if ((a_actor == nullptr) || (a_inv == nullptr)) return false;
-            return _manipulated.contains(std::pair<RE::FormID, RE::FormID>(a_actor->GetFormID(), a_inv->GetFormID())); 
+            return _manipulated.contains({a_actor->GetFormID(), a_inv->GetFormID()}); 
         }
 
         DeviceUnit EmptyDeviceUnit;
+
+        const std::map<RE::TESObjectARMO*, DeviceUnit>& GetDatabase()
+        {
+            return _database;
+        }
     private:
         void LoadDDMods();
         void ParseMods();
@@ -267,8 +275,8 @@ namespace DeviousDevices
         std::vector<RE::TESFile*>                               _ddmods;
         std::vector<std::shared_ptr<DeviceMod>>                 _ddmodspars;
         std::map<RE::TESObjectARMO*, DeviceUnit>                _database;
-        std::unordered_map<RE::FormID, DeviceUnit*> _devicesByInventory;
-        std::unordered_map<RE::FormID, DeviceUnit*> _devicesByRendered;
+        std::unordered_map<RE::FormID, DeviceUnit*>             _devicesByInventory;
+        std::unordered_map<RE::FormID, DeviceUnit*>             _devicesByRendered;
         std::vector<RE::BGSKeyword*>                            _invDeviceKwds;
         std::set<std::pair<RE::FormID, RE::FormID>>             _manipulated; // serde
         bool                                                    _installed = false;
@@ -292,6 +300,7 @@ namespace DeviousDevices
     std::vector<bool>           GetPropertyBoolArray(   PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
     std::vector<std::string>    GetPropertyStringArray( PAPYRUSFUNCHANDLE,RE::TESObjectARMO* a_invdevice, std::string a_propertyname, int a_mode);
 
+    
 
     // device manipulation
     inline void SetManipulated(PAPYRUSFUNCHANDLE, RE::Actor* actor, RE::TESObjectARMO* inv, bool manip) 
