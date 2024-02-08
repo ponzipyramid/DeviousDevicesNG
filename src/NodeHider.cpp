@@ -132,14 +132,10 @@ void DeviousDevices::NodeHider::Update()
 
     const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",500);
 
-    Utils::ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
-        auto loc_refBase    = a_ref.GetBaseObject();
-        auto loc_actor      = a_ref.As<RE::Actor>();
-        if (loc_actor && ((loc_actor == loc_player) || (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))) 
-        {
-            loc_currentactors.push_back(loc_actor);
+    Utils::ForEachActorInRange(loc_distance, [&](RE::Actor* a_actor) {
+        if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef()) {
+            loc_currentactors.push_back(a_actor);
         }
-        return RE::BSContainer::ForEachResult::kContinue;
     });
 
     std::sort(loc_lastactors.begin(),loc_lastactors.end());

@@ -43,3 +43,17 @@ void DeviousDevices::Utils::ForEachReferenceInRange(
         RE::TES::GetSingleton()->ForEachReference([&](RE::TESObjectREFR& a_ref) { return callback(a_ref); });
     }
 }
+
+void DeviousDevices::Utils::ForEachActorInRange(float a_range, std::function<void(RE::Actor* a_actor)> a_callback) {
+    const auto playerPos = RE::PlayerCharacter::GetSingleton()->GetPosition();
+
+    for (auto actorHandle : RE::ProcessLists::GetSingleton()->highActorHandles) {
+        if (auto actorPtr = actorHandle.get()) {
+            if (auto actor = actorPtr.get()) {
+                if (playerPos.GetDistance(actor->GetPosition()) <= a_range) {
+                    a_callback(actor);
+                }
+            }
+        }
+    }
+}

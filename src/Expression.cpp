@@ -418,31 +418,27 @@ namespace DeviousDevices
 
     int ExpressionManager::UpdateGagExpForNPCs()
     {
+        if (!ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.bNPCsEnabled", true)) {
+            return 0;
+        }
+
         RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
 
         if (loc_player == nullptr) return 0;
 
         uint16_t loc_updated = 0;
 
-        const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance",500);
+        const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance", 500);
 
-        LOG("UpdateGagExpForNPCs() called - Distance = {}",loc_distance)
+        LOG("UpdateGagExpForNPCs() called - Distance = {}", loc_distance)
 
-        Utils::ForEachReferenceInRange(loc_player, loc_distance, [&](RE::TESObjectREFR& a_ref) {
-            if (!a_ref.IsHandleValid()) RE::BSContainer::ForEachResult::kContinue;
-            auto loc_refBase    = a_ref.GetBaseObject();
-            auto loc_actor      = a_ref.As<RE::Actor>();
-
-          if (loc_actor && !loc_actor->IsDisabled() && 
-                loc_actor->Is3DLoaded() && 
-                IsGagged(loc_actor) &&
-                (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))
-            ) 
+        Utils::ForEachActorInRange(loc_distance, [&](RE::Actor* a_actor) {
+            if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef() &&
+                IsGagged(a_actor))
             {
                 loc_updated += 1;
-                UpdateGagExpression(loc_actor);
+                UpdateGagExpression(a_actor);
             }
-            return RE::BSContainer::ForEachResult::kContinue;
         });
 
         return loc_updated;

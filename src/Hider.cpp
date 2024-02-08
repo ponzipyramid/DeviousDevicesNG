@@ -167,17 +167,17 @@ inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
 
     Update3DSafe(loc_player);
 
+    if (!ConfigManager::GetSingleton()->GetVariable<int>("DeviceHider.bNPCsEnabled", true)) {
+        return 0;
+    }
+
     uint16_t loc_updated = 0;
 
-    Utils::ForEachReferenceInRange(loc_player, 10000, [&](RE::TESObjectREFR& a_ref) {
-        auto loc_refBase    = a_ref.GetBaseObject();
-        auto loc_actor      = a_ref.As<RE::Actor>();
-        if (loc_actor && !loc_actor->IsDisabled() && loc_actor->Is3DLoaded() && (a_ref.Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) 
-        {
+    Utils::ForEachActorInRange(10000, [&](RE::Actor* a_actor) {
+        if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef()) {
             loc_updated += 1;
-            Update3DSafe(loc_actor);
+            Update3DSafe(a_actor);
         }
-        return RE::BSContainer::ForEachResult::kContinue;
     });
 
     return loc_updated;
