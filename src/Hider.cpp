@@ -174,7 +174,10 @@ inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
     uint16_t loc_updated = 0;
 
     Utils::ForEachActorInRange(10000, [&](RE::Actor* a_actor) {
-        if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef()) {
+        auto loc_refBase = a_actor->GetActorBase();
+        
+        if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef() &&
+            (a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) {
             loc_updated += 1;
             Update3DSafe(a_actor);
         }

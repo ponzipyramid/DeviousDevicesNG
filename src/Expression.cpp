@@ -433,8 +433,11 @@ namespace DeviousDevices
         LOG("UpdateGagExpForNPCs() called - Distance = {}", loc_distance)
 
         Utils::ForEachActorInRange(loc_distance, [&](RE::Actor* a_actor) {
+            auto loc_refBase = a_actor->GetActorBase();
+
             if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef() &&
-                IsGagged(a_actor))
+                IsGagged(a_actor) &&
+                (a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))
             {
                 loc_updated += 1;
                 UpdateGagExpression(a_actor);

@@ -133,7 +133,10 @@ void DeviousDevices::NodeHider::Update()
     const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",500);
 
     Utils::ForEachActorInRange(loc_distance, [&](RE::Actor* a_actor) {
-        if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef()) {
+        auto loc_refBase = a_actor->GetActorBase();
+        
+        if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef() &&
+            (a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))) {
             loc_currentactors.push_back(a_actor);
         }
     });
