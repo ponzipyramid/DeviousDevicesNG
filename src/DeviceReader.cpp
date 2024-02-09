@@ -1,10 +1,8 @@
 #include <DeviceReader.h>
 #include "UI.h"
 #include "Settings.h"
-#include <articuno/archives/ryml/ryml.h>
 
 using namespace DeviousDevices;
-using namespace articuno::ryml;
 
 SINGLETONBODY(DeviceReader)
 
