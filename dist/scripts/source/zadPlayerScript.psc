@@ -55,9 +55,13 @@ event OnInit()
     RegisterForSingleUpdate(5.0)
 endEvent
 
+bool _initiated = false
 Event OnUpdate()
-    RegisterEvents()
-    InitGagSpeak(true)
+    if !_initiated
+        RegisterEvents()
+        InitGagSpeak(true)
+        _initiated = true
+    endif
 EndEvent
 
 Event OnPlayerLoadGame()
