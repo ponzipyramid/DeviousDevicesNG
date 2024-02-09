@@ -130,6 +130,8 @@ void DeviousDevices::NodeHider::Update()
         loc_lastactors.push_back(RE::Actor::LookupByHandle(it).get());
     }
 
+    loc_currentactors.push_back(loc_player);
+
     const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iNPCDistance",500);
 
     Utils::ForEachActorInRange(loc_distance, [&](RE::Actor* a_actor) {

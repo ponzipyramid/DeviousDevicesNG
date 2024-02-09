@@ -418,15 +418,21 @@ namespace DeviousDevices
 
     int ExpressionManager::UpdateGagExpForNPCs()
     {
-        if (!ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.bNPCsEnabled", true)) {
-            return 0;
-        }
-
         RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
 
         if (loc_player == nullptr) return 0;
 
         uint16_t loc_updated = 0;
+
+        if (IsGagged(loc_player))
+        {
+            loc_updated += 1;
+            UpdateGagExpression(loc_player);
+        }
+
+        if (!ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.bNPCsEnabled", true)) {
+            return loc_updated;
+        }
 
         const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance", 500);
 
