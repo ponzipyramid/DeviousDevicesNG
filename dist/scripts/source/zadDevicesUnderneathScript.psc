@@ -51,14 +51,14 @@ Event OnInit()
 EndEvent
 
 Event OnUpdate()
-    SetDefaultSlotMasks()
-    _Init = true
+    if !_Init
+        SetDefaultSlotMasks()
+        _Init = true
+    endif
 EndEvent
 
 Function Validate()
-    if !_Init
-        OnUpdate()
-    endif
+    OnUpdate()
 EndFunction
 
 Function SetDefaultSlotMasks()
