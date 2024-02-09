@@ -168,10 +168,10 @@ inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
     Update3DSafe(loc_player);
 
     if (!ConfigManager::GetSingleton()->GetVariable<int>("DeviceHider.bNPCsEnabled", true)) {
-        return 0;
+        return 1;
     }
 
-    uint16_t loc_updated = 0;
+    uint16_t loc_updated = 1;
 
     Utils::ForEachActorInRange(10000, [&](RE::Actor* a_actor) {
         auto loc_refBase = a_actor->GetActorBase();
