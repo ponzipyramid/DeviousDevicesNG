@@ -340,8 +340,12 @@ Event OnInit()
     RegisterForSingleUpdate(10.0)
 EndEvent
 
+bool _initiated = false
 Event OnUpdate()
-    InitLibrary()
+    if !_initiated
+        InitLibrary()
+        _initiated = true
+    endif
 EndEvent
 
 Function InitLibrary()

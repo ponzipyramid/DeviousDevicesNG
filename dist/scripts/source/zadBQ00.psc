@@ -141,10 +141,14 @@ Event OnInit()
     RegisterForSingleUpdate(10.0)
 EndEvent
 
+bool _initiated = false
 Event OnUpdate()
-	RegisterForModEvent("__DeviousDevicesInit", "OnInitialize")
-	libs.BoundCombat.CONFIG_ABC()
-	checkBlindfoldDarkFog()
+    if !_initiated
+        RegisterForModEvent("__DeviousDevicesInit", "OnInitialize")
+        libs.BoundCombat.CONFIG_ABC()
+        checkBlindfoldDarkFog()
+        _initiated = true
+    endif
 EndEvent
 
 Event OnInitialize(string eventName, string strArg, float numArg, Form sender)
