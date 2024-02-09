@@ -2314,7 +2314,7 @@ EndFunction
 String Function AnimSwitchKeyword( actor akActor, string idleName )
 	
 ;THERE USED TO BE SOMETHING BIG HERE, AND NOW OAR HANDLES THIS - krzp
-	If idleName == "Horny"
+	If idleName == "Horny" || idleName == "Horny01" || idleName == "Horny02" || idleName == "Horny03"
 			return "DDZazHornyA"
 	ElseIf idleName == "Edged"
 			return "DDZazHornyD"
