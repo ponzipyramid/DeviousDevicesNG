@@ -457,6 +457,38 @@ EndFunction
 ; It is not necessary to pass the device keyword, but the function will perform much faster if you do.
 ; This function will behave like LockDevice() if no conflicting device is equipped, but it WILL be slower, if no keyword is provided.
 Bool Function SwapDevices(actor akActor, armor deviceInventory, keyword zad_DeviousDevice = none, bool destroyDevice = false, bool genericonly = true)
+	Log("SwapDevices called for " + akActor.GetLeveledActorBase().GetName() + ": "+ deviceInventory.GetName() + ")")
+	Keyword kw		
+	if !zad_DeviousDevice
+		kw = GetDeviceKeyword(deviceInventory)		
+	else
+		kw = zad_DeviousDevice
+	EndIf	
+	Armor WornDevice = GetWornRenderedDeviceByKeyword(akActor, kw)
+	if WornDevice
+		Armor idevice = GetWornDevice(akActor, kw)		
+		if !UnlockDevice(akActor, idevice, WornDevice, zad_DeviousDevice = kw, destroyDevice = destroyDevice, genericonly = genericonly)
+			log("UnlockDevice() failed. Aborting.")
+			return false
+		EndIf		
+		int counter = 5 
+		while akActor.IsEquipped(WornDevice) && counter > 0
+			log("Removing " + idevice.GetName() + ". Waiting for removal operation to complete.")			
+			counter -= 1
+			Utility.Wait(1)
+		EndWhile
+		if akActor.IsEquipped(WornDevice) && counter == 0
+			log("Unlock operation timed out and failed. Aborting.")
+			return false
+		EndIf
+		Utility.Wait(1)
+		log("Device removed. Proceeding.")
+	Else
+		log("No confilicting device worn. Proceeding.")
+	EndIf	
+	if akActor.GetItemCount(deviceInventory) <= 0
+		akActor.AddItem(deviceInventory, 1, true)
+	EndIf		
 	akActor.EquipItemEx(deviceInventory, 0, false, true)	
 	return true
 EndFunction
