@@ -37,6 +37,7 @@ Package[] Property StrugglePoseArmbinder Auto			; Packages containing the specia
 Package[] Property BoundPoseYoke Auto					; Packages containing special poses for yokes.
 Package[] Property StrugglePoseYoke Auto				; Packages containing the special struggle poses for yokes.
 Armor[] Property EquipDevices Auto						; List of DD devices or regular armor that will get equipped when an actor enters a device.
+Faction Property zadc_Faction_FurnitureUser Auto		; Faction to be set on the user when he enters the furniture. Will be remove when the actor leaves the device. Can be used to detect actor state in Papyrus Conditions
 
 Key Property deviceKey  Auto               				; Key type to unlock this device
 Bool Property DestroyKey = False Auto 					; If set to true, the key(s) will be destroyed when the device is unlocked or escaped from.
@@ -348,6 +349,7 @@ Function LockActor(actor act)
 	If SendDeviceModEvents
 		SendDeviceEvent(True)
 	EndIf
+	user.AddToFaction(zadc_Faction_FurnitureUser)
 EndFunction
 
 Function UnlockActor()
@@ -390,6 +392,7 @@ Function UnlockActor()
 	;	user.SetScale(OldScale)
 	;	OldScale = 1.0
 	;EndIf
+	user.RemoveFromFaction(zadc_Faction_FurnitureUser)
 	user = none		
 	isSelfBondage = False
 	isLockManipulated = False
