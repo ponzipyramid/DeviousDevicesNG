@@ -101,6 +101,86 @@ namespace DeviousDevices {
                                   a_playSounds, a_applyNow, a_slotToReplace);
         }
 
+        
+
+        class EventSync :// public RE::BSTEventSink<RE::TESEquipEvent>,
+            public RE::BSTEventSink<RE::TESObjectLoadedEvent>,
+            public RE::BSTEventSink<RE::TESSwitchRaceCompleteEvent>,
+            public RE::BSTEventSink<RE::BSAnimationGraphEvent>
+        {
+        public:
+            /*
+            RE::BSEventNotifyControl ProcessEvent(RE::TESEquipEvent const* a_evn,
+                RE::BSTEventSource<RE::TESEquipEvent>*) override {
+
+                if (!a_evn || !a_evn->actor) {
+                    return RE::BSEventNotifyControl::kContinue;
+                }
+
+                const auto item = RE::TESForm::LookupByID<RE::TESBoundObject>(a_evn->baseObject);
+                if (!item) {
+                    return RE::BSEventNotifyControl::kContinue;
+                }
+
+                if (a_evn->equipped) {
+                    LOG("TESEquipEvent {}", item->GetName());
+                    // TODO
+                }
+
+
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            */
+            RE::BSEventNotifyControl ProcessEvent(RE::TESObjectLoadedEvent const* a_evn,
+                                                  RE::BSTEventSource<RE::TESObjectLoadedEvent>*) override {
+                if (!a_evn) {
+                    return RE::BSEventNotifyControl::kContinue;
+                }
+
+                if (const auto actor = RE::TESForm::LookupByID<RE::Actor>(a_evn->formID)) {
+                    actor->AddAnimationGraphEventSink(this);
+                }
+
+                return RE::BSEventNotifyControl::kContinue;
+            };
+            RE::BSEventNotifyControl ProcessEvent(RE::TESSwitchRaceCompleteEvent const* a_evn,
+                                                  RE::BSTEventSource<RE::TESSwitchRaceCompleteEvent>*) override {
+                if (!a_evn || !a_evn->subject) {
+                    return RE::BSEventNotifyControl::kContinue;
+                }
+
+                if (const auto actor = a_evn->subject->As<RE::Actor>()) {
+                    actor->AddAnimationGraphEventSink(this);
+                }
+
+                return RE::BSEventNotifyControl::kContinue;
+            };
+            RE::BSEventNotifyControl ProcessEvent(RE::BSAnimationGraphEvent const* a_evn,
+                                                  RE::BSTEventSource<RE::BSAnimationGraphEvent>*) override {
+                if (!a_evn || !a_evn->holder) {
+                    return RE::BSEventNotifyControl::kContinue;
+                }
+
+                const auto actor = const_cast<RE::Actor*>(a_evn->holder->As<RE::Actor>());
+                if (!actor) {
+                    return RE::BSEventNotifyControl::kContinue;
+                }
+
+                if (InventoryFilter::GetSingleton()->MagicCastFilter(actor)) {
+                    if (a_evn->tag == "BeginCastLeft") {
+                        actor->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)->InterruptCast(true);
+                        RE::PlaySound("MAGFail");
+                    }
+                    if (a_evn->tag == "BeginCastRight") {
+                        actor->GetMagicCaster(RE::MagicSystem::CastingSource::kRightHand)->InterruptCast(true);
+                        RE::PlaySound("MAGFail");
+                    }
+                }
+
+                return RE::BSEventNotifyControl::kContinue;
+            };
+        };
+
         inline void Install() {
             g_dManager = DeviceReader::GetSingleton();
 
@@ -139,6 +219,15 @@ namespace DeviousDevices {
             else
             {
                 WARN("Failed to install papyrus hook on UnequipObject");
+            }
+            
+		    if (const auto scriptEventSourceHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
+
+                EventSync *eventSync = new EventSync();
+
+                //scriptEventSourceHolder->AddEventSink<RE::TESEquipEvent>(eventSync);
+                scriptEventSourceHolder->AddEventSink<RE::TESObjectLoadedEvent>(eventSync);
+                scriptEventSourceHolder->AddEventSink<RE::TESSwitchRaceCompleteEvent>(eventSync);
             }
 
         }
