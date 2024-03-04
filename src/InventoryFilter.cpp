@@ -85,13 +85,6 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor, RE
     return false;
 }
 
-bool DeviousDevices::InventoryFilter::MagicCastFilter(RE::Actor* a_actor) {
-    const bool loc_heavyBondage = GetWornWithDeviousKeyword(a_actor, _deviousHeavyBondageKwd);
-    const bool loc_mittens = !loc_heavyBondage && GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
-
-    return loc_heavyBondage || loc_mittens;
-}
-
 bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item)
 {
     if ((a_actor == nullptr) || (a_item == nullptr)) return true;
@@ -133,6 +126,11 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
             RE::DebugNotification("You can't eat or drink while wearing this gag.");
             return true;
         }
+    }
+
+    if (a_item->Is(RE::FormType::Shout) && ActorHasBlockingGag(a_actor))  // filter all Shouts
+    {
+        return true;
     }
 
     // == Equip check

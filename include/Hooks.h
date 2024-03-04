@@ -44,6 +44,65 @@ namespace DeviousDevices {
             static inline void Install() { write_vfunc<RE::PlayerCharacter, PickUpObjectHook>(); }
         };
 
+        struct EquipSpellHook {
+            static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+                                const RE::BGSEquipSlot& a_slot) {
+
+                if (a_actor && a_object && a_object->Is(RE::FormType::Spell) && 
+                    InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
+                    LOG("EquipSpellHook restricted <{:08X}:{}>", a_object->GetFormID(), a_object->GetName())
+                    return;
+                }
+                return func(a_manager, a_actor, a_object, a_slot);
+            }
+
+            static inline REL::Relocation<decltype(thunk)> func;
+
+            static inline void Install() {
+                std::array targets_1{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47)),
+                                     std::make_pair(RELOCATION_ID(37950, 38906), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
+                                     std::make_pair(RELOCATION_ID(37952, 38908), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
+
+                auto& trampoline = SKSE::GetTrampoline();
+
+                for (const auto& [id, offset] : targets_1) {
+                    REL::Relocation<std::uintptr_t> target{id, offset};
+                    SKSE::AllocTrampoline(14);
+                    EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
+                }
+            }
+        };
+
+        struct EquipShoutHook {
+            static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+                              RE::BGSEquipSlot* a_slot) {
+                // not sure if check for formtype is necessary, don't know if other stuff goes through this function
+                if (a_actor && a_object && a_object->Is(RE::FormType::Shout) &&
+                    InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
+                    LOG("EquipShoutHook restricted <{:08X}:{}>", a_object->GetFormID(), a_object->GetName())
+                    return;
+                }
+
+                return func(a_manager, a_actor, a_object, a_slot);
+            }
+
+            static inline REL::Relocation<decltype(thunk)> func;
+
+            static inline void Install() {
+                std::array targets{std::make_pair(RELOCATION_ID(37941, 38897), REL::VariantOffset(0x21, 0x21, 0x21)),
+                                   std::make_pair(RELOCATION_ID(37953, 38909), REL::VariantOffset(0x4B, 0x4B, 0x4B))};
+                
+                auto& trampoline = SKSE::GetTrampoline();
+
+                for (const auto& [id, offset] : targets) {
+                    REL::Relocation<std::uintptr_t> target{id, offset};
+                    SKSE::AllocTrampoline(14);
+
+                    func = trampoline.write_call<5>(target.address(), thunk);
+                }
+            }
+        };
+
         typedef void(WINAPI* OriginalEquipObject)(  RE::ActorEquipManager* a_1, 
                                                     RE::Actor* a_actor,
                                                     RE::TESBoundObject* a_object, 
@@ -101,91 +160,17 @@ namespace DeviousDevices {
                                   a_playSounds, a_applyNow, a_slotToReplace);
         }
 
-        
-
-        class EventSync :// public RE::BSTEventSink<RE::TESEquipEvent>,
-            public RE::BSTEventSink<RE::TESObjectLoadedEvent>,
-            public RE::BSTEventSink<RE::TESSwitchRaceCompleteEvent>,
-            public RE::BSTEventSink<RE::BSAnimationGraphEvent>
-        {
-        public:
-            /*
-            RE::BSEventNotifyControl ProcessEvent(RE::TESEquipEvent const* a_evn,
-                RE::BSTEventSource<RE::TESEquipEvent>*) override {
-
-                if (!a_evn || !a_evn->actor) {
-                    return RE::BSEventNotifyControl::kContinue;
-                }
-
-                const auto item = RE::TESForm::LookupByID<RE::TESBoundObject>(a_evn->baseObject);
-                if (!item) {
-                    return RE::BSEventNotifyControl::kContinue;
-                }
-
-                if (a_evn->equipped) {
-                    LOG("TESEquipEvent {}", item->GetName());
-                    // TODO
-                }
-
-
-                return RE::BSEventNotifyControl::kContinue;
-            }
-            */
-            RE::BSEventNotifyControl ProcessEvent(RE::TESObjectLoadedEvent const* a_evn,
-                                                  RE::BSTEventSource<RE::TESObjectLoadedEvent>*) override {
-                if (!a_evn) {
-                    return RE::BSEventNotifyControl::kContinue;
-                }
-
-                if (const auto actor = RE::TESForm::LookupByID<RE::Actor>(a_evn->formID)) {
-                    actor->AddAnimationGraphEventSink(this);
-                }
-
-                return RE::BSEventNotifyControl::kContinue;
-            };
-            RE::BSEventNotifyControl ProcessEvent(RE::TESSwitchRaceCompleteEvent const* a_evn,
-                                                  RE::BSTEventSource<RE::TESSwitchRaceCompleteEvent>*) override {
-                if (!a_evn || !a_evn->subject) {
-                    return RE::BSEventNotifyControl::kContinue;
-                }
-
-                if (const auto actor = a_evn->subject->As<RE::Actor>()) {
-                    actor->AddAnimationGraphEventSink(this);
-                }
-
-                return RE::BSEventNotifyControl::kContinue;
-            };
-            RE::BSEventNotifyControl ProcessEvent(RE::BSAnimationGraphEvent const* a_evn,
-                                                  RE::BSTEventSource<RE::BSAnimationGraphEvent>*) override {
-                if (!a_evn || !a_evn->holder) {
-                    return RE::BSEventNotifyControl::kContinue;
-                }
-
-                const auto actor = const_cast<RE::Actor*>(a_evn->holder->As<RE::Actor>());
-                if (!actor) {
-                    return RE::BSEventNotifyControl::kContinue;
-                }
-
-                if (InventoryFilter::GetSingleton()->MagicCastFilter(actor)) {
-                    if (a_evn->tag == "BeginCastLeft") {
-                        actor->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)->InterruptCast(true);
-                        RE::PlaySound("MAGFail");
-                    }
-                    if (a_evn->tag == "BeginCastRight") {
-                        actor->GetMagicCaster(RE::MagicSystem::CastingSource::kRightHand)->InterruptCast(true);
-                        RE::PlaySound("MAGFail");
-                    }
-                }
-
-                return RE::BSEventNotifyControl::kContinue;
-            };
-        };
-
         inline void Install() {
             g_dManager = DeviceReader::GetSingleton();
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.EquipSpell", true)) {
+                EquipSpellHook::Install();
+            }
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.EquipShout", true)) {
+                EquipShoutHook::Install();
+            }
 
             const uintptr_t loc_equipTargetAddress = RE::Offset::ActorEquipManager::EquipObject.address();
             _EquipObject = (OriginalEquipObject)loc_equipTargetAddress;
@@ -220,16 +205,6 @@ namespace DeviousDevices {
             {
                 WARN("Failed to install papyrus hook on UnequipObject");
             }
-            
-		    if (const auto scriptEventSourceHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
-
-                EventSync *eventSync = new EventSync();
-
-                //scriptEventSourceHolder->AddEventSink<RE::TESEquipEvent>(eventSync);
-                scriptEventSourceHolder->AddEventSink<RE::TESObjectLoadedEvent>(eventSync);
-                scriptEventSourceHolder->AddEventSink<RE::TESSwitchRaceCompleteEvent>(eventSync);
-            }
-
         }
     }
 } 

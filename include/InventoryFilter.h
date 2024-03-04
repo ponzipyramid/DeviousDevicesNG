@@ -12,7 +12,6 @@ namespace DeviousDevices
         void Setup();
         bool TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj);
         bool EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item); // return true if equip operation should be filtered out (no item state will be changed)
-        bool MagicCastFilter(RE::Actor* a_actor);
         bool ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag = nullptr);
     private:
         bool IsDevious(RE::TESBoundObject* obj);
