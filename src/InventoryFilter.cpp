@@ -130,6 +130,15 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 
     if (a_item->Is(RE::FormType::Shout) && ActorHasBlockingGag(a_actor))  // filter all Shouts
     {
+        RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
+        if (RE::UI::GetSingleton() != nullptr) {
+            loc_magMenu = UI::GetMenu<RE::MagicMenu>();
+        } else
+            ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
+
+        if (loc_magMenu.get()) {
+            RE::DebugNotification("You can't equip this while wearing this gag!");
+        }
         return true;
     }
 
@@ -148,13 +157,15 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
             // UI can be still not loaded even after save is loaded. 
             // Because of that it is important to always check that UI singleton is initiated
             RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
+            RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
             if (RE::UI::GetSingleton() != nullptr)
             {
                 loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
+                loc_magMenu = UI::GetMenu<RE::MagicMenu>();
             }
             else ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
 
-            if (loc_invMenu.get()) 
+            if (loc_invMenu.get() || loc_magMenu.get()) 
             {
                 RE::DebugNotification(loc_msg.c_str());
             }
