@@ -187,7 +187,7 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
         return GetMaskForSlot(45);
     else if (kwd == _deviousHeavyBondageKwd) 
     {
-        if (auto worn = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(32))) 
+        if (auto worn = a_actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kBody)) 
         {
             if (worn->HasKeyword(_deviousStraitJacketKwd)) return GetMaskForSlot(32);
         }
