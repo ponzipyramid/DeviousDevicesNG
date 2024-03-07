@@ -50,7 +50,8 @@ namespace DeviousDevices {
 
                 if (a_actor && a_object && a_object->Is(RE::FormType::Spell) && 
                     InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
-                    LOG("EquipSpellHook restricted <{:08X}:{}>", a_object->GetFormID(), a_object->GetName())
+                    LOG("EquipSpellHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
+                        a_actor->GetFormID(), a_actor->GetName())
                     return;
                 }
                 return func(a_manager, a_actor, a_object, a_slot);
@@ -79,7 +80,8 @@ namespace DeviousDevices {
                 // not sure if check for formtype is necessary, don't know if other stuff goes through this function
                 if (a_actor && a_object && a_object->Is(RE::FormType::Shout) &&
                     InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
-                    LOG("EquipShoutHook restricted <{:08X}:{}>", a_object->GetFormID(), a_object->GetName())
+                    LOG("EquipShoutHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
+                        a_actor->GetFormID(), a_actor->GetName())
                     return;
                 }
 
@@ -140,7 +142,11 @@ namespace DeviousDevices {
         {
 
             // Apply inventory filter
-            if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) return;
+            if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) {
+                LOG("EquipObject restricted <{:08X}:{}> for <{:08X}:{}>", a_item->GetFormID(), a_item->GetName(),
+                    a_actor->GetFormID(), a_actor->GetName())
+                return;
+            }
 
             _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
                          a_applyNow);
