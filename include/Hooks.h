@@ -171,10 +171,10 @@ namespace DeviousDevices {
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.EquipSpell", true)) {
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
                 EquipSpellHook::Install();
             }
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.EquipShout", true)) {
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
                 EquipShoutHook::Install();
             }
 
