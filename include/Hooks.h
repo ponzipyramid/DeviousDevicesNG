@@ -44,6 +44,67 @@ namespace DeviousDevices {
             static inline void Install() { write_vfunc<RE::PlayerCharacter, PickUpObjectHook>(); }
         };
 
+        struct EquipSpellHook {
+            static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+                                const RE::BGSEquipSlot& a_slot) {
+
+                if (a_actor && a_object && a_object->Is(RE::FormType::Spell) && 
+                    InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
+                    LOG("EquipSpellHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
+                        a_actor->GetFormID(), a_actor->GetName())
+                    return;
+                }
+                return func(a_manager, a_actor, a_object, a_slot);
+            }
+
+            static inline REL::Relocation<decltype(thunk)> func;
+
+            static inline void Install() {
+                std::array targets_1{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47)),
+                                     std::make_pair(RELOCATION_ID(37950, 38906), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
+                                     std::make_pair(RELOCATION_ID(37952, 38908), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
+
+                auto& trampoline = SKSE::GetTrampoline();
+
+                for (const auto& [id, offset] : targets_1) {
+                    REL::Relocation<std::uintptr_t> target{id, offset};
+                    SKSE::AllocTrampoline(14);
+                    EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
+                }
+            }
+        };
+
+        struct EquipShoutHook {
+            static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+                              RE::BGSEquipSlot* a_slot) {
+                // not sure if check for formtype is necessary, don't know if other stuff goes through this function
+                if (a_actor && a_object && a_object->Is(RE::FormType::Shout) &&
+                    InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
+                    LOG("EquipShoutHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
+                        a_actor->GetFormID(), a_actor->GetName())
+                    return;
+                }
+
+                return func(a_manager, a_actor, a_object, a_slot);
+            }
+
+            static inline REL::Relocation<decltype(thunk)> func;
+
+            static inline void Install() {
+                std::array targets{std::make_pair(RELOCATION_ID(37941, 38897), REL::VariantOffset(0x21, 0x21, 0x21)),
+                                   std::make_pair(RELOCATION_ID(37953, 38909), REL::VariantOffset(0x4B, 0x4B, 0x4B))};
+                
+                auto& trampoline = SKSE::GetTrampoline();
+
+                for (const auto& [id, offset] : targets) {
+                    REL::Relocation<std::uintptr_t> target{id, offset};
+                    SKSE::AllocTrampoline(14);
+
+                    func = trampoline.write_call<5>(target.address(), thunk);
+                }
+            }
+        };
+
         typedef void(WINAPI* OriginalEquipObject)(  RE::ActorEquipManager* a_1, 
                                                     RE::Actor* a_actor,
                                                     RE::TESBoundObject* a_object, 
@@ -81,7 +142,11 @@ namespace DeviousDevices {
         {
 
             // Apply inventory filter
-            if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) return;
+            if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) {
+                LOG("EquipObject restricted <{:08X}:{}> for <{:08X}:{}>", a_item->GetFormID(), a_item->GetName(),
+                    a_actor->GetFormID(), a_actor->GetName())
+                return;
+            }
 
             _EquipObject(a_1, a_actor, a_item, a_extraData, a_count, a_slot, a_queueEquip, a_forceEquip, a_playSounds,
                          a_applyNow);
@@ -106,6 +171,12 @@ namespace DeviousDevices {
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
+                EquipSpellHook::Install();
+            }
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
+                EquipShoutHook::Install();
+            }
 
             const uintptr_t loc_equipTargetAddress = RE::Offset::ActorEquipManager::EquipObject.address();
             _EquipObject = (OriginalEquipObject)loc_equipTargetAddress;
@@ -140,7 +211,6 @@ namespace DeviousDevices {
             {
                 WARN("Failed to install papyrus hook on UnequipObject");
             }
-
         }
     }
 } 
