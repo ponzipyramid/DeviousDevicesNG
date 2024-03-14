@@ -8,7 +8,7 @@ void DeviousDevices::UpdateManager::Setup()
     {
         _installed = true;
         REL::Relocation<std::uintptr_t> vtbl{RE::PlayerCharacter::VTABLE[0]};
-        Update_old = vtbl.write_vfunc(0x0AD, Update);
+        Update_old = vtbl.write_vfunc(REL::Module::GetRuntime() != REL::Module::Runtime::VR ? 0x0AD : 0x0AF, Update);
     }
 }
 
