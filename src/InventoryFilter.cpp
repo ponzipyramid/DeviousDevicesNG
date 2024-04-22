@@ -67,8 +67,11 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor, RE
     if (a_gag) loc_armor = a_gag;
     else loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor,GetMaskForSlot(44));
     
+
     if (loc_armor != nullptr)
     {
+
+
         if (loc_armor->HasKeyword(_deviousGagKwd))
         {
             if (loc_armor->HasKeyword(_deviousGagRingKwd) || loc_armor->HasKeyword(_PermitOralKwd))
@@ -80,6 +83,12 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor, RE
                 return a_actor->GetFactionRank(_gagpanelfaction, a_actor->IsPlayer()) == 1;
             }
             return true;
+        } else { // check hood
+            loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(42));
+            if (loc_armor->HasKeyword(_deviousGagKwd)) 
+            {
+                return true;    
+            }
         }
     }
     return false;
