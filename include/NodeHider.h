@@ -40,4 +40,14 @@ namespace DeviousDevices
         std::unordered_map<uint32_t,HidderState> _weaponhiddenstates; //temporary array with state of weapon nodes on updated actors
         std::unordered_map<uint32_t,std::unordered_map<std::string,HidderState>> _weaponnodestates; //temporary array with states of weapon nodes on updated actors
     };
+
+    inline void HideWeapons(PAPYRUSFUNCHANDLE, RE::Actor* a_actor) {
+        LOG("HideWeapons called")
+        NodeHider::GetSingleton()->HideWeapons(a_actor);
+    }
+
+    inline void ShowWeapons(PAPYRUSFUNCHANDLE, RE::Actor* a_actor) {
+        LOG("ShowWeapons called")
+        NodeHider::GetSingleton()->ShowWeapons(a_actor);
+    }
 }

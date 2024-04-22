@@ -444,11 +444,18 @@ namespace DeviousDevices
             auto loc_refBase = a_actor->GetActorBase();
 
             if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef() &&
-                IsGagged(a_actor) &&
                 (a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))
             {
-                loc_updated += 1;
-                UpdateGagExpression(a_actor);
+                if (IsGagged(a_actor)) {
+                    loc_updated += 1;
+                    _trackedActors.insert(a_actor);
+                    DEBUG("Updating and tracking gag expression for {}", a_actor->GetFormID());
+                    UpdateGagExpression(a_actor);
+                } else if (_trackedActors.contains(a_actor)) {
+                    DEBUG("Resetting and clearing gag expression for {}", a_actor->GetFormID());
+                    ResetGagExpression(a_actor);
+                    _trackedActors.erase(a_actor);
+                }
             }
         });
 

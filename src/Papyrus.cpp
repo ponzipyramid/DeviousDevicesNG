@@ -98,6 +98,9 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(SyncSetting,true);
     REGISTERPAPYRUSFUNC(SetActorStripped,true);
     REGISTERPAPYRUSFUNC(IsActorStripped,true);
+    REGISTERPAPYRUSFUNC(ShowWeapons, true);
+    REGISTERPAPYRUSFUNC(HideWeapons, true);
+
 
     //device reader
     REGISTERPAPYRUSFUNC(GetRenderDevice,true);
