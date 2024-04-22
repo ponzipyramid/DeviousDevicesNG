@@ -342,7 +342,7 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
 bool DeviousDevices::DeviceHiderManager::Update3D(RE::Actor* a_actor)
 {
     using func_t = decltype(Update3D);
-    static REL::Relocation<func_t> func{REL::RelocationID(19316, 19743), REL::VariantOffset(0x0, 0x2A5AC0, 0x0)};
+    static REL::Relocation<func_t> func{ REL::RelocationID(19316, 19743) };
     return func(a_actor);
 }
 
