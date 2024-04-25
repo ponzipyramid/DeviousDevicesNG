@@ -358,6 +358,8 @@ namespace DeviousDevices
 
         RE::BSFaceGenAnimationData* loc_expdata = a_actor->GetFaceGenAnimationData();
 
+        if (loc_expdata == nullptr) return;
+
         RE::BSSpinLockGuard locker(loc_expdata->lock);
 
         for (int i = 0; i < 16; i++) loc_expdata->phenomeKeyFrame.SetValue(i,0.0f);
