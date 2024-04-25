@@ -128,6 +128,20 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         }
     }
 
+    if (a_item->Is(RE::FormType::Shout) && ActorHasBlockingGag(a_actor))  // filter all Shouts
+    {
+        RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
+        if (RE::UI::GetSingleton() != nullptr) {
+            loc_magMenu = UI::GetMenu<RE::MagicMenu>();
+        } else
+            ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
+
+        if (loc_magMenu.get()) {
+            RE::DebugNotification("You can't equip this while wearing this gag!");
+        }
+        return true;
+    }
+
     // == Equip check
     if ((a_item->Is(RE::FormType::Spell) || a_item->Is(RE::FormType::Weapon) || a_item->Is(RE::FormType::Light) ||
          (a_item->Is(RE::FormType::Armor) && !IsDevious(a_item) && !IsStrapon(a_item)))) 
@@ -143,13 +157,15 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
             // UI can be still not loaded even after save is loaded. 
             // Because of that it is important to always check that UI singleton is initiated
             RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
+            RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
             if (RE::UI::GetSingleton() != nullptr)
             {
                 loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
+                loc_magMenu = UI::GetMenu<RE::MagicMenu>();
             }
             else ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
 
-            if (loc_invMenu.get()) 
+            if (loc_invMenu.get() || loc_magMenu.get()) 
             {
                 RE::DebugNotification(loc_msg.c_str());
             }
@@ -187,7 +203,7 @@ int DeviousDevices::InventoryFilter::GetMaskForKeyword(RE::Actor* a_actor, RE::B
         return GetMaskForSlot(45);
     else if (kwd == _deviousHeavyBondageKwd) 
     {
-        if (auto worn = a_actor->GetWornArmor(static_cast<RE::BIPED_MODEL::BipedObjectSlot>(32))) 
+        if (auto worn = a_actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kBody)) 
         {
             if (worn->HasKeyword(_deviousStraitJacketKwd)) return GetMaskForSlot(32);
         }
