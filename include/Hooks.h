@@ -60,13 +60,18 @@ namespace DeviousDevices {
             static inline REL::Relocation<decltype(thunk)> func;
 
             static inline void Install() {
-                std::array targets_1{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47)),
-                                     std::make_pair(RELOCATION_ID(37950, 38906), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
-                                     std::make_pair(RELOCATION_ID(37952, 38908), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
+                std::list targets{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47))};
+
+                if (!REL::Module::IsVR()) {
+                    targets.push_back(
+                        std::make_pair(RELOCATION_ID(37950, 38906), REL::VariantOffset(0xC5, 0xCA, 0xC5)));
+                    targets.push_back(
+                        std::make_pair(RELOCATION_ID(37952, 38908), REL::VariantOffset(0xD7, 0xD7, 0xD7)));
+                }
 
                 auto& trampoline = SKSE::GetTrampoline();
 
-                for (const auto& [id, offset] : targets_1) {
+                for (const auto& [id, offset] : targets) {
                     REL::Relocation<std::uintptr_t> target{id, offset};
                     SKSE::AllocTrampoline(14);
                     EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
@@ -91,8 +96,12 @@ namespace DeviousDevices {
             static inline REL::Relocation<decltype(thunk)> func;
 
             static inline void Install() {
-                std::array targets{std::make_pair(RELOCATION_ID(37941, 38897), REL::VariantOffset(0x21, 0x21, 0x21)),
-                                   std::make_pair(RELOCATION_ID(37953, 38909), REL::VariantOffset(0x4B, 0x4B, 0x4B))};
+                std::list targets{std::make_pair(RELOCATION_ID(37941, 38897), REL::VariantOffset(0x21, 0x21, 0x21))};
+
+                if (!REL::Module::IsVR()) {
+                    targets.push_back(
+                        std::make_pair(RELOCATION_ID(37953, 38909), REL::VariantOffset(0x4B, 0x4B, 0x4B)));
+                }
                 
                 auto& trampoline = SKSE::GetTrampoline();
 
