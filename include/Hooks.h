@@ -60,13 +60,13 @@ namespace DeviousDevices {
             static inline REL::Relocation<decltype(thunk)> func;
 
             static inline void Install() {
-                std::array targets_1{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47)),
+                std::array targets{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47)),
                                      std::make_pair(RELOCATION_ID(37950, 38906), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
                                      std::make_pair(RELOCATION_ID(37952, 38908), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
 
                 auto& trampoline = SKSE::GetTrampoline();
 
-                for (const auto& [id, offset] : targets_1) {
+                for (const auto& [id, offset] : targets) {
                     REL::Relocation<std::uintptr_t> target{id, offset};
                     SKSE::AllocTrampoline(14);
                     EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
@@ -171,10 +171,10 @@ namespace DeviousDevices {
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true) && !REL::Module::IsVR()) {
                 EquipSpellHook::Install();
             }
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true) && !REL::Module::IsVR()) {
                 EquipShoutHook::Install();
             }
 
