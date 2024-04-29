@@ -60,14 +60,14 @@ namespace DeviousDevices {
             static inline REL::Relocation<decltype(thunk)> func;
 
             static inline void Install() {
-                std::array targets{std::make_pair(RELOCATION_ID(37939, 38895), REL::VariantOffset(0x47, 0x47, 0x47)),
-                                     std::make_pair(RELOCATION_ID(37950, 38906), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
-                                     std::make_pair(RELOCATION_ID(37952, 38908), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
+                std::array targets{
+                    REL::Relocation<std::uintptr_t>(RELOCATION_ID(37939, 38895),            REL::VariantOffset(0x47, 0x47, 0x47)),
+                    REL::Relocation<std::uintptr_t>(REL::VariantID(37950, 38906, 0x6415E0), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
+                    REL::Relocation<std::uintptr_t>(REL::VariantID(37952, 38908, 0x641A30), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
 
                 auto& trampoline = SKSE::GetTrampoline();
 
-                for (const auto& [id, offset] : targets) {
-                    REL::Relocation<std::uintptr_t> target{id, offset};
+                for (const auto& target : targets) {
                     SKSE::AllocTrampoline(14);
                     EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
                 }
@@ -91,15 +91,14 @@ namespace DeviousDevices {
             static inline REL::Relocation<decltype(thunk)> func;
 
             static inline void Install() {
-                std::array targets{std::make_pair(RELOCATION_ID(37941, 38897), REL::VariantOffset(0x21, 0x21, 0x21)),
-                                   std::make_pair(RELOCATION_ID(37953, 38909), REL::VariantOffset(0x4B, 0x4B, 0x4B))};
+                std::array targets{
+                    REL::Relocation<std::uintptr_t>(RELOCATION_ID(37941, 38897),            REL::VariantOffset(0x21, 0x21, 0x21)),
+                    REL::Relocation<std::uintptr_t>(REL::VariantID(37953, 38909, 0x641B30), REL::VariantOffset(0x4B, 0x4B, 0x4B))};
                 
                 auto& trampoline = SKSE::GetTrampoline();
 
-                for (const auto& [id, offset] : targets) {
-                    REL::Relocation<std::uintptr_t> target{id, offset};
+                for (const auto& target : targets) {
                     SKSE::AllocTrampoline(14);
-
                     func = trampoline.write_call<5>(target.address(), thunk);
                 }
             }
@@ -171,10 +170,10 @@ namespace DeviousDevices {
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true) && !REL::Module::IsVR()) {
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
                 EquipSpellHook::Install();
             }
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true) && !REL::Module::IsVR()) {
+            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
                 EquipShoutHook::Install();
             }
 
