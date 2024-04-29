@@ -79,8 +79,23 @@ void DeviousDevices::DeviceHiderManager::Setup()
             HINSTANCE dllHandle = LoadLibrary(TEXT("DynamicArmorVariants.dll"));
             if (dllHandle != NULL)
             {
-                InitWornArmorDAV = ((fInitWornArmorDAV)(*((uint64_t*)loc_hookIWA.address() + 1)));
-                DEBUG("DeviceHiderManager::Setup() - DAV found - Copying original function -> {}",(uintptr_t)InitWornArmorDAV)
+                //most compatible way to get size we need to use is to again use XByac to generate call instruction (so we know offset from the ond of previous patch)
+                struct PatchIWA_Call: public Xbyak::CodeGenerator
+                {
+                    PatchIWA_Call(std::uintptr_t a_funcAddr)
+                    {
+                        call(rax);
+                    }
+                } loc_PatchIWA_Call(reinterpret_cast<std::uintptr_t>(InitWornArmor));
+                loc_PatchIWA_Call.ready();
+                
+                // Move by the size of injected code withcout call instruction + size of call instruction (E8 = 1 byte)
+                auto InitWornArmorDAV2 = (((uint8_t*)loc_hookIWA.address() + (loc_patchIWA.getSize() - loc_PatchIWA_Call.getSize()) - 0x8U));
+
+
+                InitWornArmorDAV = *(fInitWornArmorDAV*)InitWornArmorDAV2;
+                DEBUG("DeviceHiderManager::Setup() - DAV found - Copying original function -> 0x{:016X}",(uintptr_t)InitWornArmorDAV)
+
                 _DAVInstalled = true;
             }
             else
@@ -167,7 +182,7 @@ inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
 
     Update3DSafe(loc_player);
 
-    if (!ConfigManager::GetSingleton()->GetVariable<int>("DeviceHider.bNPCsEnabled", true)) {
+    if (!ConfigManager::GetSingleton()->GetVariable<bool>("DeviceHider.bNPCsEnabled", true)) {
         return 1;
     }
 

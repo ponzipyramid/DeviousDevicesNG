@@ -46,8 +46,8 @@ namespace DeviousDevices {
 
         struct EquipSpellHook {
             static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
-                                const RE::BGSEquipSlot& a_slot) {
-
+                                const RE::BGSEquipSlot& a_slot) 
+            {
                 if (a_actor && a_object && a_object->Is(RE::FormType::Spell) && 
                     InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
                     LOG("EquipSpellHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
@@ -171,10 +171,12 @@ namespace DeviousDevices {
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
+            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipSpell", true))
+            {
                 EquipSpellHook::Install();
             }
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
+            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipShout", true))
+            {
                 EquipShoutHook::Install();
             }
 
