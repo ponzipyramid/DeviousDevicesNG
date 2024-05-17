@@ -54,7 +54,8 @@ void DeviousDevices::DeviceHiderManager::Setup()
         }
 
         {
-            auto loc_hookIWA = REL::Relocation<uintptr_t>(REL::Relocation<std::uintptr_t>{REL::RelocationID(24232,24736), REL::VariantOffset(0x2F0,0x2F0, 0x373CB0)});
+            //auto loc_hookIWA = REL::Relocation<std::uintptr_t>{REL::VariantID(24232, 24736, 0x373CB0), REL::VariantOffset(0x2F0, 0x2F0, 0x2F0)}; // raw VR offset
+            auto loc_hookIWA = REL::Relocation<std::uintptr_t>{REL::RelocationID(24232, 24736), REL::VariantOffset(0x2F0, 0x2F0, 0x2F0)};
 
             // Expected size: 0x12
             struct PatchIWA: public Xbyak::CodeGenerator
@@ -301,14 +302,16 @@ bool DeviousDevices::DeviceHiderManager::CheckHiderSlots(RE::TESObjectARMO* a_ar
 bool DeviousDevices::DeviceHiderManager::HasRace(RE::TESObjectARMA* a_armorAddon, RE::TESRace* a_race)
 {
     using func_t = decltype(HasRace);
-    static REL::Relocation<func_t> func{ REL::RelocationID(17359,17757), REL::VariantOffset(0,0, 0x2380A0) };
+    // VR address library not have offset for 17359 (29/04/2024) - use raw offset
+    static REL::Relocation<func_t> func{REL::VariantID(17359, 17757, 0x2380A0), REL::VariantOffset(0x0, 0x0, 0x0)};
     return func(a_armorAddon, a_race);
 }
 
 void DeviousDevices::DeviceHiderManager::InitWornArmorAddon(RE::TESObjectARMA* a_armorAddon, RE::TESObjectARMO* a_armor, RE::BSTSmartPointer<RE::BipedAnim>* a_biped, RE::SEX a_sex)
 {
     using func_t = decltype(InitWornArmorAddon);
-    static REL::Relocation<func_t> func{ REL::RelocationID(17361, 17759), REL::VariantOffset(0x0,0x0,0x2383A0) };
+    //static REL::Relocation<func_t> func{REL::VariantID(17361, 17759, 0x2383a0), REL::VariantOffset(0x0, 0x0, 0x0)}; // raw VR offset
+    static REL::Relocation<func_t> func{REL::RelocationID(17361, 17759), REL::VariantOffset(0x0, 0x0, 0x0)};
     return func(a_armorAddon, a_armor, a_biped, a_sex);
 }
 
@@ -357,7 +360,8 @@ void DeviousDevices::DeviceHiderManager::InitWornArmor(RE::TESObjectARMO* a_armo
 bool DeviousDevices::DeviceHiderManager::Update3D(RE::Actor* a_actor)
 {
     using func_t = decltype(Update3D);
-    static REL::Relocation<func_t> func{REL::RelocationID(19316, 19743), REL::VariantOffset(0x0, 0x2A5AC0, 0x0)};
+    //static REL::Relocation<func_t> func{REL::VariantID(19316, 19743, 0x2a5ac0), REL::VariantOffset(0x0, 0x0, 0x0)}; // raw VR offset
+    static REL::Relocation<func_t> func{REL::RelocationID(19316, 19743), REL::VariantOffset(0x0, 0x0, 0x0)};
     return func(a_actor);
 }
 
