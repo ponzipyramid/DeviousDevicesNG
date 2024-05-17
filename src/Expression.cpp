@@ -432,7 +432,7 @@ namespace DeviousDevices
             UpdateGagExpression(loc_player);
         }
 
-        if (!ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.bNPCsEnabled", true)) {
+        if (!ConfigManager::GetSingleton()->GetVariable<bool>("GagExpression.bNPCsEnabled", true)) {
             return loc_updated;
         }
 
