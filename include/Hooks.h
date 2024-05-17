@@ -167,18 +167,11 @@ namespace DeviousDevices {
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
           
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
-                EquipSpellHook::Install();
-            }
-            if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
-                EquipShoutHook::Install();
-            }
-          
-            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipSpell", true) && !REL::Module::IsVR())
+            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipSpell", true))
             {
                 EquipSpellHook::Install();
             }
-            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipShout", true) && !REL::Module::IsVR())
+            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipShout", true))
             {
                 EquipShoutHook::Install();
             }
