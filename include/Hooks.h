@@ -43,35 +43,33 @@ namespace DeviousDevices {
 
             static inline void Install() { write_vfunc<RE::PlayerCharacter, PickUpObjectHook>(); }
         };
-
+      
         struct EquipSpellHook {
-            static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
-                                const RE::BGSEquipSlot& a_slot) {
+                    static void thunk(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object,
+                                        const RE::BGSEquipSlot& a_slot) {
+                        if (a_actor && a_object && a_object->Is(RE::FormType::Spell) && 
+                            InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
+                            LOG("EquipSpellHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
+                                a_actor->GetFormID(), a_actor->GetName())
+                            return;
+                        }
+                        return func(a_manager, a_actor, a_object, a_slot);
+                    }
+                    static inline REL::Relocation<decltype(thunk)> func;
 
-                if (a_actor && a_object && a_object->Is(RE::FormType::Spell) && 
-                    InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_object)) {
-                    LOG("EquipSpellHook restricted <{:08X}:{}> for <{:08X}:{}>", a_object->GetFormID(), a_object->GetName(),
-                        a_actor->GetFormID(), a_actor->GetName())
-                    return;
-                }
-                return func(a_manager, a_actor, a_object, a_slot);
-            }
+                    static inline void Install() {
+                        std::array targets{
+                            REL::Relocation<std::uintptr_t>(RELOCATION_ID(37939, 38895),            REL::VariantOffset(0x47, 0x47, 0x47)),
+                            REL::Relocation<std::uintptr_t>(REL::VariantID(37950, 38906, 0x6415E0), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
+                            REL::Relocation<std::uintptr_t>(REL::VariantID(37952, 38908, 0x641A30), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
 
-            static inline REL::Relocation<decltype(thunk)> func;
+                        auto& trampoline = SKSE::GetTrampoline();
 
-            static inline void Install() {
-                std::array targets{
-                    REL::Relocation<std::uintptr_t>(RELOCATION_ID(37939, 38895),            REL::VariantOffset(0x47, 0x47, 0x47)),
-                    REL::Relocation<std::uintptr_t>(REL::VariantID(37950, 38906, 0x6415E0), REL::VariantOffset(0xC5, 0xCA, 0xC5)),
-                    REL::Relocation<std::uintptr_t>(REL::VariantID(37952, 38908, 0x641A30), REL::VariantOffset(0xD7, 0xD7, 0xD7))};
-
-                auto& trampoline = SKSE::GetTrampoline();
-
-                for (const auto& target : targets) {
-                    SKSE::AllocTrampoline(14);
-                    EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
-                }
-            }
+                        for (const auto& target : targets) {
+                            SKSE::AllocTrampoline(14);
+                            EquipSpellHook::func = trampoline.write_call<5>(target.address(), EquipSpellHook::thunk);
+                        }
+                    }
         };
 
         struct EquipShoutHook {
@@ -84,17 +82,15 @@ namespace DeviousDevices {
                         a_actor->GetFormID(), a_actor->GetName())
                     return;
                 }
-
                 return func(a_manager, a_actor, a_object, a_slot);
             }
-
             static inline REL::Relocation<decltype(thunk)> func;
 
             static inline void Install() {
                 std::array targets{
                     REL::Relocation<std::uintptr_t>(RELOCATION_ID(37941, 38897),            REL::VariantOffset(0x21, 0x21, 0x21)),
                     REL::Relocation<std::uintptr_t>(REL::VariantID(37953, 38909, 0x641B30), REL::VariantOffset(0x4B, 0x4B, 0x4B))};
-                
+
                 auto& trampoline = SKSE::GetTrampoline();
 
                 for (const auto& target : targets) {
@@ -103,7 +99,7 @@ namespace DeviousDevices {
                 }
             }
         };
-
+      
         typedef void(WINAPI* OriginalEquipObject)(  RE::ActorEquipManager* a_1, 
                                                     RE::Actor* a_actor,
                                                     RE::TESBoundObject* a_object, 
@@ -170,10 +166,20 @@ namespace DeviousDevices {
 
             AddObjectToContainerHook::Install();
             PickUpObjectHook::Install();
+          
             if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipSpell", true)) {
                 EquipSpellHook::Install();
             }
             if (ConfigManager::GetSingleton()->GetVariable<bool>("Hooks.bEquipShout", true)) {
+                EquipShoutHook::Install();
+            }
+          
+            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipSpell", true) && !REL::Module::IsVR())
+            {
+                EquipSpellHook::Install();
+            }
+            if (!ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipShout", true) && !REL::Module::IsVR())
+            {
                 EquipShoutHook::Install();
             }
 
