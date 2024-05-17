@@ -37,6 +37,7 @@ namespace DeviousDevices
         std::vector<GagType>    _GagTypes;
         GagType                 _DefaultGagType;
         RE::TESFaction*         _BlockFaction;
+        std::unordered_set<RE::Actor*> _trackedActors;
 
     private:
         std::vector<float>  GetGagEffectPreset(RE::Actor* a_actor);
