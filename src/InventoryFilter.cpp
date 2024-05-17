@@ -93,7 +93,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     // or is SMP object used by 3BA
     if (!CheckWhitelist(a_item)) return false;
 
-    // == Gag check
+    // == Food check
     bool loc_needgagcheck = false;
 
     if (a_item->Is(RE::FormType::Ingredient)) //filter all ingredients
@@ -128,6 +128,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         }
     }
 
+    // == Shout check
     if (a_item->Is(RE::FormType::Shout) && ActorHasBlockingGag(a_actor))  // filter all Shouts
     {
         RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
