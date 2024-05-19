@@ -12,6 +12,7 @@ namespace DeviousDevices
         if (!_installed)
         {
             _installed = true;
+            _NPCUpdateTime = ConfigManager::GetSingleton()->GetVariable<float>("GagExpression.fNPCUpdateTime",1.0f);
             RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
             if (loc_datahandler)
             {
@@ -243,6 +244,30 @@ namespace DeviousDevices
         return loc_gag->HasKeywordString("zad_DeviousGag");
     }
 
+    void ExpressionManager::Reload()
+    {
+        _UpdatedActors.clear();
+    }
+
+    void ExpressionManager::CleanUnusedActors()
+    {
+        //DEBUG("CleanUnusedActors() called")
+        for (auto&& [actor,updateHandle] : _UpdatedActors)
+        {
+            // If actor was not updated atleast for 3600 frames (60 seconds for 60 FPS), clean them
+            if ((updateHandle.lastUpdateFrame + 3600) < _UpdateCounter)
+            {
+                //DEBUG("CleanUnusedActors() - Removing actor 0x{:016X}",(uintptr_t)actor)
+                _UpdatedActors.erase(actor);
+            }
+        }
+    }
+
+    void ExpressionManager::IncUpdateCounter()
+    {
+        _UpdateCounter++;
+    }
+
     void ExpressionManager::ApplyGagExpression(RE::Actor* a_actor, const std::vector<float>& a_expression)
     {
         if (a_actor == nullptr) return;
@@ -350,6 +375,40 @@ namespace DeviousDevices
         ApplyGagExpression(a_actor,loc_new);
     }
 
+    void ExpressionManager::UpdateGagExpressionTimed(RE::Actor* a_actor, float a_delta)
+    {
+        //DEBUG("UpdateGagExpressionTimed({},{:g}) called",a_actor ? a_actor->GetName() : "NONE",a_delta)
+
+        if (!a_actor) return;
+
+        auto loc_refBase = a_actor->GetActorBase();
+        if(a_actor->IsDisabled() || !a_actor->Is3DLoaded() || !(a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))
+        {
+            LOG("UpdateGagExpressionTimed({},{:g}) - Actor is invalid",a_actor ? a_actor->GetName() : "NONE",a_delta)
+            return;
+        }
+
+        auto loc_id = _UpdatedActors.find(a_actor);
+
+        if (loc_id == _UpdatedActors.end())
+        {
+            _UpdatedActors[a_actor] = {0,_UpdateCounter};
+            LOG("UpdateGagExpressionTimed({},{:g}) - Actor registered",a_actor ? a_actor->GetName() : "NONE",a_delta)
+            return;
+        }
+
+        loc_id->second.elapsedFrames++;
+        loc_id->second.lastUpdateFrame   = _UpdateCounter;
+
+        //DEBUG("UpdateGagExpressionTimed({},{:g}) - Elapsed frames = {}, Total Frames = {}",a_actor ? a_actor->GetName() : "NONE",a_delta,loc_id->second.elapsedFrames,loc_id->second.lastUpdateFrame)
+
+        if (loc_id->second.elapsedFrames >= 60)
+        {
+            loc_id->second.elapsedFrames -= 60;
+            UpdateGagExpression(a_actor);
+        }
+    }
+
     void ExpressionManager::ResetGagExpression(RE::Actor* a_actor)
     {
         if (a_actor == nullptr) return;
@@ -416,50 +475,6 @@ namespace DeviousDevices
         loc_res[31] *= loc_mult;
 
         return loc_res;
-    }
-
-    int ExpressionManager::UpdateGagExpForNPCs()
-    {
-        RE::PlayerCharacter* loc_player = RE::PlayerCharacter::GetSingleton(); 
-
-        if (loc_player == nullptr) return 0;
-
-        uint16_t loc_updated = 0;
-
-        if (IsGagged(loc_player))
-        {
-            loc_updated += 1;
-            UpdateGagExpression(loc_player);
-        }
-
-        if (!ConfigManager::GetSingleton()->GetVariable<bool>("GagExpression.bNPCsEnabled", true)) {
-            return loc_updated;
-        }
-
-        const int loc_distance = ConfigManager::GetSingleton()->GetVariable<int>("GagExpression.iNPCDistance", 500);
-
-        LOG("UpdateGagExpForNPCs() called - Distance = {}", loc_distance)
-
-        Utils::ForEachActorInRange(loc_distance, [&](RE::Actor* a_actor) {
-            auto loc_refBase = a_actor->GetActorBase();
-
-            if (a_actor && !a_actor->IsDisabled() && a_actor->Is3DLoaded() && !a_actor->IsPlayerRef() &&
-                (a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))
-            {
-                if (IsGagged(a_actor)) {
-                    loc_updated += 1;
-                    _trackedActors.insert(a_actor);
-                    DEBUG("Updating and tracking gag expression for {}", a_actor->GetFormID());
-                    UpdateGagExpression(a_actor);
-                } else if (_trackedActors.contains(a_actor)) {
-                    DEBUG("Resetting and clearing gag expression for {}", a_actor->GetFormID());
-                    ResetGagExpression(a_actor);
-                    _trackedActors.erase(a_actor);
-                }
-            }
-        });
-
-        return loc_updated;
     }
 
     std::vector<float> ExpressionManager::GetGagEffectPreset(RE::Actor* a_actor)
