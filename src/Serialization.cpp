@@ -19,5 +19,4 @@ void DeviousDevices::OnRevert(SKSE::SerializationInterface* a_serde)
     NodeHider::GetSingleton()->Reload();
     DeviceHiderManager::GetSingleton()->Reload();
     ExpressionManager::GetSingleton()->Reload();
-
 }

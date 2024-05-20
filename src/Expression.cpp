@@ -12,7 +12,7 @@ namespace DeviousDevices
         if (!_installed)
         {
             _installed = true;
-            _NPCUpdateTime = ConfigManager::GetSingleton()->GetVariable<float>("GagExpression.fNPCUpdateTime",1.0f);
+            _NPCUpdateTime = ConfigManager::GetSingleton()->GetVariable<float>("GagExpression.iNPCUpdateTime",120);
             RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
             if (loc_datahandler)
             {
@@ -246,11 +246,13 @@ namespace DeviousDevices
 
     void ExpressionManager::Reload()
     {
+        UniqueLock lock(_SaveLock);
         _UpdatedActors.clear();
     }
 
     void ExpressionManager::CleanUnusedActors()
     {
+        UniqueLock lock(_SaveLock);
         //DEBUG("CleanUnusedActors() called")
         for (auto&& [actor,updateHandle] : _UpdatedActors)
         {
@@ -375,16 +377,17 @@ namespace DeviousDevices
         ApplyGagExpression(a_actor,loc_new);
     }
 
-    void ExpressionManager::UpdateGagExpressionTimed(RE::Actor* a_actor, float a_delta)
+    void ExpressionManager::UpdateGagExpressionTimed(RE::Actor* a_actor)
     {
-        //DEBUG("UpdateGagExpressionTimed({},{:g}) called",a_actor ? a_actor->GetName() : "NONE",a_delta)
+        UniqueLock lock(_SaveLock);
+        //DEBUG("UpdateGagExpressionTimed({}) called",a_actor ? a_actor->GetName() : "NONE")
 
         if (!a_actor) return;
 
         auto loc_refBase = a_actor->GetActorBase();
         if(a_actor->IsDisabled() || !a_actor->Is3DLoaded() || !(a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC))))
         {
-            LOG("UpdateGagExpressionTimed({},{:g}) - Actor is invalid",a_actor ? a_actor->GetName() : "NONE",a_delta)
+            LOG("ExpressionManager::UpdateGagExpressionTimed({}) - Actor is invalid",a_actor ? a_actor->GetName() : "NONE")
             return;
         }
 
@@ -393,18 +396,18 @@ namespace DeviousDevices
         if (loc_id == _UpdatedActors.end())
         {
             _UpdatedActors[a_actor] = {0,_UpdateCounter};
-            LOG("UpdateGagExpressionTimed({},{:g}) - Actor registered",a_actor ? a_actor->GetName() : "NONE",a_delta)
+            LOG("ExpressionManager::UpdateGagExpressionTimed({}) - Actor registered",a_actor ? a_actor->GetName() : "NONE")
             return;
         }
 
         loc_id->second.elapsedFrames++;
         loc_id->second.lastUpdateFrame   = _UpdateCounter;
 
-        //DEBUG("UpdateGagExpressionTimed({},{:g}) - Elapsed frames = {}, Total Frames = {}",a_actor ? a_actor->GetName() : "NONE",a_delta,loc_id->second.elapsedFrames,loc_id->second.lastUpdateFrame)
+        //DEBUG("ExpressionManager::UpdateGagExpressionTimed({}) - Elapsed frames = {}, Total Frames = {}",a_actor ? a_actor->GetName() : "NONE",loc_id->second.elapsedFrames,loc_id->second.lastUpdateFrame)
 
-        if (loc_id->second.elapsedFrames >= 60)
+        if (loc_id->second.elapsedFrames >= _NPCUpdateTime)
         {
-            loc_id->second.elapsedFrames -= 60;
+            loc_id->second.elapsedFrames -= _NPCUpdateTime;
             UpdateGagExpression(a_actor);
         }
     }

@@ -1,5 +1,6 @@
 #pragma once
 #include <RE/Skyrim.h>
+#include "Utils.h"
 
 namespace DeviousDevices 
 {
@@ -16,12 +17,6 @@ namespace DeviousDevices
         mReset  = 1
     };
 
-    struct UpdateHandle
-    {
-        uint64_t    elapsedFrames   = 0UL;
-        uint64_t    lastUpdateFrame = 0UL;
-    };
-
     class ExpressionManager
     {
     SINGLETONHEADER(ExpressionManager)
@@ -32,7 +27,7 @@ namespace DeviousDevices
         std::vector<float>  GetExpression(RE::Actor* a_actor);
         bool                ResetExpression(RE::Actor* a_actor, int a_priority);
         void                UpdateGagExpression(RE::Actor* a_actor);
-        void                UpdateGagExpressionTimed(RE::Actor* a_actor, float a_delta);
+        void                UpdateGagExpressionTimed(RE::Actor* a_actor);
         void                ResetGagExpression(RE::Actor* a_actor);
         bool                RegisterGagType(RE::BGSKeyword* a_keyword, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
         bool                RegisterDefaultGagType(std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
@@ -48,6 +43,7 @@ namespace DeviousDevices
         std::unordered_map<RE::Actor*,UpdateHandle> _UpdatedActors;
         float                   _NPCUpdateTime = 1.0f;
         uint64_t                _UpdateCounter = 0UL;
+        Spinlock                _SaveLock;
 
     private:
         std::vector<float>  GetGagEffectPreset(RE::Actor* a_actor);

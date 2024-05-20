@@ -40,11 +40,11 @@ void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_del
         if (!loc_manager->UpdateThread2) 
         {
             loc_manager->UpdateThread2 = true;
-            NodeHider::GetSingleton()->Update();
+            NodeHider::GetSingleton()->UpdatePlayer(loc_player);
             std::thread([loc_manager]
             {
                 //wait
-                std::this_thread::sleep_for(std::chrono::milliseconds(ConfigManager::GetSingleton()->GetVariable<int>("UpdateThreads.iUpdateTime2",2000))); //wait x ms before updating again
+                std::this_thread::sleep_for(std::chrono::milliseconds(ConfigManager::GetSingleton()->GetVariable<int>("NodeHider.iUpdatePlayerTime",500))); //wait x ms before updating again
                 loc_manager->UpdateThread2 = false;
             }).detach();
         }
@@ -61,6 +61,7 @@ void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_del
             }).detach();
         }
         ExpressionManager::GetSingleton()->IncUpdateCounter();
+        NodeHider::GetSingleton()->IncUpdateCounter();
     }
     UpdatePlayer_old(a_actor,a_delta);
 }
@@ -68,10 +69,16 @@ void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_del
 //this function is only called if no menu is open. It also looks like that it is not called when player is in free cam mode
 void DeviousDevices::UpdateManager::UpdateCharacter(RE::Actor* a_actor, float a_delta)
 {
-    static bool loc_updatenpc = ConfigManager::GetSingleton()->GetVariable<bool>("GagExpression.bNPCsEnabled", true);
-    if (loc_updatenpc)
+    static const bool loc_gag = ConfigManager::GetSingleton()->GetVariable<bool>("GagExpression.bNPCsEnabled", true);
+    if (loc_gag)
     {
-        ExpressionManager::GetSingleton()->UpdateGagExpressionTimed(a_actor,a_delta);
+        ExpressionManager::GetSingleton()->UpdateGagExpressionTimed(a_actor);
+    }
+
+    static const bool loc_nodes = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
+    if (loc_nodes)
+    {
+        NodeHider::GetSingleton()->UpdateTimed(a_actor);
     }
 
     UpdateCharacter_old(a_actor,a_delta);
