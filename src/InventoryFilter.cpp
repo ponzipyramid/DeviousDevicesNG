@@ -135,6 +135,19 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         return true;
     }
 
+    // Prevents from device being unequipped by other armor which is not device
+    // This is often caused by Follower mods which constantly force outfits to NPCs by uneqipping the current armor (even if its set to be unequippable)
+    if ((a_item->Is(RE::FormType::Armor) && !IsDevious(a_item)))
+    {
+        RE::TESObjectARMO* loc_armor = reinterpret_cast<RE::TESObjectARMO*>(a_item);
+        const auto loc_mask = (int)loc_armor->GetSlotMask();
+        RE::TESObjectARMO* loc_worn = LibFunctions::GetSingleton()->GetWornArmor(a_actor,loc_mask);
+        if (loc_worn && IsDevious(loc_worn))
+        {
+            return true;
+        }
+    }
+
     // == Equip check
     if ((a_item->Is(RE::FormType::Spell) || a_item->Is(RE::FormType::Weapon) || a_item->Is(RE::FormType::Light) ||
          (a_item->Is(RE::FormType::Armor) && !IsDevious(a_item) && !IsStrapon(a_item)))) {

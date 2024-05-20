@@ -88,7 +88,7 @@ Function EvaluateAA(actor akActor)
 		libs.UpdateControls()
 	endIf
 	
-	if !libs.IsAnimating(akActor) 
+	if !libs.IsAnimating(akActor) && !akActor.getAV("Paralysis")
 		Debug.SendAnimationEvent(akActor, "IdleForceDefaultState")
 	EndIf
 	
@@ -102,7 +102,7 @@ Function EvaluateAA(actor akActor)
 EndFunction
 
 Function ClearAA(actor akActor)
-	if akActor != libs.PlayerRef && !akActor.isDead()
+	if akActor != libs.PlayerRef && !akActor.isDead() && !akActor.getAV("Paralysis")
 		akActor.EvaluatePackage()
 		if !libs.IsAnimating(akActor) 
 			Debug.SendAnimationEvent(akActor, "IdleForceDefaultState")
