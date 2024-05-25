@@ -374,7 +374,10 @@ namespace DeviousDevices
 
         const std::vector<float> loc_new = GetGagEffectPreset(a_actor);
 
-        ApplyGagExpression(a_actor,loc_new);
+        if (loc_new.size() > 0)
+        {
+            ApplyGagExpression(a_actor,loc_new);
+        }
     }
 
     void ExpressionManager::UpdateGagExpressionTimed(RE::Actor* a_actor)
@@ -482,11 +485,11 @@ namespace DeviousDevices
 
     std::vector<float> ExpressionManager::GetGagEffectPreset(RE::Actor* a_actor)
     {
-        std::vector<float> loc_res(16,0);
-
         const RE::TESObjectARMO* loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,(int)RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
 
-        if (loc_gag == nullptr) return loc_res;
+        if (loc_gag == nullptr || !loc_gag->HasKeywordString("zad_DeviousGag")) return std::vector<float>();
+
+        std::vector<float> loc_res(16,0);
 
         bool loc_gagtypefound = false;
         for (auto&& it : _GagTypes)
