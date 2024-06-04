@@ -1082,7 +1082,13 @@ bool[] Function StartThirdPersonAnimation(actor akActor, string animation, bool 
 			timeout += 1
 		EndWhile
 		ret[1] = true
-	EndIf	
+	EndIf
+    
+    ; actor still have drawn weapon. Starting animation will break the actor weapon state, so we prevent it
+    if akActor.IsWeaponDrawn()
+        return ret
+    endif
+    
 	if akActor == PlayerRef
 		; Manipulate camera		
 		int cameraOld = Game.GetCameraState()
@@ -2797,42 +2803,41 @@ function strip(actor a, bool animate = false)
 EndFunction
 
 bool function hasAnyWeaponEquipped(actor a)
-	if !a.GetEquippedWeapon(true) && !a.GetEquippedWeapon(false) && !a.getEquippedSpell(1) && !a.getEquippedSpell(0) 
-		return false
-	endif
-	return true
+    if !a.GetEquippedObject(0) && !a.GetEquippedObject(1)
+        return false
+    endif
+    return true
 EndFunction
 
-function stripweapons(actor a, bool unequiponly = true)		
-    int i = 2
-    Spell spl
-    Weapon weap
-    Armor sh
+function stripweapons(actor a, bool unequiponly = true)
+    int i = 10
+    
+    Form loc_lefthand   = none
+    Form loc_righthand  = none
+    
     While i > 0
         i -= 1
-        if i == 0
-            Utility.Wait(1.0)
-        EndIf
-        spl = a.getEquippedSpell(1)
-        if spl
-            a.unequipSpell(spl, 1)
-        endIf
-        weap = a.GetEquippedWeapon(true)
-        if weap
-            a.unequipItem(weap, false, true)
-        endIf
-        sh = a.GetEquippedShield()
-        if sh
-            a.unequipItem(sh, false, true)
-        endIf
-        spl = a.getEquippedSpell(0)
-        if spl
-            a.unequipSpell(spl, 0)
-        endIf
-        weap = a.GetEquippedWeapon(false)
-        if weap
-            a.unequipItem(weap, false, true)
-        endIf
+        loc_lefthand = a.GetEquippedObject(0)
+        if loc_lefthand
+            a.unequipItem(loc_lefthand, false, true)
+        endif
+        if loc_lefthand as Spell
+            a.UnequipSpell(loc_lefthand as Spell,0)
+        endif
+        
+        loc_righthand = a.GetEquippedObject(1)
+        if loc_righthand
+            a.unequipItem(loc_righthand, false, true)
+        endif
+        if loc_righthand as Spell
+            a.UnequipSpell(loc_righthand as Spell,0)
+        endif
+        if loc_lefthand || loc_righthand || a.IsWeaponDrawn()
+            a.SheatheWeapon()
+            Utility.Wait(0.1)
+        else
+            return
+        endif
     EndWhile
 endfunction
 

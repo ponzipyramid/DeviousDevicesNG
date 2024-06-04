@@ -84,6 +84,8 @@ bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor, RE
 bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item) {
     if ((a_actor == nullptr) || (a_item == nullptr)) return true;
 
+    //DEBUG("EquipFilter({},{})",a_actor->GetName(),a_item->GetName())
+
     // item have no name -> most likely used internaly by other mod, and not equipped by player -> never filter it out
     // or is SMP object used by 3BA
     if (!CheckWhitelist(a_item)) return false;
@@ -144,39 +146,92 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         RE::TESObjectARMO* loc_worn = LibFunctions::GetSingleton()->GetWornArmor(a_actor,loc_mask);
         if (loc_worn && IsDevious(loc_worn))
         {
+            DEBUG("EquipFilter({},{}) - Prevented equipping armor in slot already used by device",a_actor->GetName(),a_item->GetName())
+            return true;
+        }
+    }
+
+    const bool loc_heavyBondage = GetWornWithDeviousKeyword(a_actor, _deviousHeavyBondageKwd);
+    const bool loc_mittens = !loc_heavyBondage && GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
+
+    // == Weapon check
+    if (a_item->Is(RE::FormType::Weapon) || a_item->Is(RE::FormType::Light)) {
+        if (loc_heavyBondage || loc_mittens) {
+            if (a_actor->IsPlayerRef())
+            {
+                const std::string loc_msg = loc_heavyBondage ? "You can't equip this with your hands tied!"
+                                                             : "You can't equip this while locked in bondage mittens!";
+                RE::DebugNotification(loc_msg.c_str());
+            }
+            //DEBUG("EquipFilter({},{}) - Prevented equipping weapon/light",a_actor->GetName(),a_item->GetName())
+            // Equipping anything should be disabled when bound. Even if menu is closed. 
+            // Reason is that otherwise player can easily equip back all weapons/spells by using Favirite menu or hotkeys
             return true;
         }
     }
 
     // == Equip check
-    if ((a_item->Is(RE::FormType::Spell) || a_item->Is(RE::FormType::Weapon) || a_item->Is(RE::FormType::Light) ||
-         (a_item->Is(RE::FormType::Armor) && !IsDevious(a_item) && !IsStrapon(a_item)))) {
-        const bool loc_heavyBondage = GetWornWithDeviousKeyword(a_actor, _deviousHeavyBondageKwd);
-        const bool loc_mittens = !loc_heavyBondage && GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd);
-
+    if ((a_item->Is(RE::FormType::Armor) && !IsDevious(a_item) && !IsStrapon(a_item))) {
         if (loc_heavyBondage || loc_mittens) {
             const std::string loc_msg = loc_heavyBondage ? "You can't equip this with your hands tied!"
-                                                         : "You can't equip this while locked in bondage mittens!";
-
+                                                            : "You can't equip this while locked in bondage mittens!";
             // UI can be still not loaded even after save is loaded.
             // Because of that it is important to always check that UI singleton is initiated
             RE::GPtr<RE::InventoryMenu> loc_invMenu = nullptr;
             RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
-            if (RE::UI::GetSingleton() != nullptr) {
+            if (RE::UI::GetSingleton() != nullptr) 
+            {
                 loc_invMenu = UI::GetMenu<RE::InventoryMenu>();
                 loc_magMenu = UI::GetMenu<RE::MagicMenu>();
             } else
                 ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
 
-            if (loc_invMenu.get() || loc_magMenu.get()) {
+            RE::TESObjectARMO* loc_armor =  reinterpret_cast<RE::TESObjectARMO*>(a_item);
+            const bool loc_isshield = (loc_armor && loc_armor->IsShield());
+
+            if ((loc_isshield || (loc_invMenu.get() || loc_magMenu.get())) && a_actor->IsPlayerRef()) 
+            {
                 RE::DebugNotification(loc_msg.c_str());
                 return true;
             }
-
-            return (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipFilterModeMenu", false) ==
+            DEBUG("loc_isshield = {}",loc_isshield)
+            return loc_isshield || (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipFilterModeMenu", false) ==
                     0);
         }
     }
+
+    // == Spell check
+    if ((a_item->Is(RE::FormType::Spell))) {
+        if (loc_heavyBondage || loc_mittens) {
+            RE::SpellItem* loc_spell = reinterpret_cast<RE::SpellItem*>(a_item);
+
+            bool loc_isspell = false;
+            switch (loc_spell->GetSpellType())
+            {
+            case RE::MagicSystem::SpellType::kSpell:
+               loc_isspell = true;
+               break;
+            default:
+                loc_isspell = false;
+                break;
+            }
+
+            // Only if if spell is trully spell (using hands)
+            if (loc_isspell)
+            {
+                if (a_actor->IsPlayerRef())
+                {
+                    const std::string loc_msg = loc_heavyBondage ? "You can't equip this with your hands tied!"
+                                                                 : "You can't equip this while locked in bondage mittens!";
+                    RE::DebugNotification(loc_msg.c_str());
+                }
+                // Equipping anything should be disabled when bound. Even if menu is closed. 
+                // Reason is that otherwise player can easily equipp back all weapons/spells by using Favirite menu
+                return true;
+            }
+        }
+    }
+
 
     return false;
 }
@@ -241,6 +296,8 @@ bool DeviousDevices::InventoryFilter::CheckWhitelist(const RE::TESBoundObject* a
     if (a_item == nullptr) return false;
     auto loc_whitelist = ConfigManager::GetSingleton()->GetArray<std::string>("InventoryFilter.asWhitelist");
 
+    if (loc_whitelist.size() == 0) return true;
+
     std::string loc_name = a_item->GetName();
     std::transform(loc_name.begin(), loc_name.end(), loc_name.begin(), ::tolower);  // to lower case
 
@@ -257,6 +314,8 @@ bool DeviousDevices::InventoryFilter::CheckWhitelist(const RE::TESBoundObject* a
 bool DeviousDevices::InventoryFilter::CheckWhitelistFood(const RE::TESBoundObject* a_item) const {
     if (a_item == nullptr) return false;
     auto loc_whitelist = ConfigManager::GetSingleton()->GetArray<std::string>("InventoryFilter.asWhitelistFood");
+
+    if (loc_whitelist.size() == 0) return true;
 
     std::string loc_name = a_item->GetName();
     std::transform(loc_name.begin(), loc_name.end(), loc_name.begin(), ::tolower);  // to lower case

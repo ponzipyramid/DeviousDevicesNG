@@ -83,8 +83,11 @@ void DeviousDevices::NodeHider::UpdatePlayer(RE::Actor* a_actor)
     UniqueLock lock(SaveLock);
 
     if (a_actor == nullptr) return;
-
-    UpdateArms(a_actor);
+    static bool loc_hidearms = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bHideArms",false);
+    if (loc_hidearms)
+    {
+        UpdateArms(a_actor);
+    }
     UpdateWeapons(a_actor);
 }
 
