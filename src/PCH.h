@@ -146,3 +146,9 @@ namespace logger = SKSE::log;
 namespace util {
     using SKSE::stl::report_and_fail;
 }
+
+struct UpdateHandle
+{
+    uint64_t    elapsedFrames   = 0UL;
+    uint64_t    lastUpdateFrame = 0UL;
+};

@@ -121,8 +121,16 @@ namespace DeviousDevices {
                                                     std::uint64_t a_playSounds,
                                                     std::uint64_t a_applyNow, 
                                                     std::uint64_t a_slotToReplace);
-        inline OriginalEquipObject   _EquipObject;
-        inline OriginalUnequipObject _UnequipObject;
+
+        typedef bool(WINAPI* OriginalEquipObject2)(RE::ActorEquipManager* a_1,
+                                                       RE::Actor* actor, 
+                                                       RE::TESBoundObject* item,
+                                                       std::uint64_t a_extradata, 
+                                                       std::uint64_t a_unkw);
+
+        inline OriginalEquipObject      _EquipObject;
+        inline OriginalUnequipObject    _UnequipObject;
+        inline OriginalEquipObject2     _EquipObject2;
 
         inline void EquipObject(RE::ActorEquipManager*      a_1,
                                 RE::Actor*                  a_actor,
@@ -161,7 +169,27 @@ namespace DeviousDevices {
                                   a_playSounds, a_applyNow, a_slotToReplace);
         }
 
+        // Some mods or game itself calls this method sometimes directly (mainly for NPCs). 
+        // Because of that, the EquipObject hook will not work 100% of time
+        // Using this will make it bulletproof
+        inline void EquipObject2(RE::ActorEquipManager* a_1,RE::Actor* a_actor, RE::TESBoundObject* a_item,
+                                  std::uint64_t a_extradata, std::uint64_t a_unkw)
+        {
+            //DEBUG("EquipBipedObject({},{}) called",a_actor->GetName(),a_item->GetName())
+
+            // Apply inventory filter
+            if (InventoryFilter::GetSingleton()->EquipFilter(a_actor, a_item)) {
+                DEBUG("EquipObject2 restricted <{:08X}:{}> for <{:08X}:{}>", a_item->GetFormID(), a_item->GetName(),
+                    a_actor->GetFormID(), a_actor->GetName())
+                return;
+            }
+            _EquipObject2(a_1,a_actor,a_item,a_extradata,a_unkw);
+        }
+
         inline void Install() {
+            static bool loc_installed = false;
+            if (loc_installed)  return;
+            loc_installed = true;
             g_dManager = DeviceReader::GetSingleton();
 
             AddObjectToContainerHook::Install();
@@ -176,21 +204,36 @@ namespace DeviousDevices {
                 EquipShoutHook::Install();
             }
 
-            const uintptr_t loc_equipTargetAddress = RE::Offset::ActorEquipManager::EquipObject.address();
-            _EquipObject = (OriginalEquipObject)loc_equipTargetAddress;
+            //const uintptr_t loc_equipTargetAddress = RE::Offset::ActorEquipManager::EquipObject.address();
+            //_EquipObject = (OriginalEquipObject)loc_equipTargetAddress;
+            //DetourTransactionBegin();
+            //DetourUpdateThread(GetCurrentThread());
+            //DetourAttach(&(PVOID&)_EquipObject, (PBYTE)&EquipObject);
+            //
+            //if (DetourTransactionCommit() == NO_ERROR)
+            //{
+            //    LOG("Installed papyrus hook on EquipObject at {0:x} with replacement from address {0:x}",
+            //                 loc_equipTargetAddress, (void*)&EquipObject);
+            //}
+            //else
+            //{
+            //    WARN("Failed to install papyrus hook on EquipObject");
+            //}
 
+            const uintptr_t loc_equip2TargetAddress = RELOCATION_ID(37974, 38929).address();
+            _EquipObject2 = (OriginalEquipObject2)loc_equip2TargetAddress;
             DetourTransactionBegin();
             DetourUpdateThread(GetCurrentThread());
-            DetourAttach(&(PVOID&)_EquipObject, (PBYTE)&EquipObject);
+            DetourAttach(&(PVOID&)_EquipObject2, (PBYTE)&EquipObject2);
 
             if (DetourTransactionCommit() == NO_ERROR)
             {
-                LOG("Installed papyrus hook on EquipObject at {0:x} with replacement from address {0:x}",
-                             loc_equipTargetAddress, (void*)&EquipObject);
+                DEBUG("Installed papyrus hook on EquipObject2 at {0:x} with replacement from address {0:x}",
+                             loc_equip2TargetAddress, (void*)&EquipObject2);
             }
             else
             {
-                WARN("Failed to install papyrus hook on EquipObject");
+                ERROR("Failed to install papyrus hook on EquipObject2");
             }
 
             const uintptr_t loc_unequipTargetAddress = RE::Offset::ActorEquipManager::UnequipObject.address();

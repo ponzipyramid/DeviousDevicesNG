@@ -3,6 +3,7 @@
 #include <detours/detours.h>
 #include "DeviceReader.h"
 #include "LibFunctions.h"
+#include "Utils.h"
 
 namespace DeviousDevices
 {
@@ -58,6 +59,7 @@ namespace DeviousDevices
         std::vector<RE::BGSKeyword*> _hidekeywords;
         std::vector<RE::BGSKeyword*> _nohidekeywords;
 
+        mutable Spinlock        _SaveLock;
     private:
 
         bool CheckHiderSlots(RE::TESObjectARMO* a_armor, uint8_t a_min, uint8_t a_max, const std::unordered_map<RE::TESObjectARMO*,uint32_t>& a_slots) const;

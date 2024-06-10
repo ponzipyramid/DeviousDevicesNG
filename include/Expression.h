@@ -1,5 +1,6 @@
 #pragma once
 #include <RE/Skyrim.h>
+#include "Utils.h"
 
 namespace DeviousDevices 
 {
@@ -26,18 +27,23 @@ namespace DeviousDevices
         std::vector<float>  GetExpression(RE::Actor* a_actor);
         bool                ResetExpression(RE::Actor* a_actor, int a_priority);
         void                UpdateGagExpression(RE::Actor* a_actor);
+        void                UpdateGagExpressionTimed(RE::Actor* a_actor);
         void                ResetGagExpression(RE::Actor* a_actor);
         bool                RegisterGagType(RE::BGSKeyword* a_keyword, std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
         bool                RegisterDefaultGagType(std::vector<RE::TESFaction*> a_factions, std::vector<int> a_defaults);
-        int                 UpdateGagExpForNPCs();
         bool                IsGagged(RE::Actor* a_actor) const;
-
+        void                Reload();
+        void                CleanUnusedActors();
+        void                IncUpdateCounter();
     private:
         bool                    _installed = false;
         std::vector<GagType>    _GagTypes;
         GagType                 _DefaultGagType;
         RE::TESFaction*         _BlockFaction;
-        std::unordered_set<RE::Actor*> _trackedActors;
+        std::unordered_map<RE::Actor*,UpdateHandle> _UpdatedActors;
+        float                   _NPCUpdateTime = 1.0f;
+        uint64_t                _UpdateCounter = 0UL;
+        Spinlock                _SaveLock;
 
     private:
         std::vector<float>  GetGagEffectPreset(RE::Actor* a_actor);
@@ -46,7 +52,6 @@ namespace DeviousDevices
         void                ApplyGagExpression(RE::Actor* a_actor, const std::vector<float> &a_expression);
         std::vector<float>  ApplyStrengthToExpression(const std::vector<float>& a_expression,float a_strength);
         bool                CheckExpressionBlock(RE::Actor* a_actor, int a_priority, BlockCheckMode a_mode);
-
     };
 
 

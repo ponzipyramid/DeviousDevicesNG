@@ -116,6 +116,7 @@ void DeviousDevices::DeviceHiderManager::Setup()
 
 void DeviousDevices::DeviceHiderManager::Reload()
 {
+    UniqueLock lock(_SaveLock);
     _forcestrip.clear();
 }
 
@@ -204,6 +205,7 @@ inline uint16_t DeviousDevices::DeviceHiderManager::UpdateActors3D()
 
 void DeviousDevices::DeviceHiderManager::SetActorStripped(RE::Actor* a_actor, bool a_stripped, int a_armorfilter, int a_devicefilter)
 {
+    UniqueLock lock(_SaveLock);
     if (a_actor == nullptr) return;
 
     const uint32_t loc_handle = a_actor->GetHandle().native_handle();
@@ -222,6 +224,7 @@ void DeviousDevices::DeviceHiderManager::SetActorStripped(RE::Actor* a_actor, bo
 
 bool DeviousDevices::DeviceHiderManager::IsActorStripped(RE::Actor* a_actor)
 {
+    UniqueLock lock(_SaveLock);
     if (a_actor == nullptr) return false;
     const auto loc_data = _forcestrip.find(a_actor->GetHandle().native_handle());
     return (loc_data != _forcestrip.end());
@@ -229,6 +232,8 @@ bool DeviousDevices::DeviceHiderManager::IsActorStripped(RE::Actor* a_actor)
 
 bool DeviousDevices::DeviceHiderManager::CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const
 {
+    UniqueLock lock(_SaveLock);
+
     if (_forcestrip.size() == 0 || a_actor == nullptr) return true;
 
     const auto loc_data         = _forcestrip.find(a_actor->GetHandle().native_handle());
