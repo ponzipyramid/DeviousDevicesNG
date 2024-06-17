@@ -89,7 +89,7 @@ Function EvaluateAA(actor akActor)
 	endIf
 	
 	; Check if actor doesnt have drawn weapon, as calling animation event will otherwise break the character weapon state!
-	if !libs.IsAnimating(akActor) && !akActor.IsWeaponDrawn() && !akActor.getAV("Paralysis")
+	if !libs.IsAnimating(akActor) && !akActor.isDead() && !akActor.IsWeaponDrawn() && !akActor.getAV("Paralysis")
 		Debug.SendAnimationEvent(akActor, "IdleForceDefaultState")
 	EndIf
 	
