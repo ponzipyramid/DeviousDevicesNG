@@ -115,6 +115,7 @@ Float   RepairDifficultyModifier        = 0.0       ; Global modifier for escape
 Float   LockShieldTimer                 = 0.0       ; The actual uptime of the lockshield. Randomly determined when the item is equipped using the min and max values.
 Float   LockTimer                       = 0.0       ; The actual uptime of the timed lock. Randomly determined when the item is equipped using the min and max values.
 Bool    QuestItemRemovalTokenInternal   = False
+Actor	DeviceWearer								; The actor currently wearing the device
 
 Function ProcessLinkedDeviceOnUntighten(Actor akActor)
     If akActor != Libs.PlayerRef || LinkedDeviceEquipOnUntighten == None
@@ -158,6 +159,7 @@ EndFunction
 
 Event OnEquipped(Actor akActor)        
     libs.Log("OnEquipped("+akActor.GetLeveledActorBase().GetName()+": "+deviceInventory.GetName()+")")
+	DeviceWearer = none ;clear wearer in case of invalid pre-equip checks
     if akActor == libs.PlayerRef
         libs.log("Checking for active unequip operation for " + zad_DeviousDevice)
         int counter = 10 ; half second intervals, so 5 secs max
@@ -257,6 +259,7 @@ Event OnEquipped(Actor akActor)
     EscapeStruggleAttemptsMade = 0
     EscapeLockpickAttemptsMade = 0
     menuDisable = false
+	DeviceWearer = akActor
 EndEvent
 
 Event OnUnequipped(Actor akActor)
@@ -270,6 +273,7 @@ Event OnUnequipped(Actor akActor)
         libs.log("Starting unequip operation for " + zad_DeviousDevice)
         StorageUtil.SetIntValue(akActor, "zad_RemovalOperation" + zad_DeviousDevice, 1)
     EndIf
+	DeviceWearer = akActor
     If DeviceRendered.HasKeyword(Libs.Zad_QuestItem) || DeviceInventory.HasKeyword(Libs.Zad_QuestItem)
         libs.Log("Attempt to remove quest item: "+akActor.GetLeveledActorBase().GetName()+": "+deviceInventory.GetName()+")")
         if !QuestItemRemovalTokenInternal && (libs.questItemRemovalAuthorizationToken == None || libs.zadStandardKeywords.HasForm(libs.questItemRemovalAuthorizationToken) || (!DeviceRendered.HasKeyword(libs.questItemRemovalAuthorizationToken) && !DeviceInventory.HasKeyword(libs.questItemRemovalAuthorizationToken)))
@@ -334,6 +338,7 @@ Event OnUnequipped(Actor akActor)
                 ProcessLinkedDeviceOnTighten(akActor)
                 StorageUtil.UnSetIntValue(akActor, "zad_TightenToken" + deviceInventory)
             EndIf
+			DeviceWearer = none
         EndIf
     else        
         if akActor==libs.PlayerRef
@@ -417,6 +422,7 @@ Event OnContainerChanged(ObjectReference akNewContainer, ObjectReference akOldCo
                 akNewContainer.RemoveItem(deviceRendered, 1, true)
             else
                 Actor npc = (akOldContainer as Actor)
+				DeviceWearer = npc
                 ; Is this an npc, or a container?
                 if npc != none && npc.GetItemCount(deviceRendered)!=0
                     if libs.PlayerRef.WornHasKeyword(libs.zad_DeviousHeavyBondage)
@@ -515,7 +521,8 @@ Function RemoveDevice(actor akActor, bool destroyDevice=false, bool skipMutex=fa
     libs.UnlockDevice(akActor, deviceInventory, deviceRendered, zad_DeviousDevice, destroyDevice = DestroyInventoryDevice)
     if akActor != libs.PlayerRef
         OnRemoveDevice(akActor)
-    EndIf    
+    EndIf   
+	DeviceWearer = none
 EndFunction
 
 bool Function RemoveDeviceWithKey(actor akActor = none, bool destroyDevice=false)
