@@ -65,6 +65,7 @@ namespace DeviousDevices
         bool IsBound(RE::Actor* a_actor) const;
         BondageState GetBondageState(RE::Actor* a_actor) const;
         bool WornHasKeyword(RE::Actor* a_actor, RE::BGSKeyword* a_kw) const;
+        bool WornHasKeyword(RE::Actor* a_actor, std::string a_kw) const;
         RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,int a_mask) const;
         bool IsAnimating(RE::Actor* a_actor);
         bool PluginInstalled(std::string a_dll);

@@ -3,6 +3,7 @@
 #include "Hider.h"
 #include "Utils.h"
 
+
 SINGLETONBODY(DeviousDevices::NodeHider)
 
 void DeviousDevices::NodeHider::Setup()
@@ -13,6 +14,9 @@ void DeviousDevices::NodeHider::Setup()
         _WeaponNodes = ConfigManager::GetSingleton()->GetArrayText("NodeHider.asWeaponNodes",false);
         _ArmNodes    = ConfigManager::GetSingleton()->GetArray<std::string>("NodeHider.asArmNodes");
         _straitjacket = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousStraitJacket");
+
+        _ArmHiddingKeywords = ConfigManager::GetSingleton()->GetArrayText("NodeHider.asArmHiddingKeywords",false);
+
         _installed = true;
         DEBUG("NodeHider::Setup() - complete")
     }
@@ -66,7 +70,11 @@ void DeviousDevices::NodeHider::UpdateArms(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return;
 
-    if (LibFunctions::GetSingleton()->WornHasKeyword(a_actor,_straitjacket)) HideArms(a_actor);
+    const auto loc_it = std::find_if(_ArmHiddingKeywords.begin(),_ArmHiddingKeywords.end(),[a_actor](const std::string& a_kw)
+    {
+        return LibFunctions::GetSingleton()->WornHasKeyword(a_actor,a_kw);
+    });
+    if (loc_it != _ArmHiddingKeywords.end()) HideArms(a_actor);
     else ShowArms(a_actor);
 }
 
@@ -267,8 +275,28 @@ void DeviousDevices::NodeHider::UpdateTimed(RE::Actor* a_actor)
 void DeviousDevices::NodeHider::Reload()
 {
     UniqueLock lock(SaveLock);
-    //UpdateWeapons(RE::PlayerCharacter::GetSingleton());
-    //UpdateArms(RE::PlayerCharacter::GetSingleton());
+
+    const bool loc_nodehider = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
+    if (loc_nodehider)
+    {
+        for (auto&& [handle,state] : _armhiddenstates)
+        {
+            auto loc_actor = RE::Actor::LookupByHandle(handle);
+            if (loc_actor != nullptr)
+            {
+                ShowArms(loc_actor.get());
+            }
+        }
+
+        for (auto&& [handle,state] : _weaponhiddenstates)
+        {
+            auto loc_actor = RE::Actor::LookupByHandle(handle);
+            if (loc_actor != nullptr)
+            {
+                ShowWeapons(loc_actor.get());
+            }
+        }
+    }
     _UpdatedActors.clear();
     _lastupdatestack.clear();
     _armhiddenstates.clear();

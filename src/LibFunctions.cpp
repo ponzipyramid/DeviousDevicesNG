@@ -227,6 +227,31 @@ bool DeviousDevices::LibFunctions::WornHasKeyword(RE::Actor* a_actor, RE::BGSKey
     return loc_res;
 }
 
+bool DeviousDevices::LibFunctions::WornHasKeyword(RE::Actor* a_actor, std::string a_kw) const
+{
+    if ((a_actor == nullptr) || (a_kw == "")) return false;
+
+    //LOG("LibFunctions::WornHasKeyword({},{}) called",a_actor->GetName(),a_kw)
+
+    bool loc_res = false;
+    auto loc_visitor = WornVisitor([this,&loc_res,a_kw](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr && loc_armor->HasKeywordString(a_kw))
+        {
+            loc_res = true;
+            return RE::BSContainer::ForEachResult::kStop;
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+    return loc_res;
+}
+
 RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor, int a_mask) const
 {
     if (a_actor == nullptr) return nullptr;

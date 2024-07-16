@@ -49,6 +49,7 @@ namespace DeviousDevices
         std::unordered_map<uint32_t,std::unordered_map<std::string,HidderState>> _weaponnodestates; //temporary array with states of weapon nodes on updated actors
         uint64_t                    _UpdateCounter = 0UL;
         std::unordered_map<RE::Actor*,UpdateHandle> _UpdatedActors;
+        std::vector<std::string>    _ArmHiddingKeywords;
         
     };
 
