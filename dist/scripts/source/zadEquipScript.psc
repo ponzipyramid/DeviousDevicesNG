@@ -22,6 +22,7 @@ Keyword     Property zad_DeviousDevice                          Auto
 Quest       Property deviceQuest                                Auto
 String      Property deviceName                                 Auto
 MiscObject  Property Lockpick                                   Auto
+Actor 		Property DeviceWearer 								Auto Hidden		; The actor currently wearing the device
 
 ; Wrist Bondage and struggle system
 String[]    Property struggleIdles                              Auto
@@ -115,7 +116,6 @@ Float   RepairDifficultyModifier        = 0.0       ; Global modifier for escape
 Float   LockShieldTimer                 = 0.0       ; The actual uptime of the lockshield. Randomly determined when the item is equipped using the min and max values.
 Float   LockTimer                       = 0.0       ; The actual uptime of the timed lock. Randomly determined when the item is equipped using the min and max values.
 Bool    QuestItemRemovalTokenInternal   = False
-Actor	DeviceWearer								; The actor currently wearing the device
 
 Function ProcessLinkedDeviceOnUntighten(Actor akActor)
     If akActor != Libs.PlayerRef || LinkedDeviceEquipOnUntighten == None
