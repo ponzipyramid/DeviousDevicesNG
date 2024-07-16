@@ -21,6 +21,7 @@ void DeviousDevices::UpdateManager::Setup()
 void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_delta)
 {
     static RE::Actor* loc_player = RE::PlayerCharacter::GetSingleton();
+    
     UpdateManager* loc_manager = UpdateManager::GetSingleton();
 
     if (a_actor == loc_player)
@@ -37,7 +38,8 @@ void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_del
             }).detach();
         }
 
-        if (!loc_manager->UpdateThread2) 
+        static const bool loc_nodehider = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
+        if (loc_nodehider && !loc_manager->UpdateThread2) 
         {
             loc_manager->UpdateThread2 = true;
             NodeHider::GetSingleton()->UpdatePlayer(loc_player);
@@ -75,8 +77,8 @@ void DeviousDevices::UpdateManager::UpdateCharacter(RE::Actor* a_actor, float a_
         ExpressionManager::GetSingleton()->UpdateGagExpressionTimed(a_actor);
     }
 
-    static const bool loc_nodes = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
-    if (loc_nodes)
+    static const bool loc_nodehider = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
+    if (loc_nodehider)
     {
         NodeHider::GetSingleton()->UpdateTimed(a_actor);
     }

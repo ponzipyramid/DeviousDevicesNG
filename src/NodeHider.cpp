@@ -275,26 +275,28 @@ void DeviousDevices::NodeHider::UpdateTimed(RE::Actor* a_actor)
 void DeviousDevices::NodeHider::Reload()
 {
     UniqueLock lock(SaveLock);
-    //UpdateWeapons(RE::PlayerCharacter::GetSingleton());
-    //UpdateArms(RE::PlayerCharacter::GetSingleton());
-    for (auto&& [handle,state] : _armhiddenstates)
+
+    const bool loc_nodehider = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
+    if (loc_nodehider)
     {
-        auto loc_actor = RE::Actor::LookupByHandle(handle);
-        if (loc_actor != nullptr)
+        for (auto&& [handle,state] : _armhiddenstates)
         {
-            ShowArms(loc_actor.get());
+            auto loc_actor = RE::Actor::LookupByHandle(handle);
+            if (loc_actor != nullptr)
+            {
+                ShowArms(loc_actor.get());
+            }
+        }
+
+        for (auto&& [handle,state] : _weaponhiddenstates)
+        {
+            auto loc_actor = RE::Actor::LookupByHandle(handle);
+            if (loc_actor != nullptr)
+            {
+                ShowWeapons(loc_actor.get());
+            }
         }
     }
-
-    for (auto&& [handle,state] : _weaponhiddenstates)
-    {
-        auto loc_actor = RE::Actor::LookupByHandle(handle);
-        if (loc_actor != nullptr)
-        {
-            ShowWeapons(loc_actor.get());
-        }
-    }
-
     _UpdatedActors.clear();
     _lastupdatestack.clear();
     _armhiddenstates.clear();
