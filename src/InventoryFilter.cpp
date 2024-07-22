@@ -134,6 +134,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         if (loc_magMenu.get()) {
             RE::DebugNotification("You can't equip this while wearing this gag!");
         }
+        LOG("EquipFilter({},{}) - Prevented equipping shout",a_actor->GetName(),a_item->GetName())
         return true;
     }
 
@@ -163,7 +164,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
                                                              : "You can't equip this while locked in bondage mittens!";
                 RE::DebugNotification(loc_msg.c_str());
             }
-            //DEBUG("EquipFilter({},{}) - Prevented equipping weapon/light",a_actor->GetName(),a_item->GetName())
+            LOG("EquipFilter({},{}) - Prevented equipping weapon/light",a_actor->GetName(),a_item->GetName())
             // Equipping anything should be disabled when bound. Even if menu is closed. 
             // Reason is that otherwise player can easily equip back all weapons/spells by using Favirite menu or hotkeys
             return true;
@@ -192,11 +193,19 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
             if ((loc_isshield || (loc_invMenu.get() || loc_magMenu.get())) && a_actor->IsPlayerRef()) 
             {
                 RE::DebugNotification(loc_msg.c_str());
+                LOG("EquipFilter({},{}) - Prevented equipping armor",a_actor->GetName(),a_item->GetName())
                 return true;
             }
-            DEBUG("loc_isshield = {}",loc_isshield)
-            return loc_isshield || (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipFilterModeMenu", false) ==
-                    0);
+            
+            if (loc_isshield || (ConfigManager::GetSingleton()->GetVariable<bool>("InventoryFilter.bEquipFilterModeMenu", false) == 0))
+            {
+                LOG("EquipFilter({},{}) - Prevented equipping armor",a_actor->GetName(),a_item->GetName())
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -225,6 +234,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
                                                                  : "You can't equip this while locked in bondage mittens!";
                     RE::DebugNotification(loc_msg.c_str());
                 }
+                LOG("EquipFilter({},{}) - Prevented equipping spell",a_actor->GetName(),a_item->GetName())
                 // Equipping anything should be disabled when bound. Even if menu is closed. 
                 // Reason is that otherwise player can easily equipp back all weapons/spells by using Favirite menu
                 return true;
