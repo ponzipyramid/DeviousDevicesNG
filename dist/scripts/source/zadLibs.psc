@@ -2830,7 +2830,7 @@ function stripweapons(actor a, bool unequiponly = true)
             a.unequipItem(loc_righthand, false, true)
         endif
         if loc_righthand as Spell
-            a.UnequipSpell(loc_righthand as Spell,0)
+            a.UnequipSpell(loc_righthand as Spell,1)
         endif
         if loc_lefthand || loc_righthand || a.IsWeaponDrawn()
             a.SheatheWeapon()
