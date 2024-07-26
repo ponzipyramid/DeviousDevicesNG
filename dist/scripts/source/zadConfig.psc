@@ -642,17 +642,10 @@ Event OnOptionMenuAccept(int option, int index)
 	ElseIf option == blindfoldModeOID
 		If BlindfoldMode == 3 && index != 3 ; Old mode was Dark Fog, remove it
 			if Weather.GetSkyMode() == 0
-				ConsoleUtil.ExecuteCommand("ts")
+				zadNativeFunctions.ExecuteConsoleCmd("ts")
 			endif
-			ConsoleUtil.ExecuteCommand("setfog 0 0") 
+			zadNativeFunctions.ExecuteConsoleCmd("setfog 0 0") 
 		EndIf
-		If (index == 3) 
-			int cotest = ConsoleUtil.GetVersion()
-			if !cotest
-				ShowMessage("This mode requires ConsoleUtil which doesn't seem to be installed.")
-				return
-			endif
-		Endif
 		BlindfoldMode = index		
 		SetMenuOptionValue(BlindfoldModeOID, blindfoldList[blindfoldMode])
         ForcePageReset()
@@ -1570,18 +1563,11 @@ function ImportSettings()
 	HobbleSkirtSpeedDebuff = ImportInt("HobbleSkirtSpeedDebuff", HobbleSkirtSpeedDebuff);IMPORTAUTOGEN
 	lockmenuwhentied = ImportBool("lockmenuwhentied", lockmenuwhentied);IMPORTAUTOGEN
 	useAnimFilterCreatures = ImportBool("useAnimFilterCreatures", useAnimFilterCreatures)
-	If BlindfoldMode == 3
-		int cotest = ConsoleUtil.GetVersion()
-		if !cotest
-			ShowMessage("Blindfold mode Dark Fog (in import) requires ConsoleUtil which doesn't seem to be installed. Setting reverted.")
-			BlindfoldMode = oldBlindfoldMode
-		endif
-	Endif
 	If oldBlindfoldMode == 3 && BlindfoldMode != 3 ; Old mode was Dark Fog, remove it
 		if Weather.GetSkyMode() == 0
-			ConsoleUtil.ExecuteCommand("ts")
+			zadNativeFunctions.ExecuteConsoleCmd("ts")
 		endif
-		ConsoleUtil.ExecuteCommand("setfog 0 0") 
+		zadNativeFunctions.ExecuteConsoleCmd("setfog 0 0") 
 	EndIf	
 	game.ForceFirstPerson()
 	game.ForceThirdPerson()

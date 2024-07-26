@@ -78,4 +78,7 @@ Armor[]  Function GetDevices(Actor akActor, int aiMode = 0, bool abWorn = False)
 Armor    Function GetWornDevice(Actor akActor, Keyword akKeyword, bool fuzzy = false)                   global native
 
 ; Returns true if plugin is installed. Full name with extension is required
-Bool Function PluginInstalled(String asName) global native
+Bool    Function PluginInstalled(String asName) global native
+
+; Implementation copied from https://github.com/VersuchDrei/ConsoleUtilSSE/tree/master to prevent ctd by using old version of ConsoleUtils
+        Function ExecuteConsoleCmd(String asCmd) global native
