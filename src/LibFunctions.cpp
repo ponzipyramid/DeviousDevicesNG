@@ -231,7 +231,7 @@ bool DeviousDevices::LibFunctions::WornHasKeyword(RE::Actor* a_actor, std::strin
 {
     if ((a_actor == nullptr) || (a_kw == "")) return false;
 
-    //LOG("LibFunctions::WornHasKeyword({},{}) called",a_actor->GetName(),a_kw)
+    //DEBUG("LibFunctions::WornHasKeyword({},{}) called",a_actor->GetName(),a_kw)
 
     bool loc_res = false;
     auto loc_visitor = WornVisitor([this,&loc_res,a_kw](RE::InventoryEntryData* a_entry)

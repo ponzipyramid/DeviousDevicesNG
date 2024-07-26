@@ -71,17 +71,23 @@ void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_del
 //this function is only called if no menu is open. It also looks like that it is not called when player is in free cam mode
 void DeviousDevices::UpdateManager::UpdateCharacter(RE::Actor* a_actor, float a_delta)
 {
-    static const bool loc_gag = ConfigManager::GetSingleton()->GetVariable<bool>("GagExpression.bNPCsEnabled", true);
-    if (loc_gag)
+    const auto loc_refBase = a_actor->GetActorBase();
+    if(a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))
     {
-        ExpressionManager::GetSingleton()->UpdateGagExpressionTimed(a_actor);
-    }
+        if (a_actor->GetRace()->GetPlayable())
+        {
+            static const bool loc_gag = ConfigManager::GetSingleton()->GetVariable<bool>("GagExpression.bNPCsEnabled", true);
+            if (loc_gag)
+            {
+                ExpressionManager::GetSingleton()->UpdateGagExpressionTimed(a_actor);
+            }
 
-    static const bool loc_nodehider = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
-    if (loc_nodehider)
-    {
-        NodeHider::GetSingleton()->UpdateTimed(a_actor);
+            static const bool loc_nodehider = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bEnabled",true);
+            if (loc_nodehider)
+            {
+                NodeHider::GetSingleton()->UpdateTimed(a_actor);
+            }
+        }
     }
-
     UpdateCharacter_old(a_actor,a_delta);
 }
