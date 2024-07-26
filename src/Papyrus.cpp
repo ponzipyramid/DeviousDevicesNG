@@ -69,6 +69,15 @@ namespace DeviousDevices {
             RE::ConsoleLog::GetSingleton()->Print((std::string("[DD] ") + a_msg).c_str());
         }
     }
+
+    void ExecuteConsoleCmd(PAPYRUSFUNCHANDLE, std::string a_cmd, RE::TESObjectREFR* a_target) {
+        const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
+        if (const auto script = factory ? factory->Create() : nullptr) {
+            script->SetCommand("a_cmd");
+            script->CompileAndRun(a_target);
+            delete script;
+        }
+    }
 }
 
 bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
@@ -125,6 +134,7 @@ bool DeviousDevices::RegisterFunctions(IVirtualMachine* vm) {
     REGISTERPAPYRUSFUNC(GetDevices, true);
     REGISTERPAPYRUSFUNC(GetWornDevice, true);
     REGISTERPAPYRUSFUNC(PluginInstalled, true);
+    REGISTERPAPYRUSFUNC(ExecuteConsoleCmd, false);
 
     #undef REGISTERPAPYRUSFUNC
     return true;
