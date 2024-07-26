@@ -15,8 +15,8 @@ namespace DeviousDevices
             sHidden = 1
         };
 
-        void HideArms(RE::Actor* a_actor);
-        void ShowArms(RE::Actor* a_actor);
+        void HideArmNodes(RE::Actor* a_actor,std::unordered_map<uint32_t,HidderState>& a_states,std::vector<std::string> a_nodes);
+        void ShowArmNodes(RE::Actor* a_actor,std::unordered_map<uint32_t,HidderState>& a_states,std::vector<std::string> a_nodes);
         void UpdateArms(RE::Actor* a_actor);
 
         //https://wiki.beyondskyrim.org/wiki/Arcane_University:Nifskope_Weapons_Setup
@@ -40,17 +40,21 @@ namespace DeviousDevices
         bool RemoveHideNode(RE::Actor* a_actor, std::string a_nodename);
     private:
         bool _installed = false;
-        RE::BGSKeyword*             _straitjacket;
         std::vector<uint32_t>       _lastupdatestack;
         std::vector<std::string>    _WeaponNodes;
         std::vector<std::string>    _ArmNodes;
+        std::vector<std::string>    _HandNodes;
+        std::vector<std::string>    _FingerNodes;
         std::unordered_map<uint32_t,HidderState> _armhiddenstates;    //temporary array with state of arm nodes on updated actors
+        std::unordered_map<uint32_t,HidderState> _handhiddenstates;   //temporary array with state of hand nodes on updated actors
+        std::unordered_map<uint32_t,HidderState> _fingerhiddenstates; //temporary array with state of finger nodes on updated actors
         std::unordered_map<uint32_t,HidderState> _weaponhiddenstates; //temporary array with state of weapon nodes on updated actors
         std::unordered_map<uint32_t,std::unordered_map<std::string,HidderState>> _weaponnodestates; //temporary array with states of weapon nodes on updated actors
         uint64_t                    _UpdateCounter = 0UL;
         std::unordered_map<RE::Actor*,UpdateHandle> _UpdatedActors;
         std::vector<std::string>    _ArmHiddingKeywords;
-        
+        std::vector<std::string>    _HandHiddingKeywords;
+        std::vector<std::string>    _FingerHiddingKeywords;
     };
 
     inline void HideWeapons(PAPYRUSFUNCHANDLE, RE::Actor* a_actor) {

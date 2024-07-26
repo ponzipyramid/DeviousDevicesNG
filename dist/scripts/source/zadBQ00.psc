@@ -160,16 +160,16 @@ EndEvent
 Function checkBlindfoldDarkFog()
 	if (libs.PlayerRef.WornHasKeyword(libs.zad_DeviousBlindfold) && libs.config.BlindfoldMode == 3) ;dark fog
 		if Weather.GetSkyMode() != 0
-		  ConsoleUtil.ExecuteCommand("ts")
+		  zadNativeFunctions.ExecuteConsoleCmd("ts")
 		  Utility.Wait(0.1)
 		endif
-		ConsoleUtil.ExecuteCommand("setfog " + libs.config.darkfogStrength + " " + libs.config.darkfogStrength2)
+		zadNativeFunctions.ExecuteConsoleCmd("setfog " + libs.config.darkfogStrength + " " + libs.config.darkfogStrength2)
 	Else
 		; needs to be reset because that command is apparently persistant across save games. If this ever causes compatibility issues, we need to revamp this, but it's unlikely.
 		if Weather.GetSkyMode() == 0
-			ConsoleUtil.ExecuteCommand("ts")
+			zadNativeFunctions.ExecuteConsoleCmd("ts")
 		endif
-		ConsoleUtil.ExecuteCommand("setfog 0 0")
+		zadNativeFunctions.ExecuteConsoleCmd("setfog 0 0")
 	EndIf
 EndFunction
 

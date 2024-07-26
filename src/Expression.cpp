@@ -254,14 +254,20 @@ namespace DeviousDevices
     {
         UniqueLock lock(_SaveLock);
         //DEBUG("CleanUnusedActors() called")
+        std::vector<RE::Actor*> loc_toremove;
         for (auto&& [actor,updateHandle] : _UpdatedActors)
         {
             // If actor was not updated atleast for 3600 frames (60 seconds for 60 FPS), clean them
             if ((updateHandle.lastUpdateFrame + 3600) < _UpdateCounter)
             {
                 //DEBUG("CleanUnusedActors() - Removing actor 0x{:016X}",(uintptr_t)actor)
-                _UpdatedActors.erase(actor);
+                loc_toremove.push_back(actor);
             }
+        }
+
+        for (auto&& actor : loc_toremove)
+        {
+            _UpdatedActors.erase(actor);
         }
     }
 
