@@ -7,6 +7,7 @@
 #include "Settings.h"
 #include "LibFunctions.h"
 #include "Serialization.h"
+#include "HooksVirtual.h"
 #include <stddef.h>
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
@@ -73,6 +74,7 @@ namespace {
                         DeviousDevices::NodeHider::GetSingleton()->Setup();
                         DeviousDevices::UpdateManager::GetSingleton()->Setup();
                         DeviousDevices::ExpressionManager::GetSingleton()->Setup();
+                        DeviousDevices::HooksVirtual::GetSingleton()->Setup();
                         break;
                     case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                              // Data will be a boolean indicating whether the load was

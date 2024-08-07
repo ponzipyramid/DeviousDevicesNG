@@ -67,6 +67,12 @@ namespace DeviousDevices
         bool WornHasKeyword(RE::Actor* a_actor, RE::BGSKeyword* a_kw) const;
         bool WornHasKeyword(RE::Actor* a_actor, std::string a_kw) const;
         RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,int a_mask) const;
+        // Return first armor with passed keyword string
+        RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,const std::string& a_kw) const;
+        // Return first armor with any/all passed keyword strings
+        // a_any = true -> If any of the keywords is present
+        // a_any = false -> If all of the keywords are present
+        RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,std::vector<std::string> a_kw, bool a_any = true) const;
         bool IsAnimating(RE::Actor* a_actor);
         bool PluginInstalled(std::string a_dll);
     private:

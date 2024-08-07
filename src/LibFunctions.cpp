@@ -277,6 +277,68 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor
     return loc_res;
 }
 
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor, const std::string& a_kw) const
+{
+    if (a_actor == nullptr) return nullptr;
+
+    //LOG("LibFunctions::GetWornArmor({},{}) called",a_actor->GetName(),a_kw)
+
+    RE::TESObjectARMO* loc_res = nullptr;
+    auto loc_visitor = WornVisitor([this,&loc_res,a_kw](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr && loc_armor->HasKeywordString(a_kw))
+        {
+            loc_res = loc_armor;
+            return RE::BSContainer::ForEachResult::kStop;
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+    return loc_res;
+}
+
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor, std::vector<std::string> a_kws, bool a_any) const
+{
+    if (a_actor == nullptr) return nullptr;
+
+    //LOG("LibFunctions::GetWornArmor({}, multiple keywords) called",a_actor->GetName())
+
+    RE::TESObjectARMO* loc_res = nullptr;
+    auto loc_visitor = WornVisitor([this,&loc_res,&a_kws,a_any](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr)
+        {
+            for (auto&& kw : a_kws) 
+            {
+                if (loc_armor->HasKeywordString(kw))
+                {
+                    loc_res = loc_armor;
+                    return RE::BSContainer::ForEachResult::kStop;
+                }
+                else if (!a_any)
+                {
+                    return RE::BSContainer::ForEachResult::kContinue;
+                }
+            }
+            return RE::BSContainer::ForEachResult::kContinue;
+
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+    return loc_res;
+}
+
 bool DeviousDevices::LibFunctions::IsAnimating(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return false;
