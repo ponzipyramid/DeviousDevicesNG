@@ -37,22 +37,8 @@ EndFunction
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
 	libs.Log("OnEffectStart(): Hobble Skirt")	
-	; For Princessity! *hugs*
-	TargetSpeedMult = 100 - Libs.Config.HobbleSkirtSpeedDebuff
-	FlatSpeedDebuff = Libs.Config.HobbleSkirtSpeedDebuff
-	
-	If akTarget == Libs.PlayerRef
-		savedINIDampen = Utility.GetINIBool("bDampenPlayerControls:Controls")
-		Utility.SetINIBool("bDampenPlayerControls:Controls", false)
-	EndIf
-		
-	FootIKneedsreset = False
 	MuJointFixneedsreset = False
 	If akTarget.WornHasKeyword(libs.zad_DeviousPetSuit) 
-		If akTarget.GetAnimationVariableBool("bHumanoidFootIKDisable") == false  ; that's the pet suit, needs FootIK disabled
-			akTarget.SetAnimationVariableBool("bHumanoidFootIKDisable", true)
-			FootIKneedsreset = True		
-		EndIf		
 		; need to override NiOverride... Yes, we're really overriding an override. Fun!
 		Int isFemale = aktarget.GetLeveledActorBase().GetSex()
 		If NiOverride.HasNodeTransformPosition(aktarget, False, isFemale, NINODE_ROOT, "internal")
@@ -70,53 +56,20 @@ Event OnEffectStart(Actor akTarget, Actor akCaster)
 		EndIf
 	EndIf
 	
-	If akTarget.WornHasKeyword(zad_DeviousHobbleSkirtRelaxed)
-		; With the current default values, the relaxed skirt needs no modification
-		TargetSpeedMult += 20
-		FlatSpeedDebuff -= 20
-	Else
-		; relaxed skirts do not use special animations, but the extreme ones do.
+    If !akTarget.WornHasKeyword(zad_DeviousHobbleSkirtRelaxed)
+	; relaxed skirts do not use special animations, but the extreme ones do.
 		libs.BoundCombat.Apply_HBC(akTarget)
 	EndIf
-	
-	If GetRequiem() == True && akTarget == Libs.PlayerRef
-		REQSavedVal = REQExhaustion.GetValue()
-		REQExhaustion.SetValue(1.0)
-		akTarget.DamageActorValue("SpeedMult", FlatSpeedDebuff)
-		ApplySM(akTarget)
-	Else
-		Float CurrentSpeedMult = akTarget.GetAV("SpeedMult")
-		SpeedMultDifferential = CurrentSpeedMult - TargetSpeedMult
-		If SpeedMultDifferential > 0.0
-			akTarget.DamageActorValue("SpeedMult", SpeedMultDifferential)
-			ApplySM(akTarget)
-		EndIf
-		who = akTarget
-		SpeedMultRestore = SpeedMultDifferential
-		akTarget.RegisterForSingleUpdate(5.0)
-	Endif
 EndEvent
 
 Event OnEffectFinish(Actor akTarget, Actor akCaster)
 	libs.Log("OnEffectFinish(): Hobble Skirt")
 	
-	If akTarget == Libs.PlayerRef
-		Utility.SetINIBool("bDampenPlayerControls:Controls", savedINIDampen)
-	EndIf
-	
 	If GetRequiem() == True && akTarget == Libs.PlayerRef
-		akTarget.RestoreActorValue("SpeedMult", FlatSpeedDebuff)
 		REQExhaustion.SetValue(REQSavedVal)
-		ApplySM(akTarget)
 	Else
-		akTarget.RestoreActorValue("SpeedMult", SpeedMultRestore)
-		ApplySM(akTarget)
 		akTarget.UnRegisterForUpdate()
 	Endif
-
-	If FootIKneedsreset == True
-		akTarget.SetAnimationVariableBool("bHumanoidFootIKDisable", false)		
-	EndIf	
 
 	If MuJointFixneedsreset == True
 		MuJointFixUtil.ToggleFixes(akTarget, 1, true)
@@ -134,23 +87,6 @@ Event OnEffectFinish(Actor akTarget, Actor akCaster)
 EndEvent
 
 Event OnUpdate()
-	Float CurrentSpeedMult = who.GetAV("SpeedMult")
-	TargetSpeedMult = 100 - Libs.Config.HobbleSkirtSpeedDebuff	
-	SpeedMultDifferential = CurrentSpeedMult - TargetSpeedMult
-	If who.WornHasKeyword(zad_DeviousHobbleSkirtRelaxed)
-		TargetSpeedMult += 20
-	EndIf
-	If SpeedMultDifferential > 0.0
-		who.DamageActorValue("SpeedMult", SpeedMultDifferential)
-		SpeedMultRestore += SpeedMultDifferential
-		ApplySM(who)
-	EndIf
-	If SpeedMultDifferential < 0.0
-        SpeedMultDifferential *= -1
-        who.RestoreActorValue("SpeedMult", SpeedMultDifferential)
-		SpeedMultRestore -= SpeedMultDifferential
-		ApplySM(who)
-	EndIf	
 	If who.WornHasKeyword(libs.zad_DeviousPetSuit) 
 		Int isFemale = who.GetLeveledActorBase().GetSex()
 		If !NiOverride.HasNodeTransformPosition(who, False, isFemale, NINODE_ROOT, "internal") && NiOverride.HasNodeTransformPosition(who, False, isFemale, NINODE_ROOT, NIOO_KEY) 		
