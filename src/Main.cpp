@@ -9,6 +9,7 @@
 #include "Serialization.h"
 #include "HooksVirtual.h"
 #include <stddef.h>
+#include "API.h"
 
 #if (DD_USEINVENTORYFILTER_S == 1U)
     #include "InventoryFilter.h"
@@ -56,33 +57,51 @@ namespace {
     void InitializeMessaging() 
     {
         const auto g_messaging = GetMessagingInterface();
-        if (!g_messaging->RegisterListener([](MessagingInterface::Message* message) {
-                
-                switch (message->type) {
-                    // Skyrim lifecycle events.
-                    case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
-                        DeviousDevices::Hooks::Install();
-                        break;
-                    case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
-                        break;
-                    case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
-                                                           // active.  
-                        DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
-                        DeviousDevices::LibFunctions::GetSingleton()->Setup();
-                        DeviousDevices::DeviceReader::GetSingleton()->Setup();
-                        DeviousDevices::InventoryFilter::GetSingleton()->Setup();
-                        DeviousDevices::NodeHider::GetSingleton()->Setup();
-                        DeviousDevices::UpdateManager::GetSingleton()->Setup();
-                        DeviousDevices::ExpressionManager::GetSingleton()->Setup();
-                        DeviousDevices::HooksVirtual::GetSingleton()->Setup();
-                        break;
-                    case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
-                                                             // Data will be a boolean indicating whether the load was
-                                                             // successful.
-                    case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
-                        break;
-                }
-            })) {
+        if (!g_messaging->RegisterListener([](MessagingInterface::Message* message) 
+        {
+            switch (message->type) 
+            {
+                // Skyrim lifecycle events.
+                case MessagingInterface::kPostPostLoad:  // Called after all plugins have finished running
+                    DeviousDevices::Hooks::Install();
+                    break;
+                case MessagingInterface::kInputLoaded:  // Called when all game data has been found.
+                    break;
+                case MessagingInterface::kDataLoaded:  // All ESM/ESL/ESP plugins have loaded, main menu is now
+                                                        // active.  
+                    DeviousDevices::DeviceHiderManager::GetSingleton()->Setup();
+                    DeviousDevices::LibFunctions::GetSingleton()->Setup();
+                    DeviousDevices::DeviceReader::GetSingleton()->Setup();
+                    DeviousDevices::InventoryFilter::GetSingleton()->Setup();
+                    DeviousDevices::NodeHider::GetSingleton()->Setup();
+                    DeviousDevices::UpdateManager::GetSingleton()->Setup();
+                    DeviousDevices::ExpressionManager::GetSingleton()->Setup();
+                    DeviousDevices::HooksVirtual::GetSingleton()->Setup();
+                    if (!DeviousDevicesAPI::g_API) DeviousDevicesAPI::g_API = new DeviousDevicesAPI::DeviousDevicesAPI;
+                    break;
+                case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
+                                                            // Data will be a boolean indicating whether the load was
+                                                            // successful.
+                case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
+                    break;
+            }
+        })) 
+        {
+            stl::report_and_fail("Unable to register message listener.");
+        }
+
+        if (!g_messaging->RegisterListener(NULL,[](MessagingInterface::Message* message) 
+        {
+            switch (message->type) 
+            {
+                // Request for api received
+                case DD_APITYPEKEY:
+                    message->dataLen = sizeof(DeviousDevicesAPI::DeviousDevicesAPI*);
+                    *(DeviousDevicesAPI::DeviousDevicesAPI**)message->data = DeviousDevicesAPI::g_API;
+                    break;
+            }
+        })) 
+        {
             stl::report_and_fail("Unable to register message listener.");
         }
     }

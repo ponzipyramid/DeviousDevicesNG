@@ -2,6 +2,16 @@
 #include <RE/Skyrim.h>
 #include <DeviceReader.h>
 
+namespace 
+{
+    constexpr int GetMaskForSlot(uint32_t slot) 
+    {
+        if (slot < 29 || slot > 61) return 0;
+
+        return (1 << (slot - 30));
+    }
+}  // namespace
+
 namespace DeviousDevices
 {
     //copy of RE::InventoryChanges::IItemChangeVisitor, with full definition so it can be inherited from
@@ -36,7 +46,6 @@ namespace DeviousDevices
     private:
         std::function<RE::BSContainer::ForEachResult(RE::InventoryEntryData*)> _fun;
     };
-
 
     enum BondageState : uint32_t
     {
@@ -75,12 +84,16 @@ namespace DeviousDevices
         RE::TESObjectARMO* GetWornArmor(RE::Actor* a_actor,std::vector<std::string> a_kw, bool a_any = true) const;
         bool IsAnimating(RE::Actor* a_actor);
         bool PluginInstalled(std::string a_dll);
+
+        bool IsDevice(RE::TESObjectARMO* a_obj) const;
+        bool ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag = nullptr) const;
     private:
         bool _installed = false;
         std::vector<RE::BGSKeyword*>    _idkw;
         std::vector<RE::BGSKeyword*>    _rdkw;
         RE::BGSKeyword*                 _hbkw;
         std::vector<RE::TESFaction*>    _animationfactions;
+        RE::TESFaction*                 _gagpanelfaction;
     };
 
     inline std::vector<RE::TESObjectARMO*> GetDevices(PAPYRUSFUNCHANDLE, RE::Actor* a_actor, int a_mode, bool a_worn)

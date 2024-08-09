@@ -35,6 +35,8 @@ void DeviousDevices::LibFunctions::Setup()
         if (loc_ddanimationfaction != nullptr) _animationfactions.push_back(loc_ddanimationfaction);
         if (loc_slanimationfaction != nullptr) _animationfactions.push_back(loc_slanimationfaction);
 
+        _gagpanelfaction = static_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x030C3C,"Devious Devices - Integration.esm"));
+
         DEBUG("LibFunctions::Setup() - Installed")
         _installed = true;
     }
@@ -188,11 +190,11 @@ BondageState DeviousDevices::LibFunctions::GetBondageState(RE::Actor* a_actor) c
 
         if (it->HasKeywordString("zad_DeviousBelt"))
         {
-            if (!it->HasKeywordString("zad_PermitVaginal")) loc_res |= sChastifiedGenital;
-            if (!it->HasKeywordString("zad_PermitAnal"))    loc_res |= sChastifiedAnal;
+            if (!it->HasKeywordString("zad_PermitVaginal"))     loc_res |= sChastifiedGenital;
+            if (!it->HasKeywordString("zad_PermitAnal"))        loc_res |= sChastifiedAnal;
         }
 
-        if (InventoryFilter::GetSingleton()->ActorHasBlockingGag(a_actor,it)) loc_res |= sGaggedBlocking;
+        if (ActorHasBlockingGag(a_actor,it))                    loc_res |= sGaggedBlocking;
         if (it->HasKeywordString("zad_DeviousBlindfold"))       loc_res |= sBlindfolded;
         if (it->HasKeywordString("zad_DeviousBoots"))           loc_res |= sBoots;
         if (it->HasKeywordString("zad_DeviousBondageMittens"))  loc_res |= sMittens;
@@ -361,4 +363,37 @@ bool DeviousDevices::LibFunctions::PluginInstalled(std::string a_dll)
     {
         return false;
     }
+}
+
+bool DeviousDevices::LibFunctions::ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag) const
+{
+    RE::TESObjectARMO* loc_armor = nullptr;
+    if (a_gag)
+        loc_armor = a_gag;
+    else
+        loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(44));
+
+    if (loc_armor != nullptr) {
+        if (loc_armor->HasKeywordString("zad_DeviousGag")) {
+            if (loc_armor->HasKeywordString("zad_DeviousGagRing") || loc_armor->HasKeywordString("zad_PermitOral")) {
+                return false;                                       // is ring gag, do not remove food
+            } else if (loc_armor->HasKeywordString("zad_DeviousGagPanel"))  // is panel gag, additional check needed
+            {
+                return a_actor->GetFactionRank(_gagpanelfaction, a_actor->IsPlayer()) == 1;
+            }
+            return true;
+        } else {  // check hood
+            loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(42));
+            if (loc_armor && loc_armor->HasKeywordString("zad_DeviousGag")) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool DeviousDevices::LibFunctions::IsDevice(RE::TESObjectARMO* a_obj) const
+{
+    if (a_obj == nullptr) return false;
+    return a_obj->HasKeywordInArray(_idkw, false) || a_obj->HasKeywordInArray(_rdkw, false);
 }

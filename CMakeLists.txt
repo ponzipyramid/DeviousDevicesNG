@@ -39,6 +39,7 @@ set(headers
         include/Serialization.h
         include/Export.h
         include/HooksVirtual.h
+        include/API.h
 )
 
 set(sources
@@ -56,6 +57,7 @@ set(sources
         src/Serialization.cpp
         src/Export.cpp
         src/HooksVirtual.cpp
+        src/API.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 set(tests
