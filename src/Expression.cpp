@@ -491,9 +491,20 @@ namespace DeviousDevices
 
     std::vector<float> ExpressionManager::GetGagEffectPreset(RE::Actor* a_actor)
     {
-        const RE::TESObjectARMO* loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,(int)RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
+        const RE::TESObjectARMO* loc_gag = nullptr;
 
-        if (loc_gag == nullptr || !loc_gag->HasKeywordString("zad_DeviousGag")) return std::vector<float>();
+        const RE::TESObjectARMO* loc_gagoverride = LibFunctions::GetSingleton()->GetWornArmor(a_actor,"zadNG_GagOverride");;
+
+        if (loc_gagoverride == nullptr)
+        {
+            loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,(int)RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
+
+            if (loc_gag == nullptr || !loc_gag->HasKeywordString("zad_DeviousGag")) return std::vector<float>();
+        }
+        else
+        {
+            loc_gag = loc_gagoverride;
+        }
 
         std::vector<float> loc_res(16,0);
 

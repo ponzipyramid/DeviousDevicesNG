@@ -6,14 +6,6 @@
 
 SINGLETONBODY(DeviousDevices::InventoryFilter)
 
-namespace {
-    constexpr int GetMaskForSlot(uint32_t slot) {
-        if (slot < 29 || slot > 61) return 0;
-
-        return (1 << (slot - 30));
-    }
-}  // namespace
-
 RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd) {
     const int loc_slot = GetMaskForKeyword(a_actor, kwd);
 
@@ -35,7 +27,7 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
         return false;
 
     if (!obj->Is(RE::FormType::Weapon) && !obj->Is(RE::FormType::KeyMaster) &&
-        (!obj->Is(RE::FormType::Armor) || IsDevious(obj)))
+        (!obj->Is(RE::FormType::Armor) || LibFunctions::GetSingleton()->IsDevice(obj->As<RE::TESObjectARMO>())))
         return false;
 
     if (!GetWornWithDeviousKeyword(a_actor, _deviousBondageMittensKwd)) return false;
@@ -53,32 +45,6 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
     }
 
     return loc_rollFailure;
-}
-
-bool DeviousDevices::InventoryFilter::ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag) {
-    RE::TESObjectARMO* loc_armor = nullptr;
-    if (a_gag)
-        loc_armor = a_gag;
-    else
-        loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(44));
-
-    if (loc_armor != nullptr) {
-        if (loc_armor->HasKeyword(_deviousGagKwd)) {
-            if (loc_armor->HasKeyword(_deviousGagRingKwd) || loc_armor->HasKeyword(_PermitOralKwd)) {
-                return false;                                       // is ring gag, do not remove food
-            } else if (loc_armor->HasKeyword(_deviousGagPanelKwd))  // is panel gag, additional check needed
-            {
-                return a_actor->GetFactionRank(_gagpanelfaction, a_actor->IsPlayer()) == 1;
-            }
-            return true;
-        } else {  // check hood
-            loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(42));
-            if (loc_armor && loc_armor->HasKeyword(_deviousGagKwd)) {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item) {
@@ -116,14 +82,14 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
         } else
             ERROR("Cant check if inventory menu is open because UI singleton is not initiated")
 
-        if ((!loc_checkinventory || loc_invMenu.get()) && ActorHasBlockingGag(a_actor)) {
+        if ((!loc_checkinventory || loc_invMenu.get()) && LibFunctions::GetSingleton()->ActorHasBlockingGag(a_actor)) {
             RE::DebugNotification("You can't eat or drink while wearing this gag.");
             return true;
         }
     }
 
     // == Shout check
-    if (a_item->Is(RE::FormType::Shout) && ActorHasBlockingGag(a_actor))  // filter all Shouts
+    if (a_item->Is(RE::FormType::Shout) && LibFunctions::GetSingleton()->ActorHasBlockingGag(a_actor))  // filter all Shouts
     {
         RE::GPtr<RE::MagicMenu> loc_magMenu = nullptr;
         if (RE::UI::GetSingleton() != nullptr) {
@@ -140,12 +106,12 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 
     // Prevents from device being unequipped by other armor which is not device
     // This is often caused by Follower mods which constantly force outfits to NPCs by uneqipping the current armor (even if its set to be unequippable)
-    if ((a_item->Is(RE::FormType::Armor) && !IsDevious(a_item)))
+    if ((a_item->Is(RE::FormType::Armor) && !LibFunctions::GetSingleton()->IsDevice(a_item->As<RE::TESObjectARMO>())))
     {
         RE::TESObjectARMO* loc_armor = reinterpret_cast<RE::TESObjectARMO*>(a_item);
         const auto loc_mask = (int)loc_armor->GetSlotMask();
         RE::TESObjectARMO* loc_worn = LibFunctions::GetSingleton()->GetWornArmor(a_actor,loc_mask);
-        if (loc_worn && IsDevious(loc_worn))
+        if (loc_worn && LibFunctions::GetSingleton()->IsDevice(loc_worn))
         {
             DEBUG("EquipFilter({},{}) - Prevented equipping armor in slot already used by device",a_actor->GetName(),a_item->GetName())
             return true;
@@ -172,7 +138,7 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
     }
 
     // == Equip check
-    if ((a_item->Is(RE::FormType::Armor) && !IsDevious(a_item) && !IsStrapon(a_item))) {
+    if ((a_item->Is(RE::FormType::Armor) && !LibFunctions::GetSingleton()->IsDevice(a_item->As<RE::TESObjectARMO>()) && !IsStrapon(a_item))) {
         if (loc_heavyBondage || loc_mittens) {
             const std::string loc_msg = loc_heavyBondage ? "You can't equip this with your hands tied!"
                                                             : "You can't equip this while locked in bondage mittens!";
@@ -244,11 +210,6 @@ bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBou
 
 
     return false;
-}
-
-bool DeviousDevices::InventoryFilter::IsDevious(RE::TESBoundObject* obj) {
-    static std::vector<RE::BGSKeyword*> loc_deviousKwds = {_lockableKwd, _inventoryDeviceKwd};
-    return obj->HasKeywordInArray(loc_deviousKwds, false);
 }
 
 bool DeviousDevices::InventoryFilter::IsStrapon(RE::TESBoundObject* obj) {
@@ -347,8 +308,6 @@ void DeviousDevices::InventoryFilter::Setup() {
 
         _sexlabNoStripKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
         _jewelryKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
-
-        _gagpanelfaction = RE::TESForm::LookupByEditorID<RE::TESFaction>("zadGagPanelFaction");
 
         _deviousPlugKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousPlug");
         _deviousBeltKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_DeviousBelt");

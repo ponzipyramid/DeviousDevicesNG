@@ -1,4 +1,10 @@
 #pragma once
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!! DO NOT USE. Use normal API instead !!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+/*
 #include "DeviceReader.h"
 #include "Expression.h"
 #include "LibFunctions.h"
@@ -163,3 +169,4 @@ extern "C"
         return (BondageState)DeviousDevices::LibFunctions::GetSingleton()->GetBondageState(a_actor);
     }
 }
+*/

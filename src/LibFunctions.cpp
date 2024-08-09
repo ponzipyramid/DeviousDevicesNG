@@ -35,6 +35,8 @@ void DeviousDevices::LibFunctions::Setup()
         if (loc_ddanimationfaction != nullptr) _animationfactions.push_back(loc_ddanimationfaction);
         if (loc_slanimationfaction != nullptr) _animationfactions.push_back(loc_slanimationfaction);
 
+        _gagpanelfaction = static_cast<RE::TESFaction*>(loc_datahandler->LookupForm(0x030C3C,"Devious Devices - Integration.esm"));
+
         DEBUG("LibFunctions::Setup() - Installed")
         _installed = true;
     }
@@ -188,11 +190,11 @@ BondageState DeviousDevices::LibFunctions::GetBondageState(RE::Actor* a_actor) c
 
         if (it->HasKeywordString("zad_DeviousBelt"))
         {
-            if (!it->HasKeywordString("zad_PermitVaginal")) loc_res |= sChastifiedGenital;
-            if (!it->HasKeywordString("zad_PermitAnal"))    loc_res |= sChastifiedAnal;
+            if (!it->HasKeywordString("zad_PermitVaginal"))     loc_res |= sChastifiedGenital;
+            if (!it->HasKeywordString("zad_PermitAnal"))        loc_res |= sChastifiedAnal;
         }
 
-        if (InventoryFilter::GetSingleton()->ActorHasBlockingGag(a_actor,it)) loc_res |= sGaggedBlocking;
+        if (ActorHasBlockingGag(a_actor,it))                    loc_res |= sGaggedBlocking;
         if (it->HasKeywordString("zad_DeviousBlindfold"))       loc_res |= sBlindfolded;
         if (it->HasKeywordString("zad_DeviousBoots"))           loc_res |= sBoots;
         if (it->HasKeywordString("zad_DeviousBondageMittens"))  loc_res |= sMittens;
@@ -277,6 +279,68 @@ RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor
     return loc_res;
 }
 
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor, const std::string& a_kw) const
+{
+    if (a_actor == nullptr) return nullptr;
+
+    //LOG("LibFunctions::GetWornArmor({},{}) called",a_actor->GetName(),a_kw)
+
+    RE::TESObjectARMO* loc_res = nullptr;
+    auto loc_visitor = WornVisitor([this,&loc_res,a_kw](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr && loc_armor->HasKeywordString(a_kw))
+        {
+            loc_res = loc_armor;
+            return RE::BSContainer::ForEachResult::kStop;
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+    return loc_res;
+}
+
+RE::TESObjectARMO* DeviousDevices::LibFunctions::GetWornArmor(RE::Actor* a_actor, std::vector<std::string> a_kws, bool a_any) const
+{
+    if (a_actor == nullptr) return nullptr;
+
+    //LOG("LibFunctions::GetWornArmor({}, multiple keywords) called",a_actor->GetName())
+
+    RE::TESObjectARMO* loc_res = nullptr;
+    auto loc_visitor = WornVisitor([this,&loc_res,&a_kws,a_any](RE::InventoryEntryData* a_entry)
+    {
+        #undef GetObject
+        auto loc_object = a_entry->GetObject();
+        RE::TESObjectARMO* loc_armor = nullptr;
+        if (loc_object != nullptr && loc_object->IsArmor()) loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
+
+        if (loc_armor != nullptr)
+        {
+            for (auto&& kw : a_kws) 
+            {
+                if (loc_armor->HasKeywordString(kw))
+                {
+                    loc_res = loc_armor;
+                    return RE::BSContainer::ForEachResult::kStop;
+                }
+                else if (!a_any)
+                {
+                    return RE::BSContainer::ForEachResult::kContinue;
+                }
+            }
+            return RE::BSContainer::ForEachResult::kContinue;
+
+        }
+        else return RE::BSContainer::ForEachResult::kContinue;
+    });
+    a_actor->GetInventoryChanges()->VisitWornItems(loc_visitor.AsNativeVisitor());
+    return loc_res;
+}
+
 bool DeviousDevices::LibFunctions::IsAnimating(RE::Actor* a_actor)
 {
     if (a_actor == nullptr) return false;
@@ -299,4 +363,37 @@ bool DeviousDevices::LibFunctions::PluginInstalled(std::string a_dll)
     {
         return false;
     }
+}
+
+bool DeviousDevices::LibFunctions::ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag) const
+{
+    RE::TESObjectARMO* loc_armor = nullptr;
+    if (a_gag)
+        loc_armor = a_gag;
+    else
+        loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(44));
+
+    if (loc_armor != nullptr) {
+        if (loc_armor->HasKeywordString("zad_DeviousGag")) {
+            if (loc_armor->HasKeywordString("zad_DeviousGagRing") || loc_armor->HasKeywordString("zad_PermitOral")) {
+                return false;                                       // is ring gag, do not remove food
+            } else if (loc_armor->HasKeywordString("zad_DeviousGagPanel"))  // is panel gag, additional check needed
+            {
+                return a_actor->GetFactionRank(_gagpanelfaction, a_actor->IsPlayer()) == 1;
+            }
+            return true;
+        } else {  // check hood
+            loc_armor = LibFunctions::GetSingleton()->GetWornArmor(a_actor, GetMaskForSlot(42));
+            if (loc_armor && loc_armor->HasKeywordString("zad_DeviousGag")) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool DeviousDevices::LibFunctions::IsDevice(RE::TESObjectARMO* a_obj) const
+{
+    if (a_obj == nullptr) return false;
+    return a_obj->HasKeywordInArray(_idkw, false) || a_obj->HasKeywordInArray(_rdkw, false);
 }
