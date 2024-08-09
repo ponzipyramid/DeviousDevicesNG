@@ -126,12 +126,6 @@ bool DeviousDevices::DeviceHiderManager::IsValidForHide(RE::TESObjectARMO* a_arm
     return a_armor->HasKeywordInArray(_hidekeywords,false) && !a_armor->HasKeywordInArray(_nohidekeywords,false);
 }
 
-bool DeviousDevices::DeviceHiderManager::IsDevice(const RE::TESObjectARMO* a_armor) const
-{
-    if (a_armor == nullptr) return false;
-    static const std::vector<RE::BGSKeyword*> loc_devicekw = {_kwlockable, _kwplug};
-    return a_armor->HasKeywordInArray(loc_devicekw,false);
-}
 
 void DeviousDevices::DeviceHiderManager::SyncSetting(std::vector<int> a_masks,HiderSetting a_setting)
 {
@@ -168,7 +162,7 @@ bool DeviousDevices::DeviceHiderManager::ProcessHider(RE::TESObjectARMO* a_armor
             loc_armor = static_cast<RE::TESObjectARMO*>(loc_object);
         }
 
-        if (loc_armor != nullptr && (!loc_onlydevices || IsDevice(loc_armor)))
+        if (loc_armor != nullptr && (!loc_onlydevices || LibFunctions::GetSingleton()->IsDevice(loc_armor)))
         {
             loc_devices[loc_armor] = (uint32_t)loc_armor->GetSlotMask();
         }
@@ -244,7 +238,7 @@ bool DeviousDevices::DeviceHiderManager::CheckForceStrip(RE::TESObjectARMO* a_ar
         const int loc_devicefilter  = loc_data->second.devicefilter;
         const int loc_mask          = (int)a_armor->GetSlotMask();
 
-        const bool loc_isdevice = IsDevice(a_armor);
+        const bool loc_isdevice = LibFunctions::GetSingleton()->IsDevice(a_armor);
         if (((loc_mask & loc_devicefilter) && loc_isdevice) || ((loc_mask & loc_armorfilter) && !loc_isdevice))
         {
             return false;

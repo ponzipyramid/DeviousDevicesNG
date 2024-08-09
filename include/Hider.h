@@ -32,20 +32,10 @@ namespace DeviousDevices
     public:
         void                    Setup();
         void                    Reload();
-        std::vector<int>        RebuildSlotMask(RE::Actor* a_actor, std::vector<int> a_slotfilter);
-        int                     FilterMask(RE::Actor* a_actor, int a_slotmask);
-        bool                    IsValidForHide(RE::TESObjectARMO* a_armor) const;
-        bool                    IsDevice(const RE::TESObjectARMO* a_armor) const;
-        void                    SyncSetting(std::vector<int> a_masks,HiderSetting a_setting);
-        const std::vector<int>& GetFilter() const;
-        const HiderSetting&     GetSetting() const;
-        inline bool             ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
-        inline uint16_t         UpdateActors3D();
         void                    SetActorStripped(RE::Actor* a_actor, bool a_stripped, int a_armorfilter, int a_devicefilter);
         bool                    IsActorStripped(RE::Actor* a_actor);
-        bool                    CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
-        bool                    CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
-        bool                    IsDAVInstalled() {return _DAVInstalled;}
+        bool                    IsValidForHide(RE::TESObjectARMO* a_armor) const;
+        void                    SyncSetting(std::vector<int> a_masks,HiderSetting a_setting);
 
     protected:
         bool _setup                     = false;
@@ -61,6 +51,15 @@ namespace DeviousDevices
 
         mutable Spinlock        _SaveLock;
     private:
+        std::vector<int>        RebuildSlotMask(RE::Actor* a_actor, std::vector<int> a_slotfilter);
+        int                     FilterMask(RE::Actor* a_actor, int a_slotmask);
+        const std::vector<int>& GetFilter() const;
+        const HiderSetting&     GetSetting() const;
+        inline bool             ProcessHider(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
+        inline uint16_t         UpdateActors3D();
+        bool                    CheckForceStrip(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
+        bool                    CheckNPCArmor(RE::TESObjectARMO* a_armor, RE::Actor* a_actor) const;
+        bool                    IsDAVInstalled() {return _DAVInstalled;}
 
         bool CheckHiderSlots(RE::TESObjectARMO* a_armor, uint8_t a_min, uint8_t a_max, const std::unordered_map<RE::TESObjectARMO*,uint32_t>& a_slots) const;
 

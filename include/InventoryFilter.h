@@ -12,9 +12,7 @@ namespace DeviousDevices
         void Setup();
         bool TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj);
         bool EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item); // return true if equip operation should be filtered out (no item state will be changed)
-        bool ActorHasBlockingGag(RE::Actor* a_actor, RE::TESObjectARMO* a_gag = nullptr);
     private:
-        bool IsDevious(RE::TESBoundObject* obj);
         bool IsStrapon(RE::TESBoundObject* obj);
         int  GetMaskForKeyword(RE::Actor* a_actor, RE::BGSKeyword* kwd);
         bool CheckWhitelist(const RE::TESBoundObject* a_item) const;
@@ -26,9 +24,6 @@ namespace DeviousDevices
 
         // misc
         RE::FormID _deviceHiderId;
-
-        // factions
-        RE::TESFaction* _gagpanelfaction;
 
         // keywords
         RE::BGSKeyword* _sexlabNoStripKwd;
