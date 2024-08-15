@@ -257,7 +257,7 @@ Function SetupBlindfolds()
 	blindfoldList[0] = "DD blindfold"
 	blindfoldList[1] = "DD blindfold w/ Leeches Effect"
 	blindfoldList[2] = "Leeches Mode"
-	blindfoldList[3] = "Dark Fog" ; if you change this entry, please alter the ConsoleUtil check in OnOptionMenuAccept() as well
+	blindfoldList[3] = "Dark Fog" 
 EndFunction
 
 Function SetupSoundDuration()
@@ -1140,7 +1140,7 @@ Event OnOptionHighlight(int option)
 	elseif (option == blindfoldStrengthOID)
 		SetInfoText("Controls the strength of the blindfold effect.\nDefault:"+blindfoldStrengthDefault)
 	elseif (option == darkfogStrengthOID)
-		SetInfoText("Controls the strength of the dark fog effect (requires ConsoleUtil mod to work).\nDefault:"+darkfogStrengthDefault)
+		SetInfoText("Controls the strength of the dark fog effect.\nDefault:"+darkfogStrengthDefault)
 	elseIf (option == beltRateOID)
 		SetInfoText("Arousal exposure multiplier while belted.\nDefault: "+beltRateDefault)
 	elseIf (option == plugRateOID)
@@ -1150,7 +1150,7 @@ Event OnOptionHighlight(int option)
 	elseIf (option == RubberSoundModeOID)
 		SetInfoText("Determines how often rubber sounds are played when wearing latex/ebonite restraints.")
 	elseIf (option == blindfoldModeOID)
-		SetInfoText("Switch between the four provided blindfold modes. DD's mode is intended for First Person play. While in first person, you will be able to move freely, and one of two effects will be applied to your screen. While in third person, you will be unable to move, but will be able to see clearly. The advantage of this mode is that you will be able to clearly see yourself in scenes (Sex, animations, etc), while still being forced to endure the blindfold to advance gameplay.\nLeeche's mode applies a dof-based blindfold effect constantly, and is intended for third person play. The last mode is dark fog (requires ConsoleUtil mod to work).  Default:"+blindfoldList[blindfoldModeDefault])
+		SetInfoText("Switch between the four provided blindfold modes. DD's mode is intended for First Person play. While in first person, you will be able to move freely, and one of two effects will be applied to your screen. While in third person, you will be unable to move, but will be able to see clearly. The advantage of this mode is that you will be able to clearly see yourself in scenes (Sex, animations, etc), while still being forced to endure the blindfold to advance gameplay.\nLeeche's mode applies a dof-based blindfold effect constantly, and is intended for third person play. The last mode is dark fog.  Default:"+blindfoldList[blindfoldModeDefault])
 	elseIf (option == DevicesUnderneathSlotOID)
 		SetInfoText("Configure which slot the hidden (Device / Equipment) Hider operates on. It doesn't matter what slot is set, though a slot must be set. If you set this to the same slot as a slot that is being used by a device, bad things will happen. Don't touch this unless you know what you're doing.\nDefault: "+SlotMasks[DevicesUnderneathSlotDefault])
 	elseif (option == DeviceHiderSettingOID)

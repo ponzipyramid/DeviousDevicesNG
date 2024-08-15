@@ -145,7 +145,7 @@ bool _initiated = false
 Event OnUpdate()
     if !_initiated
         RegisterForModEvent("__DeviousDevicesInit", "OnInitialize")
-        libs.BoundCombat.CONFIG_ABC()
+        ;libs.BoundCombat.CONFIG_ABC()
         checkBlindfoldDarkFog()
         _initiated = true
     endif

@@ -1168,7 +1168,7 @@ float Function GetVersion()
 EndFunction
 
 String Function GetVersionString()
-	return "5.2" ; string to be displayed in MCM etc.
+	return "5.2-NG" ; string to be displayed in MCM etc.
 EndFunction
 
 
@@ -1273,7 +1273,7 @@ Function Log(string in, int level=0)
 	if !Config.LogMessages
 		return
 	EndIf
-	string out = "[Zad]"
+	string out = "[Zad-NG]"
 	if level>=2
 		Debug.Trace("============================================================")
 		Debug.Trace(out + " (((ERROR))): " + in)
