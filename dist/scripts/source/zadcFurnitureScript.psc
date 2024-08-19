@@ -795,18 +795,21 @@ Bool Function SexWithNPCAction()
 EndFunction
 
 Int StruggleTick = 0
-Event OnUpdate()			
-	StruggleTick += 1
-	if StruggleTick > 1
-		StruggleTick = 0
-	EndIf	
-	RegisterForSingleUpdate(Utility.RandomInt(20,40))	
-	If !PasserbyAction() && StruggleTick == 0
-		StruggleScene(user)
-	EndIf
-	if !clib.IsAnimating(user)
-		; to make up for not checking here, we do when a scene ends.
-		CheckSelfBondageRelease()		
+Event OnUpdate()
+	if user
+	;prevent race condition when this function gets called whilst in or starting the UnlockActor function
+		StruggleTick += 1
+		if StruggleTick > 1
+			StruggleTick = 0
+		EndIf	
+		RegisterForSingleUpdate(Utility.RandomInt(20,40))	
+		If !PasserbyAction() && StruggleTick == 0
+			StruggleScene(user)
+		EndIf
+		if !clib.IsAnimating(user)
+			; to make up for not checking here, we do when a scene ends.
+			CheckSelfBondageRelease()		
+		EndIf
 	EndIf
 EndEvent
 
