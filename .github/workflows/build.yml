@@ -41,8 +41,9 @@ jobs:
     - name: Run CMake
       uses: lukka/run-cmake@v10
       with:
+        cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
         configurePreset: build-debug-msvc
-        configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake']"
+        configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake', '-DCMAKE_CXX_COMPILER:STRING=msvc']"
         buildPreset: debug-msvc
         testPreset: tests-unit
   
