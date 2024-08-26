@@ -22,6 +22,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - uses: seanmiddleditch/gha-setup-ninja@master
     
     - name: Setup vcpkg
       working-directory: c:/
