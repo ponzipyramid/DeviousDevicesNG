@@ -23,22 +23,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: seanmiddleditch/gha-setup-ninja@master
-    
-    - name: Setup vcpkg
-      working-directory: c:/
-      run: |
-        git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
-        bootstrap-vcpkg.bat
-        vcpkg.exe integrate install
-    - name: Cache vcpkg packages
-      uses: actions/cache@v3
-      with:
-        path: ${{github.workspace}}/build/vcpkg_installed
-        key: ${{ runner.os }}-vcpkg-${{ hashFiles('${{github.workspace}}/vcpkg.json') }}
-        restore-keys: |
-          ${{ runner.os }}-vcpkg-${{ hashFiles('${{github.workspace}}/vcpkg.json') }}
-          ${{ runner.os }}-vcpkg-
+    - uses: ilammy/msvc-dev-cmd@v1.4.1
+        
     - name: Run CMake
       uses: lukka/run-cmake@v10
       with:
@@ -47,7 +33,16 @@ jobs:
         configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake', '-DCMAKE_CXX_COMPILER:STRING=msvc']"
         buildPreset: debug-msvc
         testPreset: tests-unit
-  
+
+    - name: Cache vcpkg packages
+      uses: actions/cache@v3
+      with:
+        path: ${{github.workspace}}/vcpkg
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('${{github.workspace}}/vcpkg.json') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-${{ hashFiles('${{github.workspace}}/vcpkg.json') }}
+          ${{ runner.os }}-vcpkg-
+            
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.2
       with:
