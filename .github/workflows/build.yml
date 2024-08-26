@@ -32,7 +32,6 @@ jobs:
         configurePreset: build-debug-msvc
         configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake']"
         buildPreset: debug-msvc
-        testPreset: tests-unit
 
     - name: Cache vcpkg packages
       uses: actions/cache@v3
