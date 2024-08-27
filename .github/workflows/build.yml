@@ -44,6 +44,7 @@ jobs:
 
     - name: Move binaries
       run: |
+        cd ${{github.workspace}}/build/debug-msvc
         mkdir temp
         cd temp
         move ../DeviousDevices.dll
