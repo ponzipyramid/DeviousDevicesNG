@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: build
+    needs: [build-skse, build-papyrus]
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v3
