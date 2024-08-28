@@ -99,7 +99,7 @@ jobs:
     - name: Upload PEX artifact
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: $${{ env.PROJECT_NAME }}-PEX
+        name: ${{ env.PROJECT_NAME }}-PEX
         path: ${{ github.workspace}}/compiled_pex
         retention-days: 90
 
