@@ -77,7 +77,7 @@ jobs:
         PapyrusSourcesDD/PapyrusCompiler "dist/scripts/source"
         -o="compiled_pex" -all 
         -i="dist/scripts/source;PapyrusSourcesDD/SRC;PapyrusSourcesDD/SRC_LAL;PapyrusSourcesDD/SRC_ZAZ;PapyrusSourcesDD/SRC_OTHER;PapyrusSourcesDD/SRC_PO3;PapyrusSourcesDD/SRC_DD;PapyrusSourcesDD/SRC_SKYUI;PapyrusSourcesDD/SRC_PAPUTIL;PapyrusSourcesDD/SRC_SXL;PapyrusSourcesDD/SRC_MFG;PapyrusSourcesDD/SRC_RM;PapyrusSourcesDD/SRC_FNIS;PapyrusSourcesDD/SRC_SLA;PapyrusSourcesDD/SRC_XPMSE;PapyrusSourcesDD/SRC_SLIF"
-        -optimize -f="Flags.flg"
+        -optimize -f="PapyrusSourcesDD/Flags.flg"
     
     - name: Delete PAPYRUS folder
       uses: JesseTG/rm@v1.0.0
