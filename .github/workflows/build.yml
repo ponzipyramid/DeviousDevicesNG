@@ -165,9 +165,17 @@ jobs:
           tag_name: nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date.outputs.date}}
           release_name: Nightly Release ${{ steps.date.outputs.date }}
           body: Nightly release. Alpha build - be wary of bugs. Must be installed manually.
-          body_path: '${{ env.PROJECT_NAME }}.zip'
           keep_num: 0
           keep_tags: false
+
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release 
+          upload 
+          nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date.outputs.date}} 
+          ${{ env.PROJECT_NAME }}.zip 
   
   release:
     if: startsWith(github.ref, 'refs/tags/')
