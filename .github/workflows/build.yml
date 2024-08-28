@@ -73,9 +73,11 @@ jobs:
         repository: 'PapyrusSourcesDD'
 
     - name: Run build scripts
-      run: |
-        cd PapyrusSourcesDD
-        cmd PapyrusCompiler.exe "../scripts/source" -o="${{github.workspace}}\compiled_pex" -all -i="../scripts/source;SRC;SRC_LAL;SRC_ZAZ;SRC_OTHER;SRC_PO3;SRC_DD;SRC_SKYUI;SRC_PAPUTIL;SRC_SXL;SRC_MFG;SRC_RM;SRC_FNIS;SRC_SLA;SRC_XPMSE;SRC_SLIF" -optimize -f="Flags.flg"
+      run: >
+        PapyrusSourcesDD/PapyrusCompiler "scripts/source"
+        -o="compiled_pex" -all 
+        -i="scripts/source;PapyrusSourcesDD/SRC;PapyrusSourcesDD/SRC_LAL;PapyrusSourcesDD/SRC_ZAZ;PapyrusSourcesDD/SRC_OTHER;PapyrusSourcesDD/SRC_PO3;PapyrusSourcesDD/SRC_DD;PapyrusSourcesDD/SRC_SKYUI;PapyrusSourcesDD/SRC_PAPUTIL;PapyrusSourcesDD/SRC_SXL;PapyrusSourcesDD/SRC_MFG;PapyrusSourcesDD/SRC_RM;PapyrusSourcesDD/SRC_FNIS;PapyrusSourcesDD/SRC_SLA;PapyrusSourcesDD/SRC_XPMSE;PapyrusSourcesDD/SRC_SLIF"
+        -optimize -f="Flags.flg"
     
     - name: Delete PAPYRUS folder
       uses: JesseTG/rm@v1.0.0
