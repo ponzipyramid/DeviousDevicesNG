@@ -118,7 +118,7 @@ jobs:
           path: artifacts/${{ env.PROJECT_NAME }}-DLL
 
       - name: Copy DLL to dist
-        run: cp -r artifacts/${{ env.PROJECT_NAME }}-DLL ${{ github.workspace }}/dist/SKSE/Plugins
+        run: cp -r artifacts/${{ env.PROJECT_NAME }}-DLL/* ${{ github.workspace }}/dist/SKSE/Plugins
 
       - name: Download PEX
         uses: actions/download-artifact@v3
@@ -127,7 +127,7 @@ jobs:
           path: artifacts/${{ env.PROJECT_NAME }}-PEX
 
       - name: Copy compiled Papyrus to dist
-        run: cp -r artifacts/${{ env.PROJECT_NAME }}-PEX ${{ github.workspace }}/dist/scripts
+        run: cp -r artifacts/${{ env.PROJECT_NAME }}-PEX/* ${{ github.workspace }}/dist/scripts
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v3.1.2
@@ -152,11 +152,7 @@ jobs:
           path: artifacts/${{ env.PROJECT_NAME }}
 
       - name: Zip files
-        uses: thedoctor0/zip-release@0.7.1
-        with:
-          type: 'zip'
-          filename: '${{ env.PROJECT_NAME }}.zip'
-          path: artifacts/${{ env.PROJECT_NAME }}
+        run: zip -r -q '${{ env.PROJECT_NAME }}.zip' artifacts/${{ env.PROJECT_NAME }}
 
       - name: Create nightly release
         id: create_release
