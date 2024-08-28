@@ -87,7 +87,7 @@ jobs:
     - name: Upload PEX artifact
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: $${{ env.PROJECT_NAME }}-pex
+        name: $${{ env.PROJECT_NAME }}-PEX
         path: ${{ github.workspace}}/compiled_pex
         retention-days: 90
 
@@ -102,20 +102,20 @@ jobs:
       - name: Download DLL
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.PROJECT_NAME}}_DLL
-          path: artifacts/${{ env.PROJECT_NAME }}_DLL
+          name: ${{ env.PROJECT_NAME}}-DLL
+          path: artifacts/${{ env.PROJECT_NAME }}-DLL
 
       - name: Copy DLL to dist
-        run: cp -r artifacts/${{ env.PROJECT_NAME }}_DLL ${{ github.workspace }}/dist/SKSE/Plugins
+        run: cp -r artifacts/${{ env.PROJECT_NAME }}-DLL ${{ github.workspace }}/dist/SKSE/Plugins
 
       - name: Download PEX
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.PROJECT_NAME}}_PEX
-          path: artifacts/${{ env.PROJECT_NAME }}_PEX
+          name: ${{ env.PROJECT_NAME}}-PEX
+          path: artifacts/${{ env.PROJECT_NAME }}-PEX
 
       - name: Copy compiled Papyrus to dist
-        run: cp -r artifacts/${{ env.PROJECT_NAME }}_PEX ${{ github.workspace }}/dist/scripts
+        run: cp -r artifacts/${{ env.PROJECT_NAME }}-PEX ${{ github.workspace }}/dist/scripts
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v3.1.2
