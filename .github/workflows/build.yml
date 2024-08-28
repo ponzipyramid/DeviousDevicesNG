@@ -152,7 +152,7 @@ jobs:
           path: artifacts/${{ env.PROJECT_NAME }}
 
       - name: Zip files
-        run: zip -r -q '${{ env.PROJECT_NAME }}.zip' artifacts/${{ env.PROJECT_NAME }}
+        run: zip -r -q '${{ env.PROJECT_NAME }}.zip' artifacts/${{ env.PROJECT_NAME }}/*
 
       - name: Create nightly release
         id: create_release
