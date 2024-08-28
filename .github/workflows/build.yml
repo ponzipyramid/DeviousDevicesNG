@@ -149,6 +149,13 @@ jobs:
           name: ${{ env.PROJECT_NAME }}
           path: artifacts/${{ env.PROJECT_NAME }}
 
+      - name: Zip files
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          type: 'zip'
+          filename: '${{ env.PROJECT_NAME }}.zip'
+          path: artifacts/${{ env.PROJECT_NAME }}
+
       - name: Create nightly release
         id: create_release
         uses: viperproject/create-nightly-release@v1
@@ -158,7 +165,7 @@ jobs:
           tag_name: nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date.outputs.date}}
           release_name: Nightly Release ${{ steps.date.outputs.date }}
           body: Nightly release. Alpha build - be wary of bugs. Must be installed manually.
-          body_path: artifacts/${{ env.PROJECT_NAME }}
+          body_path: '${{ env.PROJECT_NAME }}.zip'
           keep_num: 0
           keep_tags: false
   
