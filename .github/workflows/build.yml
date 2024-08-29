@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: "37 21 * * *"
+    - cron: "40 * * * *"
   workflow_dispatch:
     inputs:
       releaseNightly:
