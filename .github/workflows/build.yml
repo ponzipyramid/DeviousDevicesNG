@@ -41,9 +41,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{github.workspace}}/build/debug-msvc/vcpkg_installed
-        key: ${{ runner.os }}-vcpkg-${{ hashFiles('${{github.workspace}}/vcpkg.json') }}
+        key: ${{ runner.os }}-vcpkg-installed-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
         restore-keys: |
-          ${{ runner.os }}-vcpkg-installed-${{ hashFiles('${{github.workspace}}/vcpkg.json') }}
+          ${{ runner.os }}-vcpkg-installed-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
           ${{ runner.os }}-vcpkg-installed
         
     - name: Run CMake
@@ -95,7 +95,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.PROJECT_NAME }}-PEX
-        path: ${{ github.workspace}}/compiled_pex
+        path: ${{ github.workspace }}/compiled_pex
         retention-days: 90
 
   compose-release:
