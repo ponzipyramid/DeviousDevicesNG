@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: "40 * * * *"
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       releaseNightly:
@@ -170,8 +170,8 @@ jobs:
           tag_name: nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date_rough.outputs.time}}
           release_name: Nightly Release ${{ steps.date_pretty.outputs.time }}
           body: Nightly release. Alpha build - be wary of bugs. Must be installed manually.
-          keep_num: 0
-          keep_tags: false
+          keep_num: 2
+          keep_tags: true
 
       - name: Upload Release Asset
         env:
