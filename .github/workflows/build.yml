@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/6 * * * *"
   workflow_dispatch:
     inputs:
       releaseNightly:
@@ -153,7 +153,7 @@ jobs:
 
       - name: Create nightly release
         id: create_release
-        uses: viperproject/create-nightly-release@v1
+        uses: viperproject/create-nightly-release@v1.1.12
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
