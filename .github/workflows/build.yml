@@ -24,6 +24,8 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   PROJECT_NAME: DDNG
+  VCPKG_DEFAULT_TRIPLET: x64-windows-skse
+  VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-skse
 
 jobs:
   build-skse:
@@ -34,17 +36,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: seanmiddleditch/gha-setup-ninja@master
-    - uses: ilammy/msvc-dev-cmd@v1.4.1
+    - uses: lukka/get-cmake@latest
 
     - name: Cache vcpkg packages
-      uses: actions/cache@v3
-      with:
-        path: ${{github.workspace}}/build/debug-msvc/vcpkg_installed
-        key: ${{ runner.os }}-vcpkg-installed-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-        restore-keys: |
-          ${{ runner.os }}-vcpkg-installed-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-          ${{ runner.os }}-vcpkg-installed
+      uses: lukka/run-vcpkg@v11
         
     - name: Run CMake
       uses: lukka/run-cmake@v10
