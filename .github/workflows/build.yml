@@ -150,6 +150,16 @@ jobs:
         run: >
           cd artifacts/${{ env.PROJECT_NAME }} &&
           zip -r -q '../../${{ env.PROJECT_NAME }}.zip' ./*
+          
+      - uses: Kaven-Universe/github-action-current-date-time@v1
+        id: date_rough
+        with:
+          format: "YYYY_MM_DD"
+
+      - uses: Kaven-Universe/github-action-current-date-time@v1
+        id: date_pretty
+        with:
+          format: "DD/MM/YYYY"
 
       - name: Create nightly release
         id: create_release
@@ -157,8 +167,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date.outputs.date}}
-          release_name: Nightly Release ${{ steps.date.outputs.date }}
+          tag_name: nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date_rough.outputs.time}}
+          release_name: Nightly Release ${{ steps.date_pretty.outputs.time }}
           body: Nightly release. Alpha build - be wary of bugs. Must be installed manually.
           keep_num: 0
           keep_tags: false
@@ -169,5 +179,5 @@ jobs:
         run: >
           gh release 
           upload 
-          nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date.outputs.date}} 
+          nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date_rough.outputs.time}} 
           ${{ env.PROJECT_NAME }}.zip 
