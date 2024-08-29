@@ -35,9 +35,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: seanmiddleditch/gha-setup-ninja@master
-    - uses: TheMrMilchmann/setup-msvc-dev@v3
-      with:
-        arch: x64
+    - uses: ilammy/msvc-dev-cmd@v1.13.0
 
     - name: Cache vcpkg packages
       uses: actions/cache@v3
