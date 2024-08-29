@@ -1,0 +1,170 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: "37 21 * * *"
+  workflow_dispatch:
+    inputs:
+      releaseNightly:
+        description: 'Release as nightly'
+        required: false
+        default: false
+        type: boolean
+      releaseName:
+        description: 'Release name'
+        type: string
+
+env:
+  BUILD_TYPE: Release
+  PROJECT_NAME: DDNG
+
+jobs:
+  build-skse:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: lukka/get-cmake@latest
+
+    - name: Cache vcpkg packages
+      uses: lukka/run-vcpkg@v11
+        
+    - name: Run CMake
+      uses: lukka/run-cmake@v10
+      with:
+        cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+        configurePreset: build-debug-msvc
+        configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake']"
+        buildPreset: debug-msvc
+
+    - name: Move binaries
+      run: |
+        cd ${{github.workspace}}/build/debug-msvc
+        mkdir temp
+        cd temp
+        move ../DeviousDevices.dll
+        move ../DeviousDevices.pdb
+    
+    - name: Upload DLL artifact
+      uses: actions/upload-artifact@v4
+      with:
+        # Artifact name
+        name: ${{ env.PROJECT_NAME }}-DLL
+        # A file, directory or wildcard pattern that describes what to upload
+        path: build/debug-msvc/temp
+        # The desired behavior if no files are found using the provided path.
+        retention-days: 90
+
+  build-papyrus:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Copy PAPYRUS sources
+      uses: GuillaumeFalourd/clone-github-repo-action@v2
+      with:
+        owner: 'IHateMyKite'
+        repository: 'PapyrusSourcesDD'
+
+    - name: Run build scripts
+      run: >
+        PapyrusSourcesDD/PapyrusCompiler "dist/scripts/source"
+        -o="compiled_pex" -all 
+        -i="dist/scripts/source;PapyrusSourcesDD/SRC;PapyrusSourcesDD/SRC_LAL;PapyrusSourcesDD/SRC_ZAZ;PapyrusSourcesDD/SRC_OTHER;PapyrusSourcesDD/SRC_PO3;PapyrusSourcesDD/SRC_DD;PapyrusSourcesDD/SRC_SKYUI;PapyrusSourcesDD/SRC_PAPUTIL;PapyrusSourcesDD/SRC_SXL;PapyrusSourcesDD/SRC_MFG;PapyrusSourcesDD/SRC_RM;PapyrusSourcesDD/SRC_FNIS;PapyrusSourcesDD/SRC_SLA;PapyrusSourcesDD/SRC_XPMSE;PapyrusSourcesDD/SRC_SLIF"
+        -optimize -f="PapyrusSourcesDD/Flags.flg"
+
+    - name: Upload PEX artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PROJECT_NAME }}-PEX
+        path: ${{ github.workspace }}/compiled_pex
+        retention-days: 90
+
+  compose-release:
+    runs-on: ubuntu-latest
+    needs: [build-skse, build-papyrus]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download DLL
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME}}-DLL
+          path: artifacts/${{ env.PROJECT_NAME }}-DLL
+
+      - name: Copy DLL to dist
+        run: cp -r artifacts/${{ env.PROJECT_NAME }}-DLL/* ${{ github.workspace }}/dist/SKSE/Plugins
+
+      - name: Download PEX
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME}}-PEX
+          path: artifacts/${{ env.PROJECT_NAME }}-PEX
+
+      - name: Copy compiled Papyrus to dist
+        run: cp -r artifacts/${{ env.PROJECT_NAME }}-PEX/* ${{ github.workspace }}/dist/scripts
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME}}
+          path: ${{ github.workspace }}/dist
+          retention-days: 90
+
+  release-nightly:
+    if: ${{ github.event_name == 'schedule' || inputs.releaseNightly }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [build-skse, build-papyrus, compose-release]
+    steps:
+      - uses: actions/checkout@v4
+    
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}
+          path: artifacts/${{ env.PROJECT_NAME }}
+
+      - name: Zip files
+        run: >
+          cd artifacts/${{ env.PROJECT_NAME }} &&
+          zip -r -q '../../${{ env.PROJECT_NAME }}.zip' ./*
+          
+      - uses: Kaven-Universe/github-action-current-date-time@v1
+        id: date_rough
+        with:
+          format: "YYYYMMDD"
+
+      - uses: Kaven-Universe/github-action-current-date-time@v1
+        id: date_pretty
+        with:
+          format: "DD/MM/YYYY"
+
+      - name: Create nightly release
+        id: create_release
+        uses: viperproject/create-nightly-release@v1.1.12
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date_rough.outputs.time}}
+          release_name: Nightly Release ${{ steps.date_pretty.outputs.time }}
+          body: Nightly release. Alpha build - be wary of bugs. Must be installed manually.
+          keep_num: 2
+          keep_tags: true
+
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release 
+          upload 
+          nightly-${{ inputs.releaseNightly && inputs.releaseName || steps.date_rough.outputs.time}} 
+          ${{ env.PROJECT_NAME }}.zip 
