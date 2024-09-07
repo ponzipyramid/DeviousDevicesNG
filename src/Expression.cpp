@@ -238,10 +238,9 @@ namespace DeviousDevices
     bool ExpressionManager::IsGagged(RE::Actor* a_actor) const
     {
         if (a_actor == nullptr) return false;
-        const RE::TESObjectARMO* loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,(int)RE::BIPED_MODEL::BipedObjectSlot::kModMouth);
-        if (loc_gag == nullptr) return false;
 
-        return loc_gag->HasKeywordString("zad_DeviousGag");
+        const RE::TESObjectARMO* loc_gag = LibFunctions::GetSingleton()->GetWornArmor(a_actor,{"zad_DeviousGag","zadNG_GagOverride"},true);
+        return loc_gag != nullptr;
     }
 
     void ExpressionManager::Reload()
@@ -493,7 +492,7 @@ namespace DeviousDevices
     {
         const RE::TESObjectARMO* loc_gag = nullptr;
 
-        const RE::TESObjectARMO* loc_gagoverride = LibFunctions::GetSingleton()->GetWornArmor(a_actor,"zadNG_GagOverride");;
+        const RE::TESObjectARMO* loc_gagoverride = LibFunctions::GetSingleton()->GetWornArmor(a_actor,"zadNG_GagOverride");
 
         if (loc_gagoverride == nullptr)
         {
