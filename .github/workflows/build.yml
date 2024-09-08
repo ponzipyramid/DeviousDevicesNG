@@ -84,7 +84,7 @@ jobs:
   build-papyrus:
     runs-on: windows-latest
     needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_run >= 1 (github.event_name == 'workflow_dispatch' && always()) }}
+    if: ${{ needs.check-changes.outputs.should_run >= 1 || (github.event_name == 'workflow_dispatch' && always()) }}
 
     steps:
     - uses: actions/checkout@v4
