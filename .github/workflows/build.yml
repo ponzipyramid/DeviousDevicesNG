@@ -39,7 +39,7 @@ jobs:
           git log --since="1 days ago" --name-only
           echo "should_run=$(git log --since="1 days ago" --name-only | grep "" -c)" >> "$GITHUB_OUTPUT"
       - name: Check if it's a fortnite job
-        if: github.event.schedule == "37 21 1,16 * *"
+        if: github.event.schedule == '37 21 1,16 * *'
         id: battle_pass
         shell: bash
         run: echo "should_run=true" >> "$GITHUB_OUTPUT"
