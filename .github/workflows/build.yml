@@ -7,6 +7,7 @@ on:
     branches: [ "main" ]
   schedule:
     - cron: "37 21 * * *"
+    - cron: "37 21 1,16 * *"
   workflow_dispatch:
     inputs:
       releaseNightly:
@@ -23,8 +24,29 @@ env:
   PROJECT_NAME: DDNG
 
 jobs:
+  check-changes:
+    name: Check for recent changes
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    outputs: 
+      should_run: ${{ steps.should_run_daily.outputs.should_run || steps.battle_pass.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for changes last 24 hours
+        id: should_run_daily
+        shell: bash
+        run: |
+          git log --since="1 days ago" --name-only
+          echo "should_run=$(git log --since="1 days ago" --name-only | grep "" -c)" >> "$GITHUB_OUTPUT"
+      - name: Check if it's a fortnite job
+        if: github.event.schedule == "37 21 1,16 * *"
+        id: battle_pass
+        shell: bash
+        run: echo "should_run=true" >> "$GITHUB_OUTPUT"
   build-skse:
     runs-on: windows-latest
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.should_run >= 1 || (github.event_name == 'workflow_dispatch' && always()) }}
 
     steps:
     - uses: actions/checkout@v4
@@ -61,6 +83,8 @@ jobs:
 
   build-papyrus:
     runs-on: windows-latest
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.should_run >= 1 (github.event_name == 'workflow_dispatch' && always()) }}
 
     steps:
     - uses: actions/checkout@v4
