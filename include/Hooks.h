@@ -220,7 +220,7 @@ namespace DeviousDevices {
             //    WARN("Failed to install papyrus hook on EquipObject");
             //}
 
-            const uintptr_t loc_equip2TargetAddress = RELOCATION_ID(37974, 38929).address();
+            const uintptr_t loc_equip2TargetAddress = REL::VariantID(37974, 38929, 0x642E30).address();
             _EquipObject2 = (OriginalEquipObject2)loc_equip2TargetAddress;
             DetourTransactionBegin();
             DetourUpdateThread(GetCurrentThread());
