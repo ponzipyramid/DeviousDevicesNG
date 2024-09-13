@@ -24,8 +24,7 @@
 * Do not forget to include this source file to your project!
 */
 
-#define DD_APITYPEKEY static_cast<uint32_t>(0x0000DDDD)
-#define DD_APIVERSION 1U
+#define DD_APIVERSION 2U
 
 namespace DeviousDevicesAPI
 {
@@ -147,19 +146,18 @@ namespace DeviousDevicesAPI
     inline bool LoadAPI()
     {
         if (g_API != nullptr) return true;
-        SKSE::GetMessagingInterface()->Dispatch(DD_APITYPEKEY,(void*)&g_API,sizeof(void*),NULL);
-        if (g_API)
+        HINSTANCE dllHandle = LoadLibrary(TEXT("DeviousDevices.dll"));
+        if (dllHandle != NULL)
         {
-            //API succesfully received!
-            if (g_API->GetVersion() != DD_APIVERSION)
+            FARPROC pGetAPI = GetProcAddress(HMODULE (dllHandle),"GetAPI");
+            if (pGetAPI != NULL) 
             {
-                //API version is old. DO NOT USE!!!!
-                return false;
-            }
-            else
-            {
-                //Use API. You can save it to some static variable or to stack.
+                g_API = ((DeviousDevicesAPI*(* )(void))(pGetAPI))();
                 return true;
+            }
+            else 
+            {
+                return false;
             }
         }
         return false;

@@ -19,6 +19,12 @@ using namespace RE::BSScript;
 using namespace SKSE;
 using namespace SKSE::stl;
  
+extern "C" DLLEXPORT DeviousDevicesAPI::DeviousDevicesAPI* GetAPI()
+{
+    DEBUG("API Request received")
+    return DeviousDevicesAPI::g_API;
+}
+
 namespace {
     void InitializeLogging() 
     {
@@ -78,6 +84,7 @@ namespace {
                     DeviousDevices::ExpressionManager::GetSingleton()->Setup();
                     DeviousDevices::HooksVirtual::GetSingleton()->Setup();
                     if (!DeviousDevicesAPI::g_API) DeviousDevicesAPI::g_API = new DeviousDevicesAPI::DeviousDevicesAPI;
+                    DEBUG("API ready - 0x{:016X}",(uintptr_t)DeviousDevicesAPI::g_API);
                     break;
                 case MessagingInterface::kPostLoadGame:  // Player's selected save game has finished loading.
                                                             // Data will be a boolean indicating whether the load was
@@ -85,21 +92,7 @@ namespace {
                 case MessagingInterface::kNewGame: //also when player makes new game, as kPostLoadGame event is called too late on new game
                     break;
             }
-        })) 
-        {
-            stl::report_and_fail("Unable to register message listener.");
-        }
-
-        if (!g_messaging->RegisterListener(NULL,[](MessagingInterface::Message* message) 
-        {
-            switch (message->type) 
-            {
-                // Request for api received
-                case DD_APITYPEKEY:
-                    message->dataLen = sizeof(DeviousDevicesAPI::DeviousDevicesAPI*);
-                    *(DeviousDevicesAPI::DeviousDevicesAPI**)message->data = DeviousDevicesAPI::g_API;
-                    break;
-            }
+            
         })) 
         {
             stl::report_and_fail("Unable to register message listener.");
@@ -119,6 +112,11 @@ namespace {
 
 SKSEPluginLoad(const LoadInterface* skse) 
 {
+    if (skse->IsEditor())
+    {
+        return false;
+    }
+
     SKSE::Init(skse);
 
     InitializeLogging();
