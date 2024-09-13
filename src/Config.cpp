@@ -62,6 +62,7 @@ std::vector<std::string> ConfigManager::GetArrayRaw(std::string a_name, bool a_t
 template<typename T>
 T ConfigManager::GetVariable(std::string a_name, T a_def) const
 {
+    UniqueLock lock(_lock);
     if (!_loaded) return a_def;
 
     void* loc_cres = _catche[a_name];
@@ -86,6 +87,7 @@ T ConfigManager::GetVariable(std::string a_name, T a_def) const
 template<typename T>
 std::vector<T> ConfigManager::GetArray(std::string a_name, std::string a_sep) const
 {
+    UniqueLock lock(_lock);
     if (!_loaded) return std::vector<T>();
 
     void* loc_cres = _catche[a_name];
@@ -117,6 +119,7 @@ std::vector<T> ConfigManager::GetArray(std::string a_name, std::string a_sep) co
 
 std::vector<std::string> ConfigManager::GetArrayText(std::string a_name, bool a_lowercase, std::string a_sep) const
 {
+    UniqueLock lock(_lock);
     if (!_loaded) return std::vector<std::string>();
 
     void* loc_cres = _catche[a_name];

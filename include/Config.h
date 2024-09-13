@@ -4,6 +4,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include "Utils.h"
 
 namespace DeviousDevices
 {
@@ -23,6 +24,7 @@ namespace DeviousDevices
         bool _loaded = false;
         boost::property_tree::ptree _config;
         mutable std::unordered_map<std::string,void*> _catche;
+        mutable Spinlock _lock;
         std::vector<std::string> GetArrayRaw(std::string a_name, bool a_tolower, std::string a_sep = ",") const;
         bool _LogDisable = false;
     };
