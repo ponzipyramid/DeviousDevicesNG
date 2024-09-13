@@ -152,8 +152,18 @@ namespace DeviousDevicesAPI
             FARPROC pGetAPI = GetProcAddress(HMODULE (dllHandle),"GetAPI");
             if (pGetAPI != NULL) 
             {
-                g_API = ((DeviousDevicesAPI*(* )(void))(pGetAPI))();
-                return true;
+                auto loc_api = ((DeviousDevicesAPI*(* )(void))(pGetAPI))();
+
+                if (loc_api != nullptr && (loc_api->GetVersion() == DD_APIVERSION))
+                {
+                    g_API = loc_api;
+                    return true;
+                }
+                else
+                {
+                    // API version is old. Update your API!!
+                    return false;
+                }
             }
             else 
             {
