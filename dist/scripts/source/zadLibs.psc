@@ -33,6 +33,7 @@ zadBoundCombatScript Property BoundCombat auto
 Int Property TweenMenuKey Auto
 bool Property Terminate Auto
 zadexpressionlibs Property ExpLibs auto ;expression libs
+vrikActions va = None
 
 ; Keywords
 Keyword Property zad_DeviousPlug Auto
@@ -3355,4 +3356,21 @@ EndFunction
 
 bool Function UpdateCorsetState(actor akActor)
 	return false
+EndFunction
+
+
+function enableVA()
+  if va == None
+    va = (Game.GetFormFromFile(0x000D61, "vrikForceAction.esp") as _vrikAction_qust_mcm).VRIKActionsConf
+  EndIf
+  va.VAC_allTime = True
+  va.EnableVA()
+EndFunction
+
+function disableVA()
+  if va == None
+    va = (Game.GetFormFromFile(0x000D61, "vrikForceAction.esp") as _vrikAction_qust_mcm).VRIKActionsConf
+  EndIf
+  va.VAC_allTime = False
+  ; va.DisableVA()
 EndFunction
