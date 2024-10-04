@@ -84,12 +84,12 @@ void DeviousDevices::NodeHider::ShowArmNodes(RE::Actor* a_actor, std::unordered_
     HidderState loc_state = a_states[a_actor->GetHandle().native_handle()];
     if (loc_state == HidderState::sShown) return;
 
-    RE::NiNode* thirdpersonNode = a_actor->Get3D(0)->AsNode();
+    RE::NiNode* thirdpersonNode = a_actor->Get3D(0) ? a_actor->Get3D(0)->AsNode() : nullptr;
     if (thirdpersonNode == nullptr) return;
 
     static bool loc_hidefirstperson = ConfigManager::GetSingleton()->GetVariable<bool>("NodeHider.bHideArmsFirstPerson",true);
 
-    RE::NiNode* firstpersonnode = loc_hidefirstperson ? a_actor->Get3D(1)->AsNode() : nullptr;
+    RE::NiNode* firstpersonnode = loc_hidefirstperson ? (a_actor->Get3D(1) ? a_actor->Get3D(1)->AsNode() : nullptr) : nullptr;
     if (loc_hidefirstperson && firstpersonnode == nullptr) return;
 
     LOG("NodeHider::ShowArmNodes({}) called",a_actor->GetName())
